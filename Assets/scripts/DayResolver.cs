@@ -3,31 +3,68 @@ using UnityEngine;
 
 public class DayResolver
 {
-    public List<string> SonucMesajlariniOlustur(GameState state, List<OrderData> emirler)
+    public List<DevamEdenEmir> SonucMesajlariniOlustur(GameState state, List<OrderData> emirler,
+        List<DevamEdenEmir> devamEdenler, List<string> mesajListesi)
     {
-        List<string> sonucMesajlari = new List<string>();
-
+        // 1) Yeni verilen emirleri isle
         foreach (OrderData emir in emirler)
         {
-            float zar = Random.Range(0f, 1f);
-            bool basarili = zar < emir.BasariSansi;
-
-            if (basarili)
+            if (emir.ToplamSure <= 1)
             {
-                state.StatDegistir(emir.EtkilenenStat, emir.BasariliDegisim);
-                string mesaj = emir.EmirTuru + " basarili oldu! (zar: " + zar.ToString("F2") + ")";
-                sonucMesajlari.Add(mesaj);
-                Debug.Log(mesaj);
+                // Aninda sonuclanan emir (tek gunluk, hep sansa bagli)
+                ZarAtVeUygula(state, emir, mesajListesi);
             }
             else
             {
-                state.StatDegistir(emir.EtkilenenStat, emir.BasarisizDegisim);
-                string mesaj = emir.EmirTuru + " basarisiz oldu. (zar: " + zar.ToString("F2") + ")";
-                sonucMesajlari.Add(mesaj);
-                Debug.Log(mesaj);
+                // Cok gunlu emir - hep baslar, suresi dolunca sonuclanacak
+                devamEdenler.Add(new DevamEdenEmir(emir, emir.ToplamSure));
+                mesajListesi.Add(emir.EmirTuru + " basladi, " + emir.ToplamSure + " gun surecek.");
             }
         }
 
-        return sonucMesajlari;
+        // 2) Devam eden isleri bir gun ilerlet
+        List<DevamEdenEmir> halaDevamEdenler = new List<DevamEdenEmir>();
+
+        foreach (DevamEdenEmir devam in devamEdenler)
+        {
+            devam.KalanGun--;
+
+            if (devam.KalanGun <= 0)
+            {
+                if (devam.Emir.SonucSansaBagli)
+                {
+                    ZarAtVeUygula(state, devam.Emir, mesajListesi);
+                }
+                else
+                {
+                    state.StatDegistir(devam.Emir.EtkilenenStat, devam.Emir.BasariliDegisim);
+                    mesajListesi.Add(devam.Emir.EmirTuru + " tamamlandi!");
+                }
+            }
+            else
+            {
+                halaDevamEdenler.Add(devam);
+                mesajListesi.Add(devam.Emir.EmirTuru + " devam ediyor, " + devam.KalanGun + " gun kaldi.");
+            }
+        }
+
+        return halaDevamEdenler;
+    }
+
+    void ZarAtVeUygula(GameState state, OrderData emir, List<string> mesajListesi)
+    {
+        float zar = Random.Range(0f, 1f);
+        bool basarili = zar < emir.BasariSansi;
+
+        if (basarili)
+        {
+            state.StatDegistir(emir.EtkilenenStat, emir.BasariliDegisim);
+            mesajListesi.Add(emir.EmirTuru + " basarili oldu!");
+        }
+        else
+        {
+            state.StatDegistir(emir.EtkilenenStat, emir.BasarisizDegisim);
+            mesajListesi.Add(emir.EmirTuru + " basarisiz oldu.");
+        }
     }
 }

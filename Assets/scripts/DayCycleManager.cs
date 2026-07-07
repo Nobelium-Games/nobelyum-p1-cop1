@@ -10,6 +10,7 @@ public enum GunAsamasi
 
 public class DayCycleManager : MonoBehaviour
 {
+    private List<string> sonGeceSonuclari = new List<string>();
     public static DayCycleManager Instance;
 
     public GunAsamasi SuankiAsama;
@@ -28,6 +29,7 @@ public class DayCycleManager : MonoBehaviour
 
     private List<NPCData> gunlukSira;
     private int suankiNpcIndex = 0;
+    private List<DevamEdenEmir> devamEdenEmirler = new List<DevamEdenEmir>();
 
     void Awake()
     {
@@ -50,13 +52,23 @@ public class DayCycleManager : MonoBehaviour
     }
 
     void YeniGuneBasla()
-    {
-        gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc);
-        suankiNpcIndex = 0;
+{
+    gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc);
 
-        AsamaDegistir(GunAsamasi.TahtOdasi);
-        SiradakiNpcyiGoster();
+    if (sonGeceSonuclari.Count > 0)
+    {
+        NPCData elci = ScriptableObject.CreateInstance<NPCData>();
+        elci.Isim = "Ulak";
+        elci.Diyalog = ElciDiyaloguOlustur(sonGeceSonuclari);
+
+        gunlukSira.Insert(0, elci);
     }
+
+    suankiNpcIndex = 0;
+
+    AsamaDegistir(GunAsamasi.TahtOdasi);
+    SiradakiNpcyiGoster();
+}
 
     void SiradakiNpcyiGoster()
     {
@@ -77,20 +89,56 @@ public class DayCycleManager : MonoBehaviour
         SiradakiNpcyiGoster();
     }
 
-    public void UyuyaBas()
+    
+    DialogueData ElciDiyaloguOlustur(List<string> sonuclar)
+{
+    DialogueData veri = ScriptableObject.CreateInstance<DialogueData>();
+    veri.DialogueID = "ulak";
+
+    string birlesikSoz = "Kralim, dun geceki haberler:\n";
+    foreach (string mesaj in sonuclar)
     {
-        AsamaDegistir(GunAsamasi.Resolve);
-
-        List<string> sonuclar = resolver.SonucMesajlariniOlustur(GameManager.Instance.State, Orders.BekleyenEmirler);
-
-        Debug.Log("--- Gece Sonuclari ---");
-        foreach (string mesaj in sonuclar)
-        {
-            Debug.Log(mesaj);
-        }
-
-        Orders.YeniDongueBasla();
-
-        YeniGuneBasla();
+        birlesikSoz += "- " + mesaj + "\n";
     }
+
+    DialogueChoice secenek = new DialogueChoice();
+    secenek.SecenekMetni = "Anladim";
+    secenek.SonrakiNodeID = "";
+    secenek.EtkilenenStat = "";
+    secenek.StatDegisimi = 0;
+
+    DialogueNode node = new DialogueNode();
+    node.NodeID = "baslangic";
+    node.NPCSozu = birlesikSoz;
+    node.Secenekler = new List<DialogueChoice> { secenek };
+
+    veri.Nodler = new List<DialogueNode> { node };
+
+    return veri;
+}
+    
+    public void UyuyaBas()
+{
+    AsamaDegistir(GunAsamasi.Resolve);
+
+    sonGeceSonuclari = new List<string>();
+
+    devamEdenEmirler = resolver.SonucMesajlariniOlustur(
+        GameManager.Instance.State,
+        Orders.BekleyenEmirler,
+        devamEdenEmirler,
+        sonGeceSonuclari
+    );
+
+    Debug.Log("--- Gece Sonuclari ---");
+    foreach (string mesaj in sonGeceSonuclari)
+    {
+        Debug.Log(mesaj);
+    }
+
+    Orders.YeniDongueBasla();
+
+    YeniGuneBasla();
+}
+
 }

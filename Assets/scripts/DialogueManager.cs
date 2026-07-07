@@ -9,6 +9,7 @@ public class DialogueManager : MonoBehaviour
 
     private DialogueData aktifDiyalog;
     private DialogueNode aktifNode;
+    public GameObject SecenekButon2;
 
     public void DiyalogBaslat(DialogueData diyalog)
     {
@@ -18,12 +19,21 @@ public class DialogueManager : MonoBehaviour
     }
 
     void NodeGoster()
-    {
-        NpcSozuText.text = aktifNode.NPCSozu;
+{
+    NpcSozuText.text = aktifNode.NPCSozu;
 
-        SecenekButon1Text.text = aktifNode.Secenekler[0].SecenekMetni;
+    SecenekButon1Text.text = aktifNode.Secenekler[0].SecenekMetni;
+
+    if (aktifNode.Secenekler.Count > 1)
+    {
+        SecenekButon2.SetActive(true);
         SecenekButon2Text.text = aktifNode.Secenekler[1].SecenekMetni;
     }
+    else
+    {
+        SecenekButon2.SetActive(false);
+    }
+}
 
     public void Secenek1Secildi()
     {

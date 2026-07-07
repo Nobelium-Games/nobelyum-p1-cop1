@@ -3,14 +3,17 @@ using System;
 [Serializable]
 public class OrderData
 {
-    public string DanismanTipi;   // orn: "Insaatci", "Askerbasi"
-    public string EmirTuru;       // orn: "Degirmen Insa Et"
-    public string EtkilenenStat;  // basari olursa hangi stat degisecek
-    public int BasariliDegisim;   // basarili olursa ne kadar degisecek
-    public int BasarisizDegisim;  // basarisiz olursa ne kadar degisecek
-    public float BasariSansi;     // 0 ile 1 arasi (orn 0.7 = %70 basari sansi)
+    public string DanismanTipi;
+    public string EmirTuru;
+    public string EtkilenenStat;
+    public int BasariliDegisim;
+    public int BasarisizDegisim;
+    public float BasariSansi;
+    public int ToplamSure;
+    public bool SonucSansaBagli;  // true = surenin sonunda zar atilir, false = garanti tamamlanir
 
-    public OrderData(string danisman, string emir, string stat, int basariliMiktar, int basarisizMiktar, float sans)
+    public OrderData(string danisman, string emir, string stat, int basariliMiktar, int basarisizMiktar,
+        float sans, int toplamSure, bool sonucSansaBagli)
     {
         DanismanTipi = danisman;
         EmirTuru = emir;
@@ -18,5 +21,7 @@ public class OrderData
         BasariliDegisim = basariliMiktar;
         BasarisizDegisim = basarisizMiktar;
         BasariSansi = sans;
+        ToplamSure = toplamSure;
+        SonucSansaBagli = sonucSansaBagli;
     }
 }
