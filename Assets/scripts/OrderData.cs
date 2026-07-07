@@ -10,7 +10,7 @@ public class OrderData
     public int BasarisizDegisim;
     public float BasariSansi;
     public int ToplamSure;
-    public bool SonucSansaBagli;  // true = surenin sonunda zar atilir, false = garanti tamamlanir
+    public bool SonucSansaBagli;
 
     public OrderData(string danisman, string emir, string stat, int basariliMiktar, int basarisizMiktar,
         float sans, int toplamSure, bool sonucSansaBagli)
