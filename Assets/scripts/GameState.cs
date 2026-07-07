@@ -6,7 +6,7 @@ public class GameState
     public int Erzak = 50;
     public int Sadakat = 50;
     public int OrduGucu = 50;
-
+    //selamlar deneme
     public void StatDegistir(string statAdi, int miktar)
     {
         switch (statAdi)
