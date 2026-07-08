@@ -77,7 +77,7 @@ public class DayCycleManager : MonoBehaviour
     {
         if (suankiNpcIndex >= gunlukSira.Count)
         {
-            AsamaDegistir(GunAsamasi.SahsiOda);
+            StartCoroutine(EkranGecisi.Instance.KararipAcil(() => AsamaDegistir(GunAsamasi.SahsiOda)));
             return;
         }
 

@@ -8,6 +8,7 @@ public class BildirimYoneticisi : MonoBehaviour
 
     public GameObject BildirimSablonu;
     public float GosterimSuresi = 2f;
+    public float FadeSuresi = 0.4f;
 
     void Awake()
     {
@@ -26,12 +27,38 @@ public class BildirimYoneticisi : MonoBehaviour
         TMP_Text metin = yeni.GetComponent<TMP_Text>();
         metin.text = "<color=" + renk + ">" + isaret + miktar + " " + statAdi + "</color>";
 
-        StartCoroutine(BirSureSonraYokEt(yeni));
+        CanvasGroup canvasGroup = yeni.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = yeni.AddComponent<CanvasGroup>();
+        }
+
+        StartCoroutine(FadeInFadeOutYokEt(yeni, canvasGroup));
     }
 
-    IEnumerator BirSureSonraYokEt(GameObject obje)
+    IEnumerator FadeInFadeOutYokEt(GameObject obje, CanvasGroup canvasGroup)
     {
+        yield return FadeCoroutine(canvasGroup, 0f, 1f, FadeSuresi);
+
         yield return new WaitForSeconds(GosterimSuresi);
+
+        yield return FadeCoroutine(canvasGroup, 1f, 0f, FadeSuresi);
+
         Destroy(obje);
+    }
+
+    IEnumerator FadeCoroutine(CanvasGroup canvasGroup, float baslangic, float bitis, float sure)
+    {
+        float gecenSure = 0f;
+        canvasGroup.alpha = baslangic;
+
+        while (gecenSure < sure)
+        {
+            gecenSure += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(baslangic, bitis, gecenSure / sure);
+            yield return null;
+        }
+
+        canvasGroup.alpha = bitis;
     }
 }

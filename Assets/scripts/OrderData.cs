@@ -17,6 +17,8 @@ public class OrderData
     public string BaseGeliriStat;
     public int BaseGeliriMiktar;
 
+    public OrderData() { }
+
     public OrderData(string danisman, string emir, string stat, int basariliMiktar, int basarisizMiktar,
         float sans, int toplamSure, bool sonucSansaBagli, string maliyetStat = "", int maliyetMiktar = 0,
         bool baseGeliriEtkiler = false, string baseGeliriStat = "", int baseGeliriMiktar = 0)

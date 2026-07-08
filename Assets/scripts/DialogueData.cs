@@ -22,6 +22,7 @@ public class DialogueChoice
     public string SecenekMetni;
     public string SonrakiNodeID;
     public List<StatEtkisi> StatEtkileri;
+    public OrderData VerilecekEmir;
 }
 
 [System.Serializable]

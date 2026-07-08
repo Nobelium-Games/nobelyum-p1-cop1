@@ -15,13 +15,19 @@ public class DialogueManager : MonoBehaviour
     public GameObject SecenekButon2;
     public Button SecenekButon1Buton;
     public Button SecenekButon2Buton;
+    public OrderManager Orders;
+    public GameObject DiyalogKutusuKok;
 
-    public void DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim)
+    private bool aktifDanismanDiyalogu = false;
+
+    public void DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim, bool danismanDiyalogu = false)
     {
         aktifDiyalog = diyalog;
         aktifNode = aktifDiyalog.Nodler[0];
+        aktifDanismanDiyalogu = danismanDiyalogu;
         PortreImage.sprite = portre;
         NpcIsimText.text = isim;
+        DiyalogKutusuKok.SetActive(true);
         NodeGoster();
     }
 
@@ -83,6 +89,11 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
+        if (secenek.VerilecekEmir != null && !string.IsNullOrEmpty(secenek.VerilecekEmir.DanismanTipi))
+        {
+            Orders.EmirEkle(secenek.VerilecekEmir);
+        }
+
         Debug.Log("Secenek uygulandi: " + secenek.SecenekMetni +
             " -> Sadakat: " + GameManager.Instance.State.Sadakat);
 
@@ -103,6 +114,13 @@ public class DialogueManager : MonoBehaviour
         NpcSozuText.text = "";
         SecenekButon1Text.text = "";
         SecenekButon2Text.text = "";
+        DiyalogKutusuKok.SetActive(false);
+
+        if (aktifDanismanDiyalogu)
+        {
+            return;
+        }
+
         DayCycleManager.Instance.SiradakiyeGec();
     }
 }
