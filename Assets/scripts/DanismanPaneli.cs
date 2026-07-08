@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ManagerTest : MonoBehaviour
+public class DanismanPaneli : MonoBehaviour
 {
     public OrderManager Orders;
 

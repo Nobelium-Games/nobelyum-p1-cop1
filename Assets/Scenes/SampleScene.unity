@@ -1259,8 +1259,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1179240677}
-        m_TargetAssemblyTypeName: ManagerTest, Assembly-CSharp
+      - m_Target: {fileID: 1179240679}
+        m_TargetAssemblyTypeName: DanismanPaneli, Assembly-CSharp
         m_MethodName: AskerToplaEmriVer
         m_Mode: 1
         m_Arguments:
@@ -1473,8 +1473,8 @@ GameObject:
   - component: {fileID: 1179240673}
   - component: {fileID: 1179240672}
   - component: {fileID: 1179240676}
-  - component: {fileID: 1179240677}
   - component: {fileID: 1179240678}
+  - component: {fileID: 1179240679}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1581,19 +1581,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffaa7d96e52c83c43a25086c40de0290, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TahtOdasiTest
---- !u!114 &1179240677
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1179240671}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7fd8950dc9aa3a45a1375b9b242d62d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ManagerTest
-  Orders: {fileID: 1775698459}
 --- !u!114 &1179240678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1607,6 +1594,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatsUI
   StatlarText: {fileID: 1611365301}
+--- !u!114 &1179240679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179240671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07ab1084e4e29f343b50a66609a50f60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DanismanPaneli
+  Orders: {fileID: 1775698459}
 --- !u!1 &1220024133
 GameObject:
   m_ObjectHideFlags: 0
@@ -1964,8 +1964,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1179240677}
-        m_TargetAssemblyTypeName: ManagerTest, Assembly-CSharp
+      - m_Target: {fileID: 1179240679}
+        m_TargetAssemblyTypeName: DanismanPaneli, Assembly-CSharp
         m_MethodName: AskerbasiEmriVer
         m_Mode: 1
         m_Arguments:
@@ -2533,8 +2533,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1179240677}
-        m_TargetAssemblyTypeName: ManagerTest, Assembly-CSharp
+      - m_Target: {fileID: 1179240679}
+        m_TargetAssemblyTypeName: DanismanPaneli, Assembly-CSharp
         m_MethodName: InsaatciEmriVer
         m_Mode: 1
         m_Arguments:
