@@ -79,6 +79,7 @@ public class DialogueManager : MonoBehaviour
             if (!string.IsNullOrEmpty(etki.StatAdi))
             {
                 GameManager.Instance.State.StatDegistir(etki.StatAdi, etki.Miktar);
+                BildirimYoneticisi.Instance.Bildirim(etki.StatAdi, etki.Miktar);
             }
         }
 
