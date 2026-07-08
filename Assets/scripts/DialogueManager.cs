@@ -4,6 +4,7 @@ using TMPro;
 
 public class DialogueManager : MonoBehaviour
 {
+    public TMP_Text NpcIsimText;
     public TMP_Text NpcSozuText;
     public TMP_Text SecenekButon1Text;
     public TMP_Text SecenekButon2Text;
@@ -12,12 +13,15 @@ public class DialogueManager : MonoBehaviour
     private DialogueData aktifDiyalog;
     private DialogueNode aktifNode;
     public GameObject SecenekButon2;
+    public Button SecenekButon1Buton;
+    public Button SecenekButon2Buton;
 
-    public void DiyalogBaslat(DialogueData diyalog, Sprite portre)
+    public void DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim)
     {
         aktifDiyalog = diyalog;
         aktifNode = aktifDiyalog.Nodler[0];
         PortreImage.sprite = portre;
+        NpcIsimText.text = isim;
         NodeGoster();
     }
 
@@ -26,11 +30,13 @@ public class DialogueManager : MonoBehaviour
     NpcSozuText.text = aktifNode.NPCSozu;
 
     SecenekButon1Text.text = aktifNode.Secenekler[0].SecenekMetni;
+    SecenekButon1Buton.interactable = SecenekKarsilanabilirMi(aktifNode.Secenekler[0]);
 
     if (aktifNode.Secenekler.Count > 1)
     {
         SecenekButon2.SetActive(true);
         SecenekButon2Text.text = aktifNode.Secenekler[1].SecenekMetni;
+        SecenekButon2Buton.interactable = SecenekKarsilanabilirMi(aktifNode.Secenekler[1]);
     }
     else
     {
@@ -48,11 +54,32 @@ public class DialogueManager : MonoBehaviour
         SecenekUygula(aktifNode.Secenekler[1]);
     }
 
+    bool SecenekKarsilanabilirMi(DialogueChoice secenek)
+    {
+        foreach (StatEtkisi etki in secenek.StatEtkileri)
+        {
+            if (etki.Miktar < 0 && GameManager.Instance.State.StatDegerAl(etki.StatAdi) + etki.Miktar < 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void SecenekUygula(DialogueChoice secenek)
     {
-        if (!string.IsNullOrEmpty(secenek.EtkilenenStat))
+        if (!SecenekKarsilanabilirMi(secenek))
         {
-            GameManager.Instance.State.StatDegistir(secenek.EtkilenenStat, secenek.StatDegisimi);
+            Debug.Log("Bu secenek icin yeterli kaynak yok: " + secenek.SecenekMetni);
+            return;
+        }
+
+        foreach (StatEtkisi etki in secenek.StatEtkileri)
+        {
+            if (!string.IsNullOrEmpty(etki.StatAdi))
+            {
+                GameManager.Instance.State.StatDegistir(etki.StatAdi, etki.Miktar);
+            }
         }
 
         Debug.Log("Secenek uygulandi: " + secenek.SecenekMetni +

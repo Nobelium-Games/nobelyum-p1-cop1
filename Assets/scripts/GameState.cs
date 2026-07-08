@@ -3,6 +3,8 @@ using System;
 [Serializable]
 public class GameState
 {
+    public int Gun = 1;
+
     public int Erzak = 50;
     public int Sadakat = 50;
     public int Altin = 50;

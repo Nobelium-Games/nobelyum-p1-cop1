@@ -10,20 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 052a559453fac0a40a210c56def563a8, type: 3}
-  m_Name: Asker_Diyalog
+  m_Name: Ayyas_Diyalog
   m_EditorClassIdentifier: Assembly-CSharp::DialogueData
-  DialogueID: asker
+  DialogueID: 
   Nodler:
   - NodeID: 
-    NPCSozu: "Kral\u0131m Asker Laz\u0131m"
+    NPCSozu: "A\u011F\u011F\xFCi\u011Fi\u011F\u011Fdi\u011Fi"
     Secenekler:
-    - SecenekMetni: Senindir
-      SonrakiNodeID: 
-      StatEtkileri:
-      - StatAdi: Manpower
-        Miktar: 10
-      - StatAdi: Altin
-        Miktar: -5
-    - SecenekMetni: Yok bb
+    - SecenekMetni: "Tamamd\u0131r"
       SonrakiNodeID: 
       StatEtkileri: []
+    - SecenekMetni: (idam et)
+      SonrakiNodeID: 
+      StatEtkileri:
+      - StatAdi: Sadakat
+        Miktar: -30

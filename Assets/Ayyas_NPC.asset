@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: df4027b6584e8dd4980994c422a98ca0, type: 3}
-  m_Name: Asker_NPC
+  m_Name: Ayyas_NPC
   m_EditorClassIdentifier: Assembly-CSharp::NPCData
-  ID: Koylu
-  Isim: Asker Mehmet
-  Diyalog: {fileID: 11400000, guid: 3c05f583cabfba649bd6533fd7d0036b, type: 2}
-  Portre: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  ID: 
+  Isim: "Ayya\u015F Adam"
+  Diyalog: {fileID: 11400000, guid: 970e0e08ae63f2d4091153deaab549d6, type: 2}
+  Portre: {fileID: 3625043607559282579, guid: b207cab799bdb9a4482b83322481c5e1, type: 3}

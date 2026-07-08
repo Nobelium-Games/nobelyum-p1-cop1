@@ -21,6 +21,12 @@ public class DialogueChoice
 {
     public string SecenekMetni;
     public string SonrakiNodeID;
-    public string EtkilenenStat;
-    public int StatDegisimi;
+    public List<StatEtkisi> StatEtkileri;
+}
+
+[System.Serializable]
+public class StatEtkisi
+{
+    public string StatAdi;
+    public int Miktar;
 }

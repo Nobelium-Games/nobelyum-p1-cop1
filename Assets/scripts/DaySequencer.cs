@@ -3,9 +3,16 @@ using UnityEngine;
 
 public class DaySequencer
 {
-    public List<NPCData> SiradakiListeyiOlustur(GameState state, NPCData koyluNpc, NPCData askerNpc)
+    public List<NPCData> SiradakiListeyiOlustur(GameState state, NPCData koyluNpc, NPCData askerNpc, NPCData ayyasNpc)
     {
         List<NPCData> yeniSira = new List<NPCData>();
+
+        // Kural 0: 10. gun sabit hikaye karakteri (ayyas adam) gelir
+        if (state.Gun == 10)
+        {
+            yeniSira.Add(ayyasNpc);
+            Debug.Log("10. gun, ayyas adam geldi");
+        }
 
         // Kural 1: Erzak dusukse, koylu gelme ihtimali yuksek
         if (state.Erzak < 40)

@@ -19,9 +19,13 @@ MonoBehaviour:
     Secenekler:
     - SecenekMetni: 'Tamam al '
       SonrakiNodeID: 
-      EtkilenenStat: Sadakat
-      StatDegisimi: 5
+      StatEtkileri:
+      - StatAdi: Erzak
+        Miktar: -20
+      - StatAdi: Sadakat
+        Miktar: 10
     - SecenekMetni: Yok git
       SonrakiNodeID: 
-      EtkilenenStat: Sadakat
-      StatDegisimi: -5
+      StatEtkileri:
+      - StatAdi: Sadakat
+        Miktar: -15

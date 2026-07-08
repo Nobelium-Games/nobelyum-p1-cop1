@@ -18,7 +18,6 @@ public class DayResolver
             {
                 // Cok gunlu emir - hep baslar, suresi dolunca sonuclanacak
                 devamEdenler.Add(new DevamEdenEmir(emir, emir.ToplamSure));
-                mesajListesi.Add(emir.EmirTuru + " basladi, " + emir.ToplamSure + " gun surecek.");
             }
         }
 
@@ -38,13 +37,12 @@ public class DayResolver
                 else if (devam.Emir.BaseGeliriEtkiler)
                 {
                     state.BaseGeliriArtir(devam.Emir.BaseGeliriStat, devam.Emir.BaseGeliriMiktar);
-                    mesajListesi.Add(devam.Emir.EmirTuru + " tamamlandi! Artik her dongu +" +
-                        devam.Emir.BaseGeliriMiktar + " " + devam.Emir.BaseGeliriStat + " kazanacaksin.");
+                    mesajListesi.Add("<color=yellow>" + devam.Emir.EmirTuru + " tamamlandi!</color>");
                 }
                 else
                 {
                     state.StatDegistir(devam.Emir.EtkilenenStat, devam.Emir.BasariliDegisim);
-                    mesajListesi.Add(devam.Emir.EmirTuru + " tamamlandi!");
+                    mesajListesi.Add("<color=yellow>" + devam.Emir.EmirTuru + " tamamlandi!</color>");
                 }
             }
             else
@@ -65,12 +63,12 @@ public class DayResolver
         if (basarili)
         {
             state.StatDegistir(emir.EtkilenenStat, emir.BasariliDegisim);
-            mesajListesi.Add(emir.EmirTuru + " basarili oldu!");
+            mesajListesi.Add("<color=green>" + emir.EmirTuru + " basarili oldu!</color>");
         }
         else
         {
             state.StatDegistir(emir.EtkilenenStat, emir.BasarisizDegisim);
-            mesajListesi.Add(emir.EmirTuru + " basarisiz oldu.");
+            mesajListesi.Add("<color=red>" + emir.EmirTuru + " basarisiz oldu.</color>");
         }
     }
 }

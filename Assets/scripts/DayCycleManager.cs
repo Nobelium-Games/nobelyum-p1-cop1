@@ -23,6 +23,7 @@ public class DayCycleManager : MonoBehaviour
 
     public NPCData KoyluNpc;
     public NPCData AskerNpc;
+    public NPCData AyyasNpc;
 
     private DaySequencer sequencer = new DaySequencer();
     private DayResolver resolver = new DayResolver();
@@ -55,7 +56,7 @@ public class DayCycleManager : MonoBehaviour
 {
     GameManager.Instance.State.BaseGeliriUygula();
 
-    gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc);
+    gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc, AyyasNpc);
 
     if (sonGeceSonuclari.Count > 0)
     {
@@ -82,7 +83,7 @@ public class DayCycleManager : MonoBehaviour
 
         NPCData npc = gunlukSira[suankiNpcIndex];
         Debug.Log("Sirada: " + npc.Isim);
-        Dialog.DiyalogBaslat(npc.Diyalog, npc.Portre);
+        Dialog.DiyalogBaslat(npc.Diyalog, npc.Portre, npc.Isim);
     }
 
     public void SiradakiyeGec()
@@ -106,8 +107,7 @@ public class DayCycleManager : MonoBehaviour
     DialogueChoice secenek = new DialogueChoice();
     secenek.SecenekMetni = "Anladim";
     secenek.SonrakiNodeID = "";
-    secenek.EtkilenenStat = "";
-    secenek.StatDegisimi = 0;
+    secenek.StatEtkileri = new List<StatEtkisi>();
 
     DialogueNode node = new DialogueNode();
     node.NodeID = "baslangic";
@@ -122,6 +122,9 @@ public class DayCycleManager : MonoBehaviour
     public void UyuyaBas()
 {
     AsamaDegistir(GunAsamasi.Resolve);
+
+    GameManager.Instance.State.Gun++;
+    Debug.Log("Yeni gun: " + GameManager.Instance.State.Gun);
 
     sonGeceSonuclari = new List<string>();
 
