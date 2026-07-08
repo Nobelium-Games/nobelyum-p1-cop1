@@ -13,4 +13,44 @@ MonoBehaviour:
   m_Name: Test_General_Diyalog
   m_EditorClassIdentifier: Assembly-CSharp::DialogueData
   DialogueID: 
-  Nodler: []
+  Nodler:
+  - NodeID: 1
+    NPCSozu: "Bir g\xF6revim var"
+    Secenekler:
+    - SecenekMetni: "K\xF6y Ya\u011Fmala"
+      SonrakiNodeID: 2
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: 
+        EmirTuru: 
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 0
+        SonucSansaBagli: 0
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+  - NodeID: 2
+    NPCSozu: "Hangi K\xF6y\xFC?"
+    Secenekler:
+    - SecenekMetni: "Babanya K\xF6y\xFC"
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: Askerbasi
+        EmirTuru: Koy Yagmala
+        EtkilenenStat: Erzak
+        BasariliDegisim: 25
+        BasarisizDegisim: -10
+        BasariSansi: 0.5
+        ToplamSure: 2
+        SonucSansaBagli: 1
+        MaliyetStat: Manpower
+        MaliyetMiktar: 15
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0

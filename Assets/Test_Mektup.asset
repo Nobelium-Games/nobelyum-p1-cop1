@@ -13,4 +13,46 @@ MonoBehaviour:
   m_Name: Test_Mektup
   m_EditorClassIdentifier: Assembly-CSharp::DialogueData
   DialogueID: 
-  Nodler: []
+  Nodler:
+  - NodeID: 
+    NPCSozu: "Bir k\xF6yl\xFC grubu erzak istiyor. Yard\u0131m edersen 10 Erzak verip
+      5 Sadakat kazanaca\u011F\u0131z."
+    Secenekler:
+    - SecenekMetni: "M\xFCh\xFCrle"
+      SonrakiNodeID: 
+      StatEtkileri:
+      - StatAdi: Erzak
+        Miktar: -10
+      - StatAdi: Sadakat
+        Miktar: 5
+      VerilecekEmir:
+        DanismanTipi: 
+        EmirTuru: 
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 0
+        SonucSansaBagli: 0
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+    - SecenekMetni: "Y\u0131rt"
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: 
+        EmirTuru: 
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 0
+        SonucSansaBagli: 0
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0

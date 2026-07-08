@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: General_NPC
   m_EditorClassIdentifier: Assembly-CSharp::NPCData
   ID: 
-  Isim: 
-  Diyalog: {fileID: 0}
+  Isim: General
+  Diyalog: {fileID: 11400000, guid: 41fbb0ca389737d4d8673eda197f80cc, type: 2}
   Portre: {fileID: 0}
