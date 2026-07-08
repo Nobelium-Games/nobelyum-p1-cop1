@@ -15,3 +15,4 @@ MonoBehaviour:
   ID: koylu_01
   Isim: "K\xF6yl\xFC Ahmet"
   Diyalog: {fileID: 11400000, guid: 7b14c219fc4d69348940eabff435726f, type: 2}
+  Portre: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}

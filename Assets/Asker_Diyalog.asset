@@ -19,9 +19,9 @@ MonoBehaviour:
     Secenekler:
     - SecenekMetni: Senindir
       SonrakiNodeID: 
-      EtkilenenStat: OrduGucu
+      EtkilenenStat: Manpower
       StatDegisimi: 5
     - SecenekMetni: Yok bb
-      SonrakiNodeID: 
-      EtkilenenStat: OrduGucu
+      SonrakiNodeID:
+      EtkilenenStat: Manpower
       StatDegisimi: -8

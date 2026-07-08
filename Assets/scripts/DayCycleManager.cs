@@ -53,6 +53,8 @@ public class DayCycleManager : MonoBehaviour
 
     void YeniGuneBasla()
 {
+    GameManager.Instance.State.BaseGeliriUygula();
+
     gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc);
 
     if (sonGeceSonuclari.Count > 0)
@@ -80,7 +82,7 @@ public class DayCycleManager : MonoBehaviour
 
         NPCData npc = gunlukSira[suankiNpcIndex];
         Debug.Log("Sirada: " + npc.Isim);
-        Dialog.DiyalogBaslat(npc.Diyalog);
+        Dialog.DiyalogBaslat(npc.Diyalog, npc.Portre);
     }
 
     public void SiradakiyeGec()

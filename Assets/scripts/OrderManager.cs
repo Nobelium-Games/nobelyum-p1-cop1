@@ -19,6 +19,18 @@ public class OrderManager : MonoBehaviour
             return;
         }
 
+        if (!string.IsNullOrEmpty(emir.MaliyetStat))
+        {
+            int mevcutDeger = GameManager.Instance.State.StatDegerAl(emir.MaliyetStat);
+            if (mevcutDeger < emir.MaliyetMiktar)
+            {
+                Debug.Log("Yeterli " + emir.MaliyetStat + " yok! Gereken: " + emir.MaliyetMiktar + ", mevcut: " + mevcutDeger);
+                return;
+            }
+
+            GameManager.Instance.State.StatDegistir(emir.MaliyetStat, -emir.MaliyetMiktar);
+        }
+
         BekleyenEmirler.Add(emir);
         KullanilanDanismanlar.Add(emir.DanismanTipi);
 

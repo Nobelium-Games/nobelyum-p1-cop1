@@ -35,6 +35,12 @@ public class DayResolver
                 {
                     ZarAtVeUygula(state, devam.Emir, mesajListesi);
                 }
+                else if (devam.Emir.BaseGeliriEtkiler)
+                {
+                    state.BaseGeliriArtir(devam.Emir.BaseGeliriStat, devam.Emir.BaseGeliriMiktar);
+                    mesajListesi.Add(devam.Emir.EmirTuru + " tamamlandi! Artik her dongu +" +
+                        devam.Emir.BaseGeliriMiktar + " " + devam.Emir.BaseGeliriStat + " kazanacaksin.");
+                }
                 else
                 {
                     state.StatDegistir(devam.Emir.EtkilenenStat, devam.Emir.BasariliDegisim);

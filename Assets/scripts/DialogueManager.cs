@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class DialogueManager : MonoBehaviour
@@ -6,15 +7,17 @@ public class DialogueManager : MonoBehaviour
     public TMP_Text NpcSozuText;
     public TMP_Text SecenekButon1Text;
     public TMP_Text SecenekButon2Text;
+    public Image PortreImage;
 
     private DialogueData aktifDiyalog;
     private DialogueNode aktifNode;
     public GameObject SecenekButon2;
 
-    public void DiyalogBaslat(DialogueData diyalog)
+    public void DiyalogBaslat(DialogueData diyalog, Sprite portre)
     {
         aktifDiyalog = diyalog;
         aktifNode = aktifDiyalog.Nodler[0];
+        PortreImage.sprite = portre;
         NodeGoster();
     }
 

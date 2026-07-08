@@ -6,4 +6,5 @@ public class NPCData : ScriptableObject
     public string ID;
     public string Isim;
     public DialogueData Diyalog;
+    public Sprite Portre;
 }

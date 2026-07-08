@@ -15,3 +15,4 @@ MonoBehaviour:
   ID: 
   Isim: Asker Mehmet
   Diyalog: {fileID: 11400000, guid: 3c05f583cabfba649bd6533fd7d0036b, type: 2}
+  Portre: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
