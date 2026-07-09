@@ -11,4 +11,6 @@ public class KoyData
 
     public int MaxBinaSlotu = 3;
     public int DoluBinaSlotu = 0;
+
+    public bool IsyanHalinde = false;
 }

@@ -49,6 +49,10 @@ public class KoyYoneticisi : MonoBehaviour
     {
         foreach (KoyData koy in Koyler)
         {
+            if (koy.IsyanHalinde)
+            {
+                continue;
+            }
             koy.Erzak += koy.ErzakYield;
         }
     }
@@ -58,6 +62,10 @@ public class KoyYoneticisi : MonoBehaviour
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
+            if (koy.IsyanHalinde)
+            {
+                continue;
+            }
             toplam += koy.ErzakYield;
         }
         return toplam;
@@ -68,9 +76,31 @@ public class KoyYoneticisi : MonoBehaviour
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
+            if (koy.IsyanHalinde)
+            {
+                continue;
+            }
             toplam += koy.AltinYield;
         }
         return toplam;
+    }
+
+    public void IsyanKontrolEt(List<string> mesajListesi)
+    {
+        foreach (KoyData koy in Koyler)
+        {
+            if (koy.IsyanHalinde || koy.Sadakat >= 50)
+            {
+                continue;
+            }
+
+            int zar = Random.Range(1, 51);
+            if (zar > koy.Sadakat)
+            {
+                koy.IsyanHalinde = true;
+                mesajListesi.Add("<color=red>" + koy.Isim + " isyan etti!</color>");
+            }
+        }
     }
 
     public int OrtalamaSadakat()

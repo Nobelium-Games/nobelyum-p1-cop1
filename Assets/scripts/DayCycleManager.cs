@@ -136,6 +136,8 @@ public class DayCycleManager : MonoBehaviour
 
     sonGeceSonuclari = new List<string>();
 
+    KoyYoneticisi.Instance.IsyanKontrolEt(sonGeceSonuclari);
+
     devamEdenEmirler = resolver.SonucMesajlariniOlustur(
         GameManager.Instance.State,
         Orders.BekleyenEmirler,

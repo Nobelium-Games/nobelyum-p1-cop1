@@ -5,6 +5,7 @@ using TMPro;
 public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public Color HoverRengi = Color.yellow;
+    public Color IsyanRengi = Color.red;
 
     private TMP_Text metin;
     private Color normalRenk;
@@ -15,6 +16,32 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
         normalRenk = metin.color;
     }
 
+    void OnEnable()
+    {
+        GuncelleRenk();
+    }
+
+    void GuncelleRenk()
+    {
+        KoyData koy = BulKoy();
+        metin.color = (koy != null && koy.IsyanHalinde) ? IsyanRengi : normalRenk;
+    }
+
+    KoyData BulKoy()
+    {
+        string etiketIsmi = metin.text.Trim();
+
+        foreach (KoyData koy in KoyYoneticisi.Instance.Koyler)
+        {
+            if (!string.IsNullOrEmpty(koy.Isim) && string.Equals(koy.Isim.Trim(), etiketIsmi, System.StringComparison.OrdinalIgnoreCase))
+            {
+                return koy;
+            }
+        }
+
+        return null;
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         metin.color = HoverRengi;
@@ -22,22 +49,20 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        metin.color = normalRenk;
+        GuncelleRenk();
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        string etiketIsmi = GetComponent<TMP_Text>().text.Trim();
+        KoyData koy = BulKoy();
 
-        foreach (KoyData koy in KoyYoneticisi.Instance.Koyler)
+        if (koy != null)
         {
-            if (!string.IsNullOrEmpty(koy.Isim) && string.Equals(koy.Isim.Trim(), etiketIsmi, System.StringComparison.OrdinalIgnoreCase))
-            {
-                KoyBilgiPaneli.Instance.Goster(koy);
-                return;
-            }
+            KoyBilgiPaneli.Instance.Goster(koy);
         }
-
-        Debug.LogWarning("Eslesen koy bulunamadi: '" + etiketIsmi + "'");
+        else
+        {
+            Debug.LogWarning("Eslesen koy bulunamadi: '" + metin.text.Trim() + "'");
+        }
     }
 }

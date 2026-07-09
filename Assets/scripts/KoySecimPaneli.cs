@@ -37,13 +37,24 @@ public class KoySecimPaneli : MonoBehaviour
 
             bool slotDolu = emirSablonu != null && emirSablonu.BinaSlotuKullanir
                 && koy.DoluBinaSlotu >= koy.MaxBinaSlotu;
+            bool isyanEngeli = emirSablonu != null && emirSablonu.BinaSlotuKullanir
+                && koy.IsyanHalinde;
+            bool tiklanamaz = slotDolu || isyanEngeli;
 
-            yeniButon.GetComponentInChildren<TMP_Text>().text = slotDolu
-                ? koy.Isim + " (Dolu)"
-                : koy.Isim;
+            string etiket = koy.Isim;
+            if (isyanEngeli)
+            {
+                etiket += " (Isyan Halinde)";
+            }
+            else if (slotDolu)
+            {
+                etiket += " (Dolu)";
+            }
+
+            yeniButon.GetComponentInChildren<TMP_Text>().text = etiket;
 
             Button buton = yeniButon.GetComponent<Button>();
-            buton.interactable = !slotDolu;
+            buton.interactable = !tiklanamaz;
 
             KoyData secilenKoy = koy;
             buton.onClick.AddListener(() => KoySecildi(secilenKoy));
