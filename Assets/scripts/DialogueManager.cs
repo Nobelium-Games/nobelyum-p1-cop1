@@ -19,12 +19,14 @@ public class DialogueManager : MonoBehaviour
     public GameObject DiyalogKutusuKok;
 
     private bool aktifDanismanDiyalogu = false;
+    private KoyData aktifKoy;
 
-    public void DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim, bool danismanDiyalogu = false)
+    public void DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim, bool danismanDiyalogu = false, KoyData ilgiliKoy = null)
     {
         aktifDiyalog = diyalog;
         aktifNode = aktifDiyalog.Nodler[0];
         aktifDanismanDiyalogu = danismanDiyalogu;
+        aktifKoy = ilgiliKoy;
         PortreImage.sprite = portre;
         NpcIsimText.text = isim;
         DiyalogKutusuKok.SetActive(true);
@@ -33,8 +35,14 @@ public class DialogueManager : MonoBehaviour
 
     void NodeGoster()
 {
-    NpcSozuText.text = aktifNode.NPCSozu;
+    string soz = aktifNode.NPCSozu;
+    if (aktifKoy != null)
+    {
+        soz = soz.Replace("{KOY}", aktifKoy.Isim);
+    }
+    NpcSozuText.text = soz;
 
+    SecenekButon1Buton.gameObject.SetActive(true);
     SecenekButon1Text.text = aktifNode.Secenekler[0].SecenekMetni;
     SecenekButon1Buton.interactable = SecenekKarsilanabilirMi(aktifNode.Secenekler[0]);
 
@@ -60,15 +68,76 @@ public class DialogueManager : MonoBehaviour
         SecenekUygula(aktifNode.Secenekler[1]);
     }
 
+    public string MaliyetMetniAl(int secenekIndex)
+    {
+        if (secenekIndex >= aktifNode.Secenekler.Count)
+        {
+            return "";
+        }
+
+        OrderData emir = aktifNode.Secenekler[secenekIndex].VerilecekEmir;
+
+        if (emir == null || string.IsNullOrEmpty(emir.MaliyetStat) || emir.MaliyetMiktar == 0)
+        {
+            return "";
+        }
+
+        return "-" + emir.MaliyetMiktar + " " + emir.MaliyetStat;
+    }
+
+    int GuncelDeger(string statAdi)
+    {
+        if (aktifKoy != null && statAdi == "Erzak")
+        {
+            return aktifKoy.Erzak;
+        }
+        if (aktifKoy != null && statAdi == "Sadakat")
+        {
+            return aktifKoy.Sadakat;
+        }
+        return GameManager.Instance.State.StatDegerAl(statAdi);
+    }
+
+    void DegeriUygula(string statAdi, int miktar)
+    {
+        if (aktifKoy != null && statAdi == "Erzak")
+        {
+            aktifKoy.Erzak += miktar;
+        }
+        else if (aktifKoy != null && statAdi == "Sadakat")
+        {
+            aktifKoy.Sadakat = Mathf.Clamp(aktifKoy.Sadakat + miktar, 0, 100);
+        }
+        else
+        {
+            GameManager.Instance.State.StatDegistir(statAdi, miktar);
+        }
+    }
+
     bool SecenekKarsilanabilirMi(DialogueChoice secenek)
     {
         foreach (StatEtkisi etki in secenek.StatEtkileri)
         {
-            if (etki.Miktar < 0 && GameManager.Instance.State.StatDegerAl(etki.StatAdi) + etki.Miktar < 0)
+            if (etki.StatAdi == "Sadakat")
+            {
+                continue; // Sadakat harcanan bir kaynak degil, 0-100 arasinda kelepceleniyor, hicbir secenegi kilitlemez
+            }
+
+            if (etki.Miktar < 0 && GuncelDeger(etki.StatAdi) + etki.Miktar < 0)
             {
                 return false;
             }
         }
+
+        OrderData emir = secenek.VerilecekEmir;
+        if (emir != null && !string.IsNullOrEmpty(emir.MaliyetStat))
+        {
+            if (GameManager.Instance.State.StatDegerAl(emir.MaliyetStat) - emir.MaliyetMiktar < 0)
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -84,9 +153,30 @@ public class DialogueManager : MonoBehaviour
         {
             if (!string.IsNullOrEmpty(etki.StatAdi))
             {
-                GameManager.Instance.State.StatDegistir(etki.StatAdi, etki.Miktar);
-                BildirimYoneticisi.Instance.Bildirim(etki.StatAdi, etki.Miktar);
+                DegeriUygula(etki.StatAdi, etki.Miktar);
+
+                string bildirimAdi = aktifKoy != null && (etki.StatAdi == "Erzak" || etki.StatAdi == "Sadakat")
+                    ? etki.StatAdi + " (" + aktifKoy.Isim + ")"
+                    : etki.StatAdi;
+                BildirimYoneticisi.Instance.Bildirim(bildirimAdi, etki.Miktar);
             }
+        }
+
+        TooltipUI.Instance.Gizle();
+
+        if (secenek.VerilecekEmir != null && !string.IsNullOrEmpty(secenek.VerilecekEmir.DanismanTipi) && secenek.VerilecekEmir.KoySecimiGerekli)
+        {
+            // Koy secilene kadar diyalog kutusu acik kalir, secim yapilinca kapanir
+            SecenekButon1Buton.gameObject.SetActive(false);
+            SecenekButon2.SetActive(false);
+
+            OrderData sablon = secenek.VerilecekEmir;
+            KoySecimPaneli.Instance.KoySec((KoyData secilenKoy) =>
+            {
+                Orders.EmirEkle(sablon.KopyalaVeKoyAta(secilenKoy));
+                DiyalogBitir();
+            });
+            return;
         }
 
         if (secenek.VerilecekEmir != null && !string.IsNullOrEmpty(secenek.VerilecekEmir.DanismanTipi))
@@ -115,6 +205,8 @@ public class DialogueManager : MonoBehaviour
         SecenekButon1Text.text = "";
         SecenekButon2Text.text = "";
         DiyalogKutusuKok.SetActive(false);
+        TooltipUI.Instance.Gizle();
+        aktifKoy = null;
 
         if (aktifDanismanDiyalogu)
         {

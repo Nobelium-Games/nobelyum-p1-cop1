@@ -15,17 +15,61 @@ MonoBehaviour:
   DialogueID: Koylu
   Nodler:
   - NodeID: baslangic
-    NPCSozu: 'Kralim erzak yok '
+    NPCSozu: '{KOY}''nden  geldim, Kralim erzak yok '
     Secenekler:
     - SecenekMetni: 'Tamam al '
       SonrakiNodeID: 
       StatEtkileri:
-      - StatAdi: Erzak
+      - StatAdi: Altin
         Miktar: -20
+      - StatAdi: Erzak
+        Miktar: 20
       - StatAdi: Sadakat
         Miktar: 10
+      VerilecekEmir:
+        DanismanTipi: 
+        EmirTuru: 
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 0
+        SonucSansaBagli: 0
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 0
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          ErzakYield: 1
+          AltinYield: 0
     - SecenekMetni: Yok git
       SonrakiNodeID: 
       StatEtkileri:
       - StatAdi: Sadakat
         Miktar: -15
+      VerilecekEmir:
+        DanismanTipi: 
+        EmirTuru: 
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 0
+        SonucSansaBagli: 0
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 0
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          ErzakYield: 1
+          AltinYield: 0

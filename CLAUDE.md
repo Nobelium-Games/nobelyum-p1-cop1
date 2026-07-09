@@ -6,10 +6,10 @@
 >
 > **Yeni oturuma not:** Bu dosya bir yol haritasıdır, ama gerçek kod her zaman "zemin gerçeği"dir.
 > Özellikle "Şu Anki Durum" bölümündeki bazı Unity sahne bağlantıları (Inspector'da hangi objenin
-> hangi alana sürüklendiği) bu özeti hazırlarken doğrudan görülmedi, sadece ekran görüntülerinden
-> takip edildi — işe başlamadan önce ilgili script dosyalarını oku/incele ve Unity'de Hierarchy'yi
-> gözden geçir, bu özetle karşılaştır. **Özellikle "Sıradaki Adımlar" bölümündeki yarım kalan iş
-> (Mektuplar butonu bağlantısı) yeni oturumun ilk kontrol etmesi gereken şey.**
+> hangi alana sürüklendiği) bu özeti hazırlarken doğrudan görülmedi — işe başlamadan önce ilgili
+> script dosyalarını oku/incele ve Unity'de Hierarchy'yi gözden geçir, bu özetle karşılaştır.
+> **Mektuplar/görev sistemi tamamen silindi** (kullanıcı henüz nasıl bir tasarım istediğine karar
+> veremedi) — eğer sahnede hâlâ buna ait kalıntı obje görürsen bu beklenmedik bir şey, kullanıcıya sor.
 
 ---
 
@@ -19,28 +19,35 @@
 - Unity'ye genel hakimiyet var, ama **C# bilgisi gelişmiş değil.**
 - Açıklamalar HER ZAMAN basit, az teknik jargonlu, adım adım olmalı — sanki hiç bilmiyormuşuz gibi anlat.
 - Yeni bir C# kavramı ilk kez geçtiğinde (fonksiyon/parametre, switch, enum, constructor, HashSet,
-  foreach, ScriptableObject, Singleton, SetActive, CanvasGroup, lambda/`Action`, vs.) mutlaka kısa
-  (1-3 cümle), günlük hayattan bir benzetmeyle açıklanmalı. Örnek benzetmeler daha önce işe yaradı:
-  fonksiyon = matematikteki çok değişkenli fonksiyon f(x,y); GameManager.Instance.State.Erzak zinciri
-  = apartman → daire → çekmece; CanvasGroup = bir objenin görünürlüğünü tek sayıyla (0-1) ayarlayan
-  düğme; lambda (`() => ...`) = "şunu yap" diye isimsiz, paketlenmiş bir tarif, hemen değil doğru
-  zamanda çalıştırılsın diye başka bir fonksiyona gönderiliyor.
+  foreach, ScriptableObject, Singleton, SetActive, CanvasGroup, lambda/`Action`, `Mathf.Clamp`,
+  `RectTransformUtility` vs.) mutlaka kısa (1-3 cümle), günlük hayattan bir benzetmeyle açıklanmalı.
+  Örnek benzetmeler daha önce işe yaradı: fonksiyon = matematikteki çok değişkenli fonksiyon f(x,y);
+  GameManager.Instance.State.Erzak zinciri = apartman → daire → çekmece; CanvasGroup = bir objenin
+  görünürlüğünü tek sayıyla (0-1) ayarlayan düğme; lambda (`() => ...`) = "şunu yap" diye isimsiz,
+  paketlenmiş bir tarif, hemen değil doğru zamanda çalıştırılsın diye başka bir fonksiyona gönderiliyor;
+  `Mathf.Clamp` = bir değeri belirlediğin alt-üst sınırın dışına çıkmasın diye kelepçeleyen fonksiyon.
 - **Küçük adımlarla ilerle.** Her seferinde tek bir parça ver, kullanıcı deneyip "oldu" ya da hata
   paylaşana kadar bir sonrakine geçme. Büyük, çok-parçalı adımlar kullanıcıyı bunalttı ve bir kez
   (ekonomi sistemi eklerken) "korkup her şeyi geri almasına" yol açtı — bundan kaçın, mümkün olan
-  en küçük, test edilebilir parçalara böl. Büyük bir özellik isteği geldiğinde (örn. "Şahsi Oda'yı
-  Papers Please tarzı yapalım") önce özelliği alt parçalara böl, kullanıcıya sırayı sor/onaylat,
-  sonra tek tek uygula — bu yöntem "Şahsi Oda yeniden tasarımı" işinde iyi çalıştı.
+  en küçük, test edilebilir parçalara böl. Büyük bir özellik isteği geldiğinde (örn. "köyleri
+  bireysel yapalım") önce özelliği alt parçalara böl, kullanıcıya sırayı sor/onaylat, sonra tek tek
+  uygula — bu yöntem hem "Şahsi Oda yeniden tasarımı" hem "köy hedefleme" işlerinde iyi çalıştı.
+- Kullanıcı bazen bir özelliği kendi önerip sonra "zor olursa yapmayabiliriz, sadece fikir sundum"
+  diyor — bu durumda dürüst bir değerlendirme yap (gerçekten zor mu, yoksa zaten elimizdeki bir
+  teknikle mi çözülüyor), tercih ona kalsın.
 - Hata geldiğinde önce sakinleştir ("bu normal, panik yok"), sonra sırayla kontrol ettir: Console'daki
   EN ESKİ/İLK hata ne diyor, dosya kaydedilmiş mi (Ctrl+S), doğru obje/script Inspector'a sürüklenmiş mi,
   Button'ın `On Click()` listesinde **doğru obje + doğru fonksiyon** seçili mi (eski/placeholder bir
-  fonksiyon kalmış olabilir — bu tam olarak "Mektuplar butonu çalışmıyor" sorununun sebebiydi).
+  fonksiyon kalmış olabilir).
 - Kullanıcı "Create → C# Script" ile MonoBehaviour şablonu oluşturduğunda kafası karışabiliyor;
   hangi script'in MonoBehaviour (sahneye yapıştırılacak) hangisinin düz veri sınıfı (`: MonoBehaviour`
   YOK) olduğunu her seferinde net söyle.
 - Unity Editor ekran görüntülerinden Hierarchy/Inspector okuyup yönlendirmek çok işe yarıyor —
   kullanıcı ekran görüntüsü attığında oradaki obje isimlerini/alan değerlerini birebir okuyup
   ona göre spesifik adımlar ver (genel geçer talimat değil).
+- Sahne dosyası (`SampleScene.unity`) bir YAML metni — bir buton gerçekten doğru fonksiyona mı bağlı
+  diye kontrol etmek gerektiğinde, kullanıcıya sormadan önce dosyayı grep'leyip doğrulamak çok işe
+  yarıyor (bkz. Mektuplar butonu kontrolü örneği).
 
 ---
 
@@ -50,8 +57,13 @@ Diyalog ve karar temalı bir **"kral simülasyonu"** oyunu (Unity, C#, **2D**). 
 ülkeyi yönetiyor.
 
 ### Stat'lar
-Oyunda bir sürü "stat" (sayı) var: Erzak, Sadakat, Altın, Manpower gibi kaynaklar. Bunlar oyundaki
-olayları belirliyor, verilen kararlara göre değişiyor.
+- **Erzak**: Artık ayrı bir "genel/kingdom" deposu YOK. Tek gerçek kaynak, köylerin kendi Erzak
+  stoklarının toplamı (bkz. "Köyler" bölümü ve Mimari Kararları #7).
+- **Sadakat**: 0-100 arası, hem "genel" bir bileşeni var hem köylerin kendi Sadakat'ları — ekranda
+  gösterilen "Sadakat", genel + köylerin ortalaması. **Sadakat asla bir seçeneği kilitlemiyor**
+  (harcanan bir kaynak değil, sadece 0-100 arasına kelepçeleniyor).
+- **Altın, Manpower**: Hâlâ tamamen "genel/kingdom-wide" — köylere bölünmüyor, harcanabilir kaynaklar
+  (yetersizse ilgili seçenek/emir kilitleniyor).
 
 ### Döngü (Cycle) Sistemi
 Oyun "döngü" (cycle) sistemiyle ilerliyor. **Her döngü = 1 gün** (`GameState.Gun`, ekranın üstünde
@@ -59,279 +71,313 @@ Oyun "döngü" (cycle) sistemiyle ilerliyor. **Her döngü = 1 gün** (`GameStat
 
 **1. TAHT ODASI**
 Sıradaki NPC'ler tek tek gelip oyuncuyla diyalog kuruyor. Diyalog seçimleri stat değişikliklerine
-yol açabiliyor (bir seçenek artık **birden fazla stat'ı aynı anda** etkileyebiliyor, bkz. Script
-Envanteri → `DialogueData.cs`). Sıra bitince, kısa bir **siyah ekran geçişiyle** (bkz. `EkranGecisi.cs`)
-otomatik olarak 2. bölüme geçiliyor.
+yol açabiliyor (bir seçenek birden fazla stat'ı aynı anda etkileyebiliyor, bkz. `DialogueData.cs`).
+**Bazı NPC'ler belirli bir köyü temsil ediyor** (bkz. aşağıdaki "Köyler" bölümü) — bu durumda o
+NPC'nin Erzak/Sadakat etkileri kingdom-wide değil, doğrudan o köyün kendi verilerine işliyor. Sıra
+bitince, kısa bir **siyah ekran geçişiyle** (bkz. `EkranGecisi.cs`) otomatik olarak 2. bölüme geçiliyor.
 
 **2. ŞAHSİ ODA**
 Kralın (oyuncunun) gözünden, önünde bir masa olan bir oda (Papers Please tarzı POV). Masanın
-üzerinde/önünde 3 etkileşim objesi var: **Ansiklopedi** (kitap), **Harita** (ortada), **Mektuplar**.
-Arka planda bir **Kapı** var. Kapıya tıklayınca hangi danışmanları (General, Maliye Bakanı vb.)
-çağırabileceğini gösteren bir liste açılıyor; listeden birine tıklayınca o danışman "içeri girip"
-Warband tarzı dallanan bir diyalog başlatıyor (bkz. aşağıdaki "Danışman diyalog akışı"). Mektuplar
-objesine tıklayınca da benzer şekilde bir liste açılıp, seçilen mektubun "kabul et / reddet" diyaloğu
-başlıyor. **Eski "4 sabit danışman butonu" sistemi (`DanismanPaneli.cs`) bu kapı+diyalog sistemiyle
-değiştiriliyor** (henüz `DanismanPaneli.cs` silinmedi, ikisi şu an sahnede aynı anda duruyor — bkz.
-Sıradaki Adımlar). Her danışman **döngü başına sadece 1 kez** kullanılabiliyor (kullanılınca o döngü
-için kilitleniyor, bu kısıtlama `OrderManager` seviyesinde uygulanıyor). Emir verildiğinde **hiçbir
+üzerinde/önünde 2 etkileşim objesi var: **Ansiklopedi** (kitap, hâlâ boş placeholder) ve **Harita**
+(bkz. aşağıdaki "Harita" bölümü). **Mektuplar objesi ve tüm ilgili sistem tamamen kaldırıldı.**
+Arka planda bir **Kapı** var. Kapıya tıklayınca danışman listesi açılıyor (şu an **General** ve
+**İnşaatçı**), listeden birine tıklayınca o danışman "içeri girip" Warband tarzı dallanan bir
+diyalog başlatıyor. Her danışman **döngü başına sadece 1 kez** kullanılabiliyor (`DanismanButon.cs`
+ile görsel kilitleniyor, gerçek kısıtlama `OrderManager` seviyesinde). Emir verildiğinde **hiçbir
 stat anında değişmiyor**, emir sadece "bekleyen emirler" listesine kaydediliyor.
 
 #### Danışman diyalog akışı (Warband tarzı, kapı sistemi)
-Mevcut `DialogueData`/`DialogueNode`/`DialogueChoice` sistemi (NPC diyaloglarında kullanılan aynı
-yapı) genişletildi: bir `DialogueChoice`, artık isteğe bağlı olarak bir **`VerilecekEmir`**
-(`OrderData`) taşıyabiliyor. Oyuncu o seçeneği seçtiğinde, dolu bir `VerilecekEmir` varsa otomatik
-olarak `OrderManager.EmirEkle()`'ye gönderiliyor — yani maliyet kontrolü, danışman kilidi gibi her
-şey zaten var olan sistemle otomatik işliyor. Bu sayede "General → Bir görevim var → Köy Yağmala →
-Hangi köy? → X Köyü" gibi çok adımlı bir dallanma, aynı NPC diyalog node/choice yapısıyla kurulabiliyor,
-sadece son seçeneğin `VerilecekEmir`'i doldurulmuş oluyor. **Mektuplar da aynı mekanizmayı kullanıyor**
-(kabul/red seçenekleri stat etkisi ve/veya emir taşıyabiliyor) — mektup için ayrı bir veri tipi
-icat edilmedi, bilinçli bir tercih. **Danışmanlar da ayrı bir veri tipi değil, doğrudan `NPCData`**
-(İsim, Diyalog, Portre) olarak tutuluyor.
+`DialogueData`/`DialogueNode`/`DialogueChoice` sistemi genişletildi: bir `DialogueChoice`, isteğe
+bağlı bir **`VerilecekEmir`** (`OrderData`) taşıyabiliyor. Seçildiğinde otomatik `OrderManager.EmirEkle()`'ye
+gönderiliyor. **General**: "Bir görevim var" → "Köy Yağmala" (hangi köy? diye sorup devam eden bir
+node) VEYA "Asker Topla" (direkt emir). **İnşaatçı**: "Değirmen İnşa Et" seçilince artık **hangi
+köyde yapılacağı, diyalog kutusunun İÇİNDE, kaydırılabilir bir köy listesiyle** soruluyor (bkz.
+Mimari Kararları #9, `KoySecimPaneli.cs`) — köy seçilene kadar diyalog kutusu kapanmıyor.
+
+### Köyler
+Oyuncu ülkeyi tek bir "kingdom" olarak görse de, arka planda bunun kaynağı **köyler** (`KoyData`,
+bkz. Script Envanteri). Her köyün kendi `Sadakat`, `Erzak`, `ErzakYield` (günlük Erzak artışı),
+`AltinYield`'i var. **Kingdom Erzak'ı = tüm köylerin Erzak'ının toplamı, tam olarak** (ayrı bir
+genel depo yok, matematiksel sapma imkansız). Kingdom Sadakat'ı = genel + köylerin ortalaması.
+
+- **Köylü NPC'si artık gerçek bir köyü temsil ediyor.** Her gün, Erzak'ı 50'nin altında olan **her
+  köy** kendi 0-50 arası zarını atıyor; zar köyün Erzak'ından yüksek çıkarsa o köy kendi Köylü'sünü
+  taht odasına gönderiyor (aynı gün birden fazla köy tetiklenebilir, bkz. `DaySequencer.cs`).
+  Diyalog metninde `{KOY}` yazan yer, o köyün adıyla değiştiriliyor. "Tamam al" (erzak ver) seçeneği:
+  **Altın -20** (kingdom-wide, merkezi kaynaktan gidiyor) + **Erzak +20** (o köye gidiyor, köy hedefli)
+  + **Sadakat +10** (o köyün kendi Sadakat'ı artıyor). "Yok git": **Sadakat -15** (o köyün Sadakat'ı,
+  0'ın altına düşmüyor, seçenek asla kilitlenmiyor).
+- **İnşaatçı/Değirmen artık belirli bir köyü hedefliyor.** Değirmen tamamlanınca genel `ErzakBaseGelir`
+  yerine, oyuncunun seçtiği **o köyün** `ErzakYield`'i +1 artıyor.
+- **Building slot/sınırı sistemi bilinçli olarak ERTELENDİ** (kullanıcı kararı) — henüz başlanmadı.
+
+### Harita
+Şahsi Oda'daki Harita objesine tıklayınca, ekranı kaplayan bir harita sekmesi açılıyor (sol üstteki
+X'e basana kadar kapanmıyor). Fare tekerleğiyle zoom, sol tıkla sürükleyerek pan yapılabiliyor
+(bkz. `HaritaKontrol.cs`). Zoom'un minimum seviyesi haritanın tam ekranı kapladığı nokta (daha fazla
+uzaklaşılamıyor), sürükleme haritanın kenarları ekran dışına çıkmayacak şekilde sınırlı. Köylerin
+isimleri şu an **elle/statik olarak** haritanın üzerine TextMeshPro etiketleriyle yerleştirildi —
+gerçek `KoyData`'ya veri olarak BAĞLI DEĞİL (köy sayısı değişirse elle yeni etiket eklenmesi gerekir).
 
 ### Uyu Tuşu (Gece / Resolve)
 Oyuncu "Uyu" tuşuna basınca döngü sona eriyor ve şunlar oluyor:
 - `GameState.Gun` +1 artıyor.
+- Her köyün Erzak'ı kendi `ErzakYield`'i kadar artıyor (`KoyYoneticisi.ErzagiGunlukArtir()`), genel
+  `ErzakBaseGelir` de (varsa) köylere dağıtılarak uygulanıyor (bkz. Mimari Kararları #7).
 - Bekleyen emirlerin her biri için zar atılıyor (rastgele + ilgili stat'a bağlı başarı ihtimali).
 - Başarı/başarısızlık belirleniyor, stat'lar buna göre güncelleniyor (sonuç mesajları renkli:
-  başarı yeşil, başarısızlık kırmızı, garanti tamamlanma sarı — bkz. `DayResolver.cs`).
-- Bazı olaylar oyuncu kararından bağımsız, tamamen rastgele de tetiklenebiliyor.
-- Bir sonraki günün taht odası sırası (hangi NPC'lerin geleceği) o anki stat'lara göre (örn. düşük
-  erzak → kızgın köylü ihtimali artar) VE sabit hikaye olaylarına göre (örn. 10. gün gelen Ayyaş Adam)
-  belirlenip bir liste halinde saklanıyor.
-- Sonuçlar (inşaat tamamlandı, akın başarılı oldu vb.) bir sonraki sabah taht odasında bir
-  elçi/ulak karakteri üzerinden oyuncuya aktarılıyor.
+  başarı yeşil, başarısızlık kırmızı, garanti tamamlanma sarı — bkz. `DayResolver.cs`). Emrin
+  "başladı" haberi artık verilmiyor (gereksizdi), sadece "devam ediyor, X gün kaldı" (renksiz) ve
+  tamamlanma mesajı gösteriliyor.
+- Her stat/köy değişiminde ekranın sağ altında anlık bir bildirim (+yeşil/-kırmızı, fade in/out)
+  beliriyor (`BildirimYoneticisi.cs`) — köy hedefli bir değişimse bildirimde köyün adı da geçiyor.
+- Bir sonraki günün taht odası sırası (hangi NPC'lerin geleceği) hem köy bazlı Köylü zarına hem
+  sabit hikaye olaylarına göre (örn. 10. gün gelen Ayyaş Adam) belirlenip bir liste halinde saklanıyor.
+- Sonuçlar bir sonraki sabah taht odasında bir elçi/ulak karakteri üzerinden oyuncuya aktarılıyor.
 
 ### Çok Günlü Emirler
-İnşaat gibi bazı emirlerin sonucu birden fazla döngü sürebiliyor (örn. değirmen birkaç döngü
-sonra tamamlanıyor). Bunun içinde de bir ayrım var:
+İnşaat gibi bazı emirlerin sonucu birden fazla döngü sürebiliyor. Bunun içinde bir ayrım var:
 - **Garanti sonuç** (örn. Değirmen İnşası): süre dolunca kesin tamamlanır, zar atılmaz.
 - **Şansa bağlı sonuç** (örn. Köy Yağmalama): süre dolunca zar atılır, başarısız da olabilir.
 
-### Ekonomi
-**Altın** ve **Manpower** stat'ları var. Değirmen inşası Altın harcıyor; Asker Topla da Altın
-harcıyor; Köy Yağmala Manpower harcıyor (emir verilirken maliyet anında düşülüyor). Erzak ve
-Altın'ın bir **"base değeri"** (pasif, otomatik döngü başı geliri) var. Değirmen inşası tamamlanınca
-doğrudan Erzak'a eklemek yerine, Erzak'ın base değerini kalıcı olarak artırıyor.
-
 ### UI/Görsel Cila
-- Stat değişikliklerini gösteren geçici bildirim kutusu **fade in / fade out** ile açılıp kapanıyor
-  (aniden belirip kaybolmuyor).
-- Taht Odası'ndan Şahsi Oda'ya geçişte kısa bir **siyah ekran (fade to black)** geçiş efekti var.
-- Diyalog kutusu "Good Pizza Great Pizza" tarzı: konuşma metni kutunun **içinde**, seçenekler
-  kutunun **altında** (dışında), konuşan karakterin portresi kutunun **yanında**.
+- Stat değişikliklerini gösteren geçici bildirim kutusu fade in/out ile açılıp kapanıyor.
+- Taht Odası'ndan Şahsi Oda'ya geçişte kısa bir siyah ekran (fade to black) geçiş efekti var.
+- Diyalog kutusu "Good Pizza Great Pizza" tarzı: konuşma metni kutunun içinde, seçenekler kutunun
+  altında, portre yanında. Seçenek butonlarının üzerine gelince maliyet bilgisi hover tooltip'te
+  gösteriliyor (`SecenekTooltip.cs`, dinamik — diyaloğa göre değişiyor).
 
 ---
 
 ## 3) MİMARİ KARARLARI
 
 **1. Stat'lar nerede tutuluyor?**
-Merkezi bir **`GameState`** sınıfı (düz C# class, `[Serializable]`, **ScriptableObject DEĞİL** —
-çünkü ScriptableObject Editor'da eski değerleri hatırlayabiliyor, save/load kontrolü zorlaşıyor).
+Merkezi bir **`GameState`** sınıfı (düz C# class, `[Serializable]`, ScriptableObject DEĞİL).
 `GameState`, **`GameManager`** (MonoBehaviour, Singleton) içinde `public GameState State` olarak
-tutuluyor. Her yerden `GameManager.Instance.State.Erzak` gibi erişiliyor.
+tutuluyor.
 
 **2. NPC'ler (ve danışmanlar) GameObject mi, veri mi?**
-**Veri olarak** tutuluyor: `NPCData` bir ScriptableObject (ID, Isim, Diyalog referansı, Portre).
-Sahnede NPC/danışman başına ayrı GameObject YOK — tek bir görsel "sahne" (diyalog kutusu) var,
-hangi NPC'nin/danışmanın sırası gelirse o kişinin verisiyle dolduruluyor. **Danışmanlar (General,
-Maliye Bakanı vb.) için ayrı bir veri tipi açılmadı — `NPCData` doğrudan yeniden kullanıldı**, çünkü
-ihtiyaç duyulan alanlar (İsim, Diyalog, Portre) zaten birebir aynıydı.
+Veri olarak tutuluyor: `NPCData` bir ScriptableObject (ID, Isim, Diyalog referansı, Portre).
+Danışmanlar için ayrı bir veri tipi açılmadı, `NPCData` yeniden kullanıldı.
 
 **3. Taht odası sırası nerede oluşturuluyor?**
-**`DaySequencer`** (düz C# class, MonoBehaviour değil). `SiradakiListeyiOlustur(state, koyluNpc,
-askerNpc, ayyasNpc)` fonksiyonu, stat'lara bakıp (düşük Erzak → köylü ihtimali artar) VE `Gun == 10`
-gibi sabit kurallara göre (Ayyaş Adam gibi hikaye NPC'leri) bir sıra üretip `List<NPCData>` olarak
-döndürüyor. Yeni sabit-günlü bir NPC eklenecekse bu fonksiyona benzer şekilde yeni parametre +
-`Gun == X` kuralı eklenmeli.
+**`DaySequencer`** (düz C# class). `SiradakiListeyiOlustur(state, koyluNpc, askerNpc, ayyasNpc)`
+artık `List<SiraGirisi>` döndürüyor (bkz. #10). `Gun == 10` gibi sabit kurallara göre hikaye NPC'leri
+ekleniyor.
 
 **4. Bekleyen emirler ve zar atma nerede?**
 - **`OrderManager`** (MonoBehaviour): `List<OrderData> BekleyenEmirler` + `HashSet<string>
-  KullanilanDanismanlar` (danışman başına döngüde 1 kullanım kısıtlaması burada uygulanıyor).
+  KullanilanDanismanlar`.
 - **`DayResolver`** (düz C# class): zar atma + sonuç hesaplama mantığının tamamı burada.
 
 **5. Döngü akışı nasıl kuruldu?**
-Basit bir **state machine**, `enum GunAsamasi { TahtOdasi, SahsiOda, Resolve }` ile.
-**`DayCycleManager`** (MonoBehaviour, Singleton) bu enum'u tutuyor, `AsamaDegistir()` fonksiyonu
-ilgili UI panelini `SetActive(true/false)` ile açıp kapatıyor. Akış: TahtOdasi (sıra biter, artık
-`EkranGecisi` ile siyah ekran geçişi yaşanıyor) → SahsiOda (Uyu'ya basılır) → Resolve (zar atılır,
-yeni gün hazırlanır) → tekrar TahtOdasi.
+`enum GunAsamasi { TahtOdasi, SahsiOda, Resolve }`, **`DayCycleManager`** (Singleton) bu enum'u
+tutuyor, `AsamaDegistir()` ilgili paneli açıp kapatıyor.
 
 **6. Diyalog kutusu Taht Odası ile Şahsi Oda arasında nasıl paylaşılıyor?**
-Diyalog kutusuyla ilgili **her şeyi** (konuşma metni, portre, isim, seçenek butonları) barındıran
-`DiyalogAlani` objesi, artık `TahtOdasiPanel`'in **içinde değil**, doğrudan `Canvas`'ın altında,
-`TahtOdasiPanel` ve `SahsiOdaPanel` ile **kardeş** seviyede duruyor. Görünürlüğü artık panel
-`SetActive`'ine bağlı değil, `DialogueManager.DiyalogKutusuKok` üzerinden **elle** açılıp kapanıyor
-(`DiyalogBaslat` içinde açılıyor, `DiyalogBitir` içinde kapanıyor). Bu sayede aynı diyalog kutusu hem
-Taht Odası'ndaki NPC'ler için hem Şahsi Oda'daki danışman/mektup diyalogları için kullanılabiliyor.
-Diyaloğun **nereden geldiğine göre farklı davranması** gerekiyor (NPC bitince sıradaki NPC'ye geç,
-danışman/mektup bitince sadece kutuyu kapat) — bu ayrım `DiyalogBaslat`'ın son parametresi
-`danismanDiyalogu` (bool, varsayılan `false`) ile yapılıyor, bkz. Script Envanteri → `DialogueManager.cs`.
+`DiyalogAlani` objesi, `Canvas`'ın altında, panellerle kardeş seviyede duruyor. Görünürlüğü
+`DialogueManager.DiyalogKutusuKok` üzerinden elle açılıp kapanıyor. Diyaloğun NPC'den mi
+danışmandan mı geldiği `DiyalogBaslat`'ın `danismanDiyalogu` (bool) parametresiyle ayrılıyor.
+
+**7. Erzak nerede tutuluyor? (bu oturumda köklü değişiklik)**
+Artık ayrı bir "genel Erzak" alanı **yok** — `GameState.Erzak` alanı tamamen kaldırıldı. Tek kaynak
+`KoyYoneticisi.Instance.Koyler`'daki her köyün kendi `Erzak`'ı. `GameState.StatDegerAl("Erzak")`
+→ `KoyYoneticisi.ToplamErzak()` (tüm köylerin toplamı). `GameState.StatDegistir("Erzak", miktar)`
+→ `KoyYoneticisi.ErzakDegistir(miktar)` (hem artış hem azalış köy sayısına bölünüp her köye
+dağıtılıyor — kalan varsa ilk köylere 1 fazla düşüyor/ekleniyor ki toplam tam tutsun). Bu, "hangi
+köyden geldiğini bilmediğimiz" kazanç/kayıplar için geçerli (örn. genel `ErzakBaseGelir`). **Sadakat
+için farklı bir karar alındı** — genel + köy ortalaması toplanarak gösteriliyor/kontrol ediliyor
+(genel `Sadakat` alanı hâlâ var, `StatDegistir`/`StatDegerAl` içinde köy ortalamasıyla toplanıyor).
+
+**8. Bir diyalog/NPC belirli bir köyü nasıl "temsil ediyor"?**
+`DialogueManager`'da `aktifKoy` (nullable `KoyData`) alanı var, `DiyalogBaslat`'ın son parametresiyle
+set ediliyor (`DayCycleManager`, `SiraGirisi.IlgiliKoy`'u buraya geçiriyor). `aktifKoy` doluyken
+Erzak/Sadakat etkileri (`GuncelDeger`/`DegeriUygula` yardımcı fonksiyonları üzerinden) doğrudan o
+köyün kendi alanlarına okunuyor/yazılıyor; Altın/Manpower her zaman kingdom-wide
+(`GameManager.State`) üzerinden işliyor. Diyalog metnindeki `{KOY}` yer tutucusu `aktifKoy.Isim`
+ile değiştiriliyor (`NodeGoster`). Diyalog bitince `aktifKoy` sıfırlanıyor (bir sonrakine sızmasın diye).
+
+**9. Çok günlü bir emrin (örn. Değirmen) hangi köyü hedeflediği nasıl hatırlanıyor?**
+`OrderData`'ya `HedefKoy` (nullable `KoyData`) + `KoySecimiGerekli` (bool) eklendi. Bir
+`DialogueChoice`'un `VerilecekEmir`'inde `KoySecimiGerekli` işaretliyse, seçilince **otomatik
+`OrderManager.EmirEkle()` çağrılmıyor** — bunun yerine diyalog kutusu açık kalıp normal seçenek
+butonları gizleniyor, `KoySecimPaneli` (diyalog kutusunun içine yerleştirilmiş, `Scroll Rect` ile
+kaydırılabilir, köy sayısınca dinamik buton oluşturan bir panel) açılıyor. Oyuncu bir köy seçince
+`OrderData.KopyalaVeKoyAta(koy)` ile emrin bir **KOPYASI** (şablonun kendisi değil — ScriptableObject
+asset'i Play modunda kalıcı bozulmasın diye) `HedefKoy` dolu şekilde oluşturulup `OrderManager`'a
+ekleniyor, ardından diyalog kapanıyor. `DayResolver`, `BaseGeliriEtkiler` dalında `HedefKoy` doluysa
+(ve `Isim`'i boş değilse — bkz. Bilinen Tuzaklar, Unity boş bir `KoyData` otomatik oluşturabiliyor)
+genel `ErzakBaseGelir` yerine doğrudan o köyün `ErzakYield`'ini artırıyor.
+
+**10. Köylü NPC'si hangi köyden geliyor, ne zaman geliyor?**
+Artık "en düşük köyü seç" mantığı değil (bu ilk denemeydi, sonra değiştirildi): `DaySequencer` her
+gün **her köy için ayrı ayrı** zar atıyor (köyün Erzak'ı 50'den düşükse, 0-50 arası zar; zar köyün
+Erzak'ından yüksek çıkarsa o köy kendi Köylü ziyaretini gönderiyor — aynı gün birden fazla köy
+tetiklenebilir). Bu bilgi `SiraGirisi` (`Npc` + `IlgiliKoy`, sadece 2 alanlı basit bir "zarf"
+sınıfı) ile `DayCycleManager`'a taşınıyor; `DaySequencer.SiradakiListeyiOlustur` artık
+`List<NPCData>` değil `List<SiraGirisi>` döndürüyor.
+
+**11. Köy verisi neden ScriptableObject değil?**
+`KoyData` düz bir `[Serializable]` C# class (`GameState` ile aynı gerekçe — runtime'da sürekli
+değişen veri, ScriptableObject Editor'da eski değerleri hatırlayabiliyor). `KoyYoneticisi`
+(MonoBehaviour, Singleton) bunları `List<KoyData> Koyler` olarak tutuyor, Inspector'dan elle
+girilip yönetiliyor (asset değil, sahne verisi).
 
 ---
 
 ## 4) SCRIPT ENVANTERİ
 
 ### Veri sınıfları (düz C#, MonoBehaviour DEĞİL)
-- **`GameState.cs`** — `Erzak`, `Sadakat`, `Altin`, `Manpower`, `Gun` (int, 1'den başlıyor),
-  `ErzakBaseGelir`, `AltinBaseGelir` (int, her yeni günde otomatik kazanılan miktar). Fonksiyonlar:
-  `StatDegistir(statAdi, miktar)`, `StatDegerAl(statAdi)`, `BaseGeliriUygula()` (her yeni günde
-  Erzak/Altın'a base geliri ekler), `BaseGeliriArtir(statAdi, miktar)` (bir stat'ın base gelirini
-  kalıcı artırır). *(Eskiden `OrduGucu` diye ayrı bir stat vardı, birleştirildi, artık sadece
-  `Manpower` var.)*
-- **`OrderData.cs`** — Bir emrin tarifi. Ana constructor: `DanismanTipi, EmirTuru, EtkilenenStat,
-  BasariliDegisim, BasarisizDegisim, BasariSansi, ToplamSure, SonucSansaBagli` (zorunlu) +
-  `MaliyetStat="", MaliyetMiktar=0` (opsiyonel, emir verilirken anında düşülüyor) +
-  `BaseGeliriEtkiler=false, BaseGeliriStat="", BaseGeliriMiktar=0` (opsiyonel, garanti tamamlanan emir
-  normal stat artışı yerine ilgili stat'ın base gelirini kalıcı artırabiliyor). **Ayrıca parametresiz
-  (boş) bir constructor eklendi** — sırf Unity Inspector'ın bu tipi bir `DialogueChoice`'un içinde
-  elle doldurulabilir şekilde göstermesi için gerekliydi.
-- **`DevamEdenEmir.cs`** — `OrderData Emir` + `int KalanGun`. Çok günlü, hâlâ devam eden emirlerin
-  "şu an ne durumda" bilgisini taşıyor.
-- **`DaySequencer.cs`** — bkz. Mimari Kararları #3.
-- **`DayResolver.cs`** — `SonucMesajlariniOlustur(GameState, List<OrderData> emirler,
-  List<DevamEdenEmir> devamEdenler, List<string> mesajListesi)`: tek günlük emirleri anında zar atıp
-  sonuçlandırıyor; çok günlü emirleri `devamEdenler`'e ekleyip her çağrıda 1 gün ilerletiyor; süresi
-  dolanları garanti tamamlıyor ya da (`SonucSansaBagli` true ise) zar atıp sonuçlandırıyor. Sonuç
-  mesajları renkli: şansa bağlı başarı `<color=green>`, başarısızlık `<color=red>`, garanti tamamlanma
-  `<color=yellow>`, "devam ediyor, X gün kaldı" mesajı renksiz.
-- **`NPCData.cs`** — ScriptableObject. `ID`, `Isim`, `DialogueData Diyalog`, `Sprite Portre`. Doğrulandı,
-  sorun yok. **Artık NPC'ler dışında danışmanlar için de kullanılıyor** (örn. `General_NPC.asset`).
-- **`DialogueData.cs`** — ScriptableObject. `DialogueID`, `List<DialogueNode> Nodler`. `DialogueNode`:
-  NodeID, NPCSozu, `List<DialogueChoice> Secenekler`. `DialogueChoice`: SecenekMetni, SonrakiNodeID,
-  `List<StatEtkisi> StatEtkileri` (her biri `StatAdi`+`Miktar` — bir seçenek birden fazla stat'ı aynı
-  anda etkileyebiliyor), **ve `OrderData VerilecekEmir`** (opsiyonel — `DanismanTipi` boş değilse, bu
-  seçenek seçildiğinde otomatik `OrderManager.EmirEkle()` çağrılıyor).
+- **`GameState.cs`** — `Gun`, `Sadakat`, `Altin`, `Manpower`, `ErzakBaseGelir`, `AltinBaseGelir`.
+  **`Erzak` alanı KALDIRILDI** (bkz. Mimari Kararları #7). `StatDegerAl`/`StatDegistir`, Erzak için
+  `KoyYoneticisi`'ye yönlendiriyor, Sadakat için genel+köy ortalamasını topluyor ve `Mathf.Clamp`
+  ile 0-100 arasına sıkıştırıyor. `BaseGeliriUygula()`: her yeni günde `KoyYoneticisi.ErzakDegistir(ErzakBaseGelir)`
+  + `Altin += AltinBaseGelir`.
+- **`KoyData.cs`** *(yeni)* — Bir köyün "kimlik kartı": `Isim`, `Sadakat` (varsayılan 50), `Erzak`
+  (varsayılan 20), `ErzakYield` (varsayılan 1), `AltinYield` (varsayılan 0). ScriptableObject DEĞİL.
+- **`OrderData.cs`** — Ana constructor aynı (`DanismanTipi, EmirTuru, EtkilenenStat, ...`). **Yeni
+  alanlar:** `KoySecimiGerekli` (bool), `HedefKoy` (nullable `KoyData`). **Yeni fonksiyon:**
+  `KopyalaVeKoyAta(KoyData koy)` — tüm alanları kopyalayıp `HedefKoy`'u dolduran bir kopya döndürür
+  (şablonu bozmamak için).
+- **`SiraGirisi.cs`** *(yeni)* — `NPCData Npc` + `KoyData IlgiliKoy` (nullable). `DaySequencer`'ın
+  ürettiği sıradaki bir "ziyaretin" hangi NPC ve (varsa) hangi köyle ilgili olduğunu taşıyan basit
+  bir zarf sınıfı.
+- **`DevamEdenEmir.cs`** — `OrderData Emir` + `int KalanGun`. Değişmedi.
+- **`DaySequencer.cs`** — `SiradakiListeyiOlustur(state, koyluNpc, askerNpc, ayyasNpc)` artık
+  `List<SiraGirisi>` döndürüyor. Köylü artık "her köy kendi zarını atar" mantığıyla ekleniyor
+  (bkz. Mimari Kararları #10). `Gun == 10` kuralı (Ayyaş Adam) değişmedi.
+- **`DayResolver.cs`** — Aynı genel yapı (tek günlük emirler anında, çok günlüler `devamEdenler`'e).
+  **Değişen:** çok günlü emrin "başladı" mesajı kaldırıldı; `BaseGeliriEtkiler` dalı artık
+  `HedefKoy` doluysa (ve `Isim`'i boşsa saymıyor) o köyün `ErzakYield`'ini artırıyor, değilse eskisi
+  gibi genel `ErzakBaseGelir`'i artırıyor. Her stat değişiminde `BildirimYoneticisi.Bildirim(...)`
+  çağrılıyor. Sonuç mesajları renkli: şansa bağlı başarı yeşil, başarısızlık kırmızı, garanti
+  tamamlanma sarı.
+- **`NPCData.cs`** — ScriptableObject. `ID`, `Isim`, `DialogueData Diyalog`, `Sprite Portre`.
+  Danışmanlar için de kullanılıyor (`General_NPC.asset`, `Insaatci_NPC.asset`).
+- **`DialogueData.cs`** — ScriptableObject. `DialogueChoice`: `SecenekMetni`, `SonrakiNodeID`,
+  `List<StatEtkisi> StatEtkileri` (her biri `StatAdi`+`Miktar`), `OrderData VerilecekEmir`.
 
 ### MonoBehaviour'lar (sahnede bir GameObject'e eklenmiş script'ler)
 - **`GameManager.cs`** — Singleton, `public GameState State`. Sadece veri kutusu tutucu.
-- **`OrderManager.cs`** — bkz. Mimari Kararları #4. `EmirEkle`, `DanismanKullanildiMi`, `YeniDongueBasla`.
-- **`DialogueManager.cs`** — Aktif diyaloğu ekrana basıyor: `NpcIsimText`, `NpcSozuText`,
-  `SecenekButon1Text`, `SecenekButon2Text`, `PortreImage`, `SecenekButon2` (GameObject — tek seçenekli
-  diyaloglarda gizleniyor), `SecenekButon1Buton`/`SecenekButon2Buton` (`SecenekKarsilanabilirMi`
-  kontrolüne göre `interactable` ayarlanıyor — bir stat'ı eksiye düşürecek seçenek kilitleniyor).
-  **Yeni alanlar (bu oturumda eklendi):** `OrderManager Orders` (seçenekteki `VerilecekEmir`'i iletmek
-  için), `GameObject DiyalogKutusuKok` (tüm diyalog kutusu grubunu — `DiyalogAlani`'yı — açıp kapatmak
-  için, bkz. Mimari Kararları #6). `DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim,
-  bool danismanDiyalogu = false)`: `danismanDiyalogu` true verilirse, diyalog bitince (`DiyalogBitir`)
-  `DayCycleManager.SiradakiyeGec()` **çağrılmıyor**, sadece kutu kapanıp mevcut sahnede (Şahsi Oda'da)
-  kalınıyor — Taht Odası NPC akışı için hâlâ `false` (varsayılan) kullanılıyor. `SecenekUygula()`: her
-  `StatEtkisi` için hem `StatDegistir` hem `BildirimYoneticisi.Bildirim` çağırıyor, `VerilecekEmir`
-  doluysa `Orders.EmirEkle()` çağırıyor, sonra sıradaki node'a geçiyor ya da `DiyalogBitir()`'i çağırıyor.
-- **`GunUI.cs`** — Ekranın üstünde `GameManager.Instance.State.Gun`'ı "Gun X" olarak gösteriyor.
-- **`BildirimYoneticisi.cs`** — Singleton. `Bildirim(statAdi, miktar)`: bir bildirim şablonunu
-  (`BildirimSablonu`) `Instantiate` ile çoğaltıp (+yeşil/-kırmızı renkli) gösteriyor. **Bu oturumda
-  güncellendi:** artık `CanvasGroup` ile fade in (`FadeSuresi`, varsayılan 0.4s) → `GosterimSuresi`
-  bekle → fade out → `Destroy` akışı var (eskiden anında `SetActive`/`Destroy` yapıyordu). Test edildi.
-- **`DayCycleManager.cs`** — Singleton, state machine'in kalbi. `GunlukSira` + `suankiNpcIndex` ile
-  Taht Odası kuyruğunu yönetiyor. `YeniGuneBasla()`: en başta `BaseGeliriUygula()`, sonra
-  `DaySequencer` ile sıra oluşturuluyor (**bu satırın fonksiyonun EN BAŞINDA olması şart**), önceki
-  geceden sonuç varsa `ElciDiyaloguOlustur` ile "Ulak" NPC'si ekleniyor. `SiradakiNpcyiGoster()`: sıra
-  bitince artık direkt `AsamaDegistir(SahsiOda)` çağırmıyor, bunun yerine
-  `StartCoroutine(EkranGecisi.Instance.KararipAcil(() => AsamaDegistir(GunAsamasi.SahsiOda)))` — asama
-  değişimi ekran tam siyahken gerçekleşiyor, geçiş görünmüyor. `UyuyaBas()`: `Gun`'ı +1 artırıyor,
-  Resolve'a geçiyor, DayResolver'ı çalıştırıyor, OrderManager'ı sıfırlıyor, YeniGuneBasla'yı çağırıyor.
-- **`DanismanPaneli.cs`** — (eski adı `ManagerTest.cs`). **Eskiyen sistem** — bkz. Sıradaki Adımlar.
-  Şahsi Oda'daki 4 sabit butona (İnşaatçı, Askerbaşı, Asker Topla) sabit `OrderData`'lar oluşturup
-  `OrderManager.EmirEkle`'ye gönderiyor. Hâlâ sahnede duruyor ve çalışıyor, ama artık aynı işi yapan bir
-  alternatif (kapı → danışman diyaloğu → `VerilecekEmir`) de var — kapı sistemi tamamlanıp içerik
-  dolunca bu eski panel kaldırılacak.
-- **`StatsUI.cs`** — Sol üstteki canlı stat göstergesi (Erzak, Altın, Manpower, Sadakat), Erzak/Altın
-  yanında `<sup>` ile base gelir gösteriyor.
-- **`TooltipUI.cs`** + **`ButtonTooltip.cs`** — Hover bilgi kutusu sistemi (maliyet gösterimi).
-- **`DanismanButon.cs`** — Danışman kullanılınca ilgili butonun görsel kilitlenmesi. Eski `DanismanPaneli`
-  sistemine ait, o kaldırılınca bu da muhtemelen kaldırılacak.
-- **`EkranGecisi.cs`** *(yeni, bu oturumda eklendi)* — Singleton. Tam ekranı kaplayan `CanvasGroup
-  KaraPanel` üzerinden siyah ekran geçişi yapıyor. `KararipAcil(System.Action ortadaYapilacakIs)`:
-  önce ekranı karartır, ekran tam siyahken verilen `Action`'ı çalıştırır (örn. panel değişimi), sonra
-  tekrar açar. Şu an sadece Taht Odası → Şahsi Oda geçişinde kullanılıyor. Sahnede
-  `EkranGecisiYoneticisi` adlı objede duruyor, `KaraPanel` alanı Canvas'taki `KaraPanel` objesine
-  bağlı. Test edildi, çalışıyor.
-- **`OdaEtkilesimTest.cs`** *(yeni, bu oturumda eklendi)* — Şahsi Oda'daki masa objelerinin
-  (Ansiklopedi, Harita) ve Kapı'nın tıklama olaylarını yakalıyor. `AnsiklopediTiklandi()` ve
-  `HaritaTiklandi()` şu an sadece `Debug.Log` yapan **placeholder**'lar — ne göstereceği henüz
-  tasarlanmadı. `KapiTiklandi()`: `DanismanListesiPaneli`'nin SetActive'ini tersine çeviriyor (toggle).
-  Eskiden bir de `MektuplarTiklandi()` fonksiyonu vardı ama **artık kullanılmıyor** — mektup açma işi
-  `MektupYoneticisi.cs`'e taşındı; `MektuplarGorseli` butonunun `On Click()`'inin doğru script'e
-  (`MektupYoneticisi`) işaret ettiği **teyit edilmedi**, bkz. Sıradaki Adımlar. `OdaGorseli` objesinde duruyor.
-- **`DanismanCagir.cs`** *(yeni, bu oturumda eklendi)* — Kapıdan açılan danışman listesindeki butonlara
-  bağlı. `DialogueManager Dialog`, `GameObject DanismanListesiPaneli`, `NPCData General`,
-  `NPCData MaliyeBakani`. `GeneralCagir()`: listeyi kapatıp `Dialog.DiyalogBaslat(General.Diyalog,
-  General.Portre, General.Isim, true)` çağırıyor. `MaliyeBakaniCagir()` fonksiyonu yazıldı ama
-  **`MaliyeBakani` verisi (NPCData asset'i) henüz oluşturulmadı, buton da bağlanmadı** — sadece
-  General ile akış doğrulandı. Sahnede `DanismanYoneticisi` adlı objede duruyor.
-- **`MektupYoneticisi.cs`** *(yeni, bu oturumda eklendi)* — Mektuplar objesine tıklanınca açılan liste
-  ve mektup diyaloğu için. `DialogueManager Dialog`, `GameObject MektuplarPaneli`,
-  `DialogueData TestMektup`. `MektuplarTiklandi()`: `MektuplarPaneli`'ni toggle yapıyor (bu fonksiyonun
-  `MektuplarGorseli` butonuna **doğru bağlanıp bağlanmadığı teyit edilmedi**). `TestMektubuAc()`:
-  listeyi kapatıp `Dialog.DiyalogBaslat(TestMektup, null, "Mektup", true)` çağırıyor (portre `null` —
-  mektupların karakter portresi yok). Sahnede `MektupYoneticisi` adlı objede duruyor.
+- **`KoyYoneticisi.cs`** *(yeni)* — Singleton, `public List<KoyData> Koyler`. Fonksiyonlar:
+  `ToplamErzak()`, `ErzakDegistir(miktar)` (hem artış hem azalışı köylere dağıtıyor, kalanı ilk
+  köylere fazladan veriyor ki toplam tam tutsun), `ErzagiGunlukArtir()` (her köyü kendi `ErzakYield`'i
+  kadar artırır), `ToplamErzakYieldi()`, `ToplamAltinYieldi()`, `OrtalamaSadakat()`.
+- **`OrderManager.cs`** — Değişmedi. `EmirEkle`, `DanismanKullanildiMi`, `YeniDongueBasla`.
+- **`DialogueManager.cs`** — `NpcIsimText`, `NpcSozuText`, `SecenekButon1/2Text`, `PortreImage`,
+  `SecenekButon1/2Buton`, `Orders`, `DiyalogKutusuKok`. **Yeni:** `aktifKoy` (nullable `KoyData`),
+  `DiyalogBaslat`'ın son parametresi `KoyData ilgiliKoy = null`. `NodeGoster()`: `{KOY}` yer
+  tutucusunu `aktifKoy.Isim` ile değiştiriyor, her node gösteriminde `SecenekButon1Buton`'u tekrar
+  aktif ediyor (köy seçimi sırasında gizlendiği için). `GuncelDeger`/`DegeriUygula`: Erzak/Sadakat'ı
+  `aktifKoy` doluysa doğrudan köye, değilse `GameManager.State` üzerinden kingdom-wide uyguluyor.
+  `SecenekKarsilanabilirMi`: Sadakat'ı hiç kontrol etmiyor (asla kilitlemiyor), `VerilecekEmir`
+  maliyetini de kontrol ediyor. `SecenekUygula`: `VerilecekEmir.KoySecimiGerekli` true ise emri hemen
+  eklemiyor, `KoySecimPaneli.KoySec(callback)` açıp seçim yapılana kadar diyaloğu açık tutuyor (normal
+  seçenek butonları gizleniyor), seçilince `KopyalaVeKoyAta` ile emri ekleyip `DiyalogBitir()` çağırıyor.
+  `MaliyetMetniAl(index)`: seçeneğin `VerilecekEmir` maliyetini "-X StatAdi" formatında döndürüyor.
+- **`SecenekTooltip.cs`** *(yeni)* — Diyalog seçenek butonlarına eklenen hover script'i (`IPointerEnterHandler`/
+  `IPointerExitHandler`). `Dialog` (DialogueManager) + `SecenekIndex` (0/1) alır, `Dialog.MaliyetMetniAl`'i
+  çağırıp `TooltipUI.Goster`/`Gizle` ile gösterir/gizler.
+- **`KoySecimPaneli.cs`** *(yeni)* — Singleton. `Panel` (GameObject) + `ButonSablonu` (GameObject,
+  Awake'te gizleniyor). `KoySec(Action<KoyData> callback)`: `KoyYoneticisi.Koyler`'daki her köy için
+  şablon butonu `Instantiate` ile çoğaltıp isim yazıyor ve `Button.onClick.AddListener(...)` ile
+  (Inspector'dan değil, KOD içinden) tıklama olayını bağlıyor — çünkü köy sayısı dinamik, Inspector'da
+  elle bağlanamaz. Panel, `DiyalogAlani`'nın içine yerleştirildi, `Scroll Rect` + `Viewport` (Rect
+  Mask 2D) + `Content` (Vertical Layout Group, `Control Child Size`+`Child Force Expand` Width
+  işaretli) ile kaydırılabilir.
+- **`HaritaKontrol.cs`** *(yeni)* — Harita içeriğinin (`Icerik`, RectTransform) sürüklenmesini/
+  yakınlaştırılmasını yönetir. `IBeginDragHandler`/`IDragHandler`: `RectTransformUtility.
+  ScreenPointToLocalPointInRectangle` ile Canvas modundan/ölçeğinden bağımsız, imlecin gerçek yerel
+  konumunu hesaplayıp fark alır (Canvas `scaleFactor` farkından kaynaklanan "kayma" bugı bu şekilde
+  çözüldü). `IScrollHandler`: zoom (fare tekerleği). `minZoom`, `Awake`'te viewport/içerik oranından
+  otomatik hesaplanıyor (harita tam ekranı kaplayana kadar uzaklaşılabiliyor, sabit sayı değil).
+  `SinirlaKonum()`: sürükleme sonrası haritanın kenarları ekran dışına taşmayacak şekilde
+  `anchoredPosition`'ı kelepçeliyor.
+- **`GunUI.cs`** — Ekranın üstünde "Gun X" gösteriyor. Değişmedi.
+- **`BildirimYoneticisi.cs`** — Singleton. `Bildirim(statAdi, miktar)`: şablonu çoğaltıp fade in
+  (`CanvasGroup`) → bekle → fade out → `Destroy`. Değişmedi (bu oturumda daha önce eklenmişti).
+- **`DayCycleManager.cs`** — Singleton, state machine'in kalbi. `gunlukSira` artık `List<SiraGirisi>`.
+  `YeniGuneBasla()`: `BaseGeliriUygula()` + `KoyYoneticisi.ErzagiGunlukArtir()` + Altın base geliri,
+  sonra `DaySequencer` ile sıra oluşturuluyor. `SiradakiNpcyiGoster()`: `Dialog.DiyalogBaslat(npc.Diyalog,
+  npc.Portre, npc.Isim, false, girisi.IlgiliKoy)` — artık ilgili köyü de iletiyor. `UyuyaBas()`:
+  `Gun`'ı +1 artırıyor, Resolve'a geçiyor, DayResolver'ı çalıştırıyor.
+- **`DanismanCagir.cs`** — Kapıdan açılan danışman listesindeki butonlara bağlı. **`MaliyeBakani`
+  alanı/fonksiyonu `Insaatci`/`InsaatciCagir()` olarak DEĞİŞTİRİLDİ** (Maliye Bakanı konsepti terk
+  edildi). `GeneralCagir()`, `InsaatciCagir()`: ilgili danışmanın diyaloğunu `danismanDiyalogu=true`
+  ile başlatıyor.
+- **`DanismanButon.cs`** — Danışman kullanılınca ilgili butonun görsel kilitlenmesi. Artık HEM eski
+  (kaldırılan) 4-buton sisteminde HEM kapıdaki General/İnşaatçı butonlarında **ortak** kullanılıyor —
+  **silinmemeli**, iki sistem paylaşıyor.
+- **`StatsUI.cs`** — Sol üstteki canlı stat göstergesi. Erzak artık `KoyYoneticisi.ToplamErzak()`'tan
+  okunuyor (genel bileşen yok), Sadakat genel+köy ortalaması.
+- **`TooltipUI.cs`** + **`ButtonTooltip.cs`** — Hover bilgi kutusu sistemi. `TooltipUI` hem eski
+  statik (`ButtonTooltip`) hem yeni dinamik (`SecenekTooltip`) hover sistemleri tarafından paylaşılıyor.
+- **`EkranGecisi.cs`** — Singleton, siyah ekran geçişi. Değişmedi.
+- **`OdaEtkilesimTest.cs`** — `KapiTiklandi()`, `AnsiklopediTiklandi()` (hâlâ placeholder),
+  `HaritaTiklandi()`: artık gerçekten `HaritaEkrani.SetActive(true)` çağırıyor (eskiden placeholder
+  log basıyordu). **`MektuplarTiklandi()` fonksiyonu tamamen KALDIRILDI.**
+
+### Muhtemelen ölü kod (doğrulanmadı, bir sonraki oturum kontrol etsin)
+- **`DanismanPaneli.cs`** — Eski 4 sabit buton (İnşaatçı/Askerbaşı/Asker Topla) sistemine aitti,
+  kullanıcı bu butonları Şahsi Oda'dan (Unity Hierarchy'den) sildi. Script dosyası hâlâ duruyor ama
+  muhtemelen artık hiçbir objeye bağlı değil — silinmedi çünkü doğrulanmadı, kontrol edilmeli.
+- **`TahtOdasiTest.cs`** — `KoyluyeYardimEt()` fonksiyonu olan eski bir test script'i, muhtemelen
+  artık kullanılmıyor, kontrol edilmeli.
 
 ---
 
 ## 5) ŞU ANKİ DURUM
 
 ✅ Çalışıyor (test edildi, onaylandı):
-- Temel döngü uçtan uca: Taht Odası → (siyah ekran geçişi) → Şahsi Oda → Uyu/Resolve → tekrar Taht Odası.
-- ScriptableObject tabanlı diyalog sistemi (node/choice yapısı), bir seçenek birden fazla stat'ı aynı
-  anda etkileyebiliyor (`StatEtkileri`), yetersiz kaynak gerektiren seçenekler görsel kilitleniyor
-  (`SecenekKarsilanabilirMi`).
-- NPC sırasının stat'a göre kısmen rastgele oluşması + `Gun == 10` gibi sabit-günlü hikaye NPC'leri
-  (Ayyaş Adam).
-- Emir verme + "danışman döngü başına 1 kez" kısıtlaması.
-- Zar atma + çok günlü emir + garanti/şansa-bağlı sonuç ayrımı, renklendirilmiş sonuç mesajları.
-- Elçi/Ulak NPC'si ile gece sonuçlarının ertesi sabah otomatik anlatılması.
-- Sol üstte canlı stat göstergesi, üst köşede "Gun X" sayacı.
-- Ekonomi sistemi (Altın, Manpower, base gelir, maliyetli emirler) uçtan uca test edildi.
-- Buton üzerine gelince maliyet bilgisi gösteren hover tooltip sistemi.
-- Danışman kullanılınca butonların görsel kilitlenmesi (`DanismanButon.cs`).
-- NPC portre/karakter görseli sistemi, diyalog panelinde NPC ismi gösterimi.
-- Anlık bildirim (toast) sistemi — **bu oturumda fade in/fade out eklendi**, artık yumuşak açılıp kapanıyor.
-- **Taht Odası → Şahsi Oda geçişinde kısa siyah ekran efekti var** (`EkranGecisi.cs`).
-- **Diyalog kutusu düzeni yenilendi:** metin kutunun içinde, portre yanında, seçenekler altında —
-  tüm bu objeler tek bir `DiyalogAlani` grubu altında toplandı, bu grup artık Taht Odası/Şahsi Oda
-  panellerinden bağımsız, `DialogueManager` tarafından elle açılıp kapanıyor.
-- **Danışman diyalog akışı (kapı sistemi) uçtan uca test edildi:** Şahsi Oda'da kapıya tıklayınca
-  danışman listesi açılıyor, "General" seçilince Warband tarzı çok adımlı bir diyalog başlıyor
-  ("Bir görevim var" → "Köy Yağmala" → "Hangi köyü?" → köy seçilince gerçek bir `OrderData`
-  `OrderManager`'a ekleniyor, Console'da "Askerbasi icin emir eklendi" mesajı doğrulandı), diyalog
-  bitince Taht Odası'na değil Şahsi Oda'da kalınıyor.
-- **Şahsi Oda görsel iskeleti kuruldu** (placeholder renkli kutularla): masa, üzerinde Ansiklopedi/
-  Harita/Mektuplar objeleri, arka planda Kapı. Hepsi tıklanabilir (Button + OnClick).
+- Temel döngü uçtan uca, siyah ekran geçişi, ScriptableObject tabanlı çoklu-stat diyalog sistemi,
+  karşılanabilirlik kontrolü (Sadakat hariç), renkli gece sonuç mesajları, elçi/Ulak anlatımı.
+- Danışman diyalog akışı (kapı sistemi): General (Köy Yağmala + Asker Topla) ve İnşaatçı (Değirmen
+  İnşa Et) uçtan uca test edildi, danışman başına döngüde 1 kullanım kısıtlaması ortak `DanismanButon.cs`
+  ile çalışıyor.
+- **Mektuplar/görev sistemi tamamen kaldırıldı** (kod + asset'ler silindi, ilgili Unity objeleri
+  kullanıcı tarafından silindi) — kullanıcı henüz nasıl bir tasarım istediğine karar vermedi.
+- Anlık bildirim (toast) sistemi, hover tooltip sistemi (hem eski statik hem yeni dinamik diyalog
+  seçenek maliyeti gösterimi, stuck-tooltip bugı düzeltildi).
+- **Harita sistemi**: tam ekran, sürüklenebilir (Canvas ölçeğinden bağımsız, `RectTransformUtility`
+  ile), zoom sınırlı (min = ekranı tam kaplama, max ayarlanabilir), pozisyon kenarlara kilitleniyor.
+  Köy isimleri elle yerleştirildi (veri-bağlı değil).
+- **Köy sistemi**: `KoyData`/`KoyYoneticisi` kuruldu, kingdom Erzak = köylerin toplamı (tam, sapma
+  imkansız), Sadakat = genel + köy ortalaması (0-100 kelepçeli, hiçbir seçeneği kilitlemiyor).
+- **Köylü NPC'si artık gerçek bir köyü temsil ediyor**: her gün her köy kendi zarını atıyor, diyalog
+  metninde köy adı geçiyor, verdiği/aldığı Erzak+Sadakat doğrudan o köyü etkiliyor, Altın kingdom-wide.
+- **İnşaatçı/Değirmen artık hangi köyde yapılacağını soruyor** (diyalog kutusunun içinde, kaydırılabilir
+  bir listeyle — ayrı bir popup değil), tamamlanınca sadece o köyün `ErzakYield`'i artıyor.
 
-⚠️ Yarım kaldı / doğrulanmadı (bir sonraki oturumun ilk işi olmalı):
-- **Mektuplar akışı henüz uçtan uca çalışmıyor.** `MektuplarGorseli` butonunun `On Click()`'i eskiden
-  `OdaEtkilesimTest.MektuplarTiklandi` (sadece Console'a log basan eski placeholder) gösteriyordu; bu
-  bağlantının `MektupYoneticisi.MektuplarTiklandi`'ye değiştirilmesi gerektiği tespit edildi ve
-  kullanıcıya adım adım nasıl düzeltileceği anlatıldı, ama **düzeltmenin yapılıp test edildiği
-  onaylanmadan sohbet bitti.** Yeni oturumda ilk iş: bu bağlantıyı kontrol et, gerekirse düzelt, sonra
-  "Kabul Et" ile `Test_Mektup`'un gerçekten Erzak -10 / Sadakat +5 uyguladığını doğrula.
-- Maliye Bakanı danışmanı henüz eklenmedi (`DanismanCagir.MaliyeBakaniCagir()` fonksiyonu hazır ama
-  `MaliyeBakani` NPCData asset'i yok, `MaliyeBakaniButonu`'nun `On Click()`'i bağlanmadı).
-- Ansiklopedi ve Harita objelerinin ne göstereceği hiç tasarlanmadı — şu an sadece Console'a log basan
-  boş placeholder'lar.
-- `DanismanPaneli.cs` (eski 4 buton sistemi) hâlâ sahnede duruyor, kapı sistemi tam anlamıyla onun
-  yerini alana kadar kaldırılmayacak.
+⚠️ Yarım kaldı / doğrulanmadı / bilinçli ertelendi:
+- `DanismanPaneli.cs` ve `TahtOdasiTest.cs` muhtemelen artık ölü kod, kontrol edilip silinebilir.
+- Ansiklopedi hâlâ tamamen boş placeholder, hiç tasarlanmadı.
+- Harita'daki köy etiketleri gerçek `KoyData`'ya bağlı değil (elle yerleştirildi) — yeni köy eklenirse
+  elle yeni etiket eklenmesi gerekiyor; "köye tıklayınca bilgi göster" gibi bir özellik istenirse bu
+  bağlantı kurulmalı.
+- **Building slot/sınırı sistemi bilinçli olarak ERTELENDİ** (kullanıcı kararı), henüz hiç başlanmadı.
+- Şu an sadece **General** ve **İnşaatçı** var, başka danışman yok (Maliye Bakanı konsepti tamamen terk edildi).
+- Mektuplar/görev sistemi silindiği için, "oyuncuya görev/istek gelen" bir mekanik yok — istenirse
+  sıfırdan, farklı bir tasarımla ele alınabilir.
 
 ---
 
 ## 6) SIRADAKİ ADIMLAR
 
-"Şahsi Oda'yı gerçek bir oda yapalım" isteği üzerine büyük iş 4 parçaya bölündü, kullanıcı sırayı
-**1 → 3 → 2 → 4** olarak seçti:
+"Köyleri gerçek/bireysel yapalım" planı büyük ölçüde tamamlandı:
+1. ✅ Altyapı (diyalog etkilerinin belirli bir köyü hedefleyebilmesi) + Köylü NPC'sinin gerçek,
+   zar-bazlı bir köyden gelmesi — kuruldu, test edildi.
+2. ✅ İnşaatçı/Değirmen'in hangi köyde yapılacağının seçilmesi (diyalog içi, kaydırılabilir liste) —
+   kuruldu, test edildi.
+3. ⬜ **Building slot/sınırı sistemi — bilinçli olarak ERTELENDİ, henüz başlanmadı.** Gündeme
+   gelirse kullanıcıyla kapsamı konuşulmalı (her köyde kaç slot, hangi bina tipleri vs. hiç konuşulmadı).
 
-1. ✅ Danışman diyalog akışının kod altyapısı (`VerilecekEmir`, `DialogueManager` genişletmesi) — kuruldu, test edildi.
-2. ✅ Oda görsel düzeni (masa, kitap, harita, mektup, kapı — placeholder kutularla) — kuruldu, test edildi.
-3. ✅ Kapı + danışman seçim listesi (tıkla-aç, hover değil — kullanıcının kararı) — kuruldu, General ile test edildi.
-4. ⚠️ **Mektuplar/görev sistemi — büyük ölçüde kuruldu ama son bağlantı testi tamamlanmadı.**
-   Yeni oturumun ilk işi: yukarıdaki "Yarım kaldı" bölümündeki Mektuplar butonu sorununu çöz ve doğrula.
-
-Bittikten/doğrulandıktan sonra sırada (henüz kullanıcıyla konuşulmadı, öncelik sırası belirlenmedi):
-- Maliye Bakanı'nı (ve muhtemelen başka danışmanları) `General` ile aynı desenle eklemek — bu artık
-  tekrar eden, tanıdık bir iş (NPCData asset'i + DialogueData + buton bağlama).
-- Ansiklopedi ve Harita objelerinin ne göstereceğine karar vermek (henüz hiç konuşulmadı).
-- Eski `DanismanPaneli.cs` (4 sabit buton) sistemini kaldırıp yerini tamamen kapı sistemine bırakmak.
-- Diğer, henüz gündeme gelmemiş konular: daha fazla diyalog/NPC/danışman içeriği, `DaySequencer.cs`'ye
-  Erzak dışında stat'lara bağlı yeni sıra kuralları, kaydet/yükle (save/load) sistemi.
+Diğer, henüz gündeme gelmemiş ama olası konular (öncelik sırası belirlenmedi):
+- `DanismanPaneli.cs`/`TahtOdasiTest.cs`'in gerçekten ölü kod olduğunu doğrulayıp temizlemek.
+- Başka danışmanlar eklemek (artık tanıdık bir desen: NPCData + DialogueData + buton bağlama).
+- Ansiklopedi'nin ne göstereceğine karar vermek.
+- Harita köy etiketlerini gerçek veriye bağlamak, köye tıklayınca detay/bilgi gösterme.
+- Mektuplar/görev sistemini (istenirse) sıfırdan, farklı bir tasarımla ele almak.
+- Kaydet/yükle (save/load) sistemi.
 
 **Genel çalışma tarzı hâlâ geçerli:** her adımı küçük parçalara böl, kullanıcı test edip onaylamadan
 bir sonrakine geçme.
@@ -342,26 +388,41 @@ bir sonrakine geçme.
 
 - Kod editöründe değişiklik yapıp **kaydetmeden (Ctrl+S)** Unity'ye dönmek "hayalet hatalara" yol
   açıyor — her değişiklikten sonra kaydet, Unity'nin alt köşesindeki "compiling" ikonunun bitmesini bekle.
-- Script derleme hatası (compile error) varken Unity bazen buton `On Click()` bağlantılarını
-  sıfırlıyor — kod hatasını düzelttikten sonra buton bağlantılarını tekrar kontrol etmek gerekebilir.
-- Bir dosyada tek bir hata bile olsa (örn. `[Serializable]` etiketinin 2 kere yazılması gibi), TÜM
-  proje derlenemiyor ve alakasız görünen onlarca hata ortaya çıkabiliyor — Console'daki **EN ESKİ
-  (ilk)** hataya odaklanmak genelde kök sebebi buluyor.
-- Inspector'da bir alana GameObject sürüklerken, o objenin üzerinde gerçekten **doğru script/component**
-  olduğundan emin olunmalı; yanlış obje sürüklenirse dropdown'da beklenen fonksiyon görünmüyor.
-- `foreach` ile gezilen bir liste, aynı döngü içinde direkt değiştirilemiyor (silinemiyor) — bu yüzden
-  `DayResolver` içinde "hâlâ devam edenler" için ayrı, yeni bir liste oluşturulup dolduruluyor.
-- **Bir script dosyasını (örn. `NPCData.cs`) Project penceresinde tıklamakla, o script'ten üretilmiş
-  bir veri (asset, örn. `Ayyas_NPC.asset`) tıklamak FARKLI şeyler** — kullanıcı bunu bir kez
-  karıştırdı. Script dosyasının ikonu farklıdır (kod dosyası ikonu), asset'in ikonu farklıdır (mavi
-  küp). Kullanıcıya hangisini bulması gerektiğini net söylerken bu ayrımı vurgula.
-- UI objelerinde **Hierarchy sırası çizim sırasını belirliyor** — sonradan eklenen (Hierarchy'de daha
-  altta duran) objeler öncekilerin **üstüne** çiziliyor. Yeni bir opak arkaplan/panel eklendiğinde
-  eski butonların "kaybolması" genelde silinme değil, görsel olarak **kaplanma**dır — Hierarchy'de
-  obje hâlâ duruyor mu diye bakmak ilk kontrol noktası olmalı.
-- Yeni bir `[Serializable]` sınıfı (örn. `OrderData`) bir `DialogueChoice` gibi başka bir serialize
-  edilen sınıfın içine gömülüp Inspector'da düzenlenebilir olması isteniyorsa, o sınıfın **parametresiz
-  (boş) bir constructor'ı olmalı** — yoksa Unity Inspector'da düzgün gösteremeyebilir.
-- Bir Button'ın `On Click()` listesinde **eski/placeholder bir fonksiyon kalabilir** — özellikle bir
-  işlev başka bir script'e taşındığında, eski bağlantı otomatik silinmiyor, elle kontrol edip
-  güncellemek gerekiyor (bkz. Mektuplar butonu sorunu, Sıradaki Adımlar).
+- Script derleme hatası varken Unity bazen buton `On Click()` bağlantılarını sıfırlıyor.
+- Bir dosyada tek bir hata bile olsa TÜM proje derlenemiyor — Console'daki **EN ESKİ (ilk)** hataya
+  odaklanmak genelde kök sebebi buluyor.
+- Bir C# class/script'i **yeniden adlandırdığında**, Unity o component'i sahnede "Missing Script"
+  olarak işaretler — eski component'i silip yeni script'i tekrar ekleyip Inspector referanslarını
+  ve buton `On Click()` bağlantılarını yeniden kurmak gerekiyor.
+- `foreach` ile gezilen bir liste, aynı döngü içinde direkt değiştirilemiyor — ayrı, yeni bir liste
+  oluşturulup dolduruluyor (`DayResolver`).
+- Bir script dosyasını (kod ikonu) ile o script'ten üretilmiş bir asset'i (mavi küp ikonu) karıştırmak
+  kolay — kullanıcıya hangisini bulması gerektiğini net söyle.
+- UI objelerinde **Hierarchy sırası çizim sırasını belirliyor** — sonradan eklenen (daha altta duran)
+  objeler öncekilerin üstüne çiziliyor.
+- `[Serializable]` bir sınıf (örn. `OrderData`) başka bir serialize edilen sınıfın (örn.
+  `DialogueChoice`) içine gömülüp Inspector'da düzenlenebilir olacaksa, **parametresiz bir
+  constructor'ı olmalı**.
+- Bir Button'ın `On Click()` listesinde eski/placeholder bir fonksiyon kalabilir.
+- **Unity, bir asset içine gömülü `[Serializable]` bir sınıfı (örn. `OrderData.HedefKoy`, tipi
+  `KoyData`) Inspector'da gösterirken otomatik olarak BOŞ bir örnek oluşturup asset'e kaydediyor** —
+  yani "hiç atanmadıysa `null` olur" varsayımı YANLIŞ. Böyle bir alanın "gerçekten atanmış mı" diye
+  kontrolünde sadece `!= null` yetmiyor, ek olarak içindeki anlamlı bir alanın (örn. `Isim`) boş
+  olup olmadığına da bakmak gerekebiliyor (bkz. `DayResolver`'daki `HedefKoy` kontrolü).
+- Bir ScriptableObject asset'in içindeki bir referans alanı, **sahnedeki bir MonoBehaviour'ın
+  runtime listesindeki bir örneği asla tutamaz** (asset'ler proje seviyesinde, sahne objeleri
+  oturum/instance seviyesinde yaşıyor). Bu yüzden "hangi köy" gibi dinamik bir seçim, Inspector'dan
+  statik olarak yapılamıyor — kod içinde, runtime'da dinamik buton oluşturarak çözülüyor
+  (bkz. `KoySecimPaneli.cs`).
+- Bir UI objesinin Rect Transform sınırlarını **inaktif bir üst obje altındayken** Scene görünümünde
+  seçmek bazen seçim anahatını göstermeyebiliyor — üst objeyi geçici olarak aktif yapmak çözüyor.
+- **Vertical Layout Group** olan bir objenin çocuklarını fareyle sürükleyip taşımaya çalışmak işe
+  yaramaz (Layout Group her karede pozisyonu kendi kurallarına göre geri ayarlıyor). Çocukların
+  konteyner genişliğini doldurmasını istiyorsan `Control Child Size` → Width + `Child Force Expand`
+  → Width işaretlenmeli.
+- Bir UI objesi sürüklenirken (drag), Canvas'ın `Scale Factor`'ü 1'den farklıysa `PointerEventData.delta`'yı
+  direkt kullanmak sürüklenen noktanın imleçten kaymasına yol açar — en güvenilir çözüm her karede
+  `RectTransformUtility.ScreenPointToLocalPointInRectangle` ile imlecin gerçek yerel konumunu
+  hesaplayıp farkı almak.
+- Bir objeyi "zoom out" ile tam ekranı kaplayacak şekilde sınırlamak istiyorsan, minimum zoom'u sabit
+  bir sayı yerine `viewport boyutu / içerik boyutu` oranından (büyük olanını seçerek) hesaplamak gerekiyor.

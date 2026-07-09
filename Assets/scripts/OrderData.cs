@@ -17,6 +17,9 @@ public class OrderData
     public string BaseGeliriStat;
     public int BaseGeliriMiktar;
 
+    public bool KoySecimiGerekli;
+    public KoyData HedefKoy;
+
     public OrderData() { }
 
     public OrderData(string danisman, string emir, string stat, int basariliMiktar, int basarisizMiktar,
@@ -36,5 +39,15 @@ public class OrderData
         BaseGeliriEtkiler = baseGeliriEtkiler;
         BaseGeliriStat = baseGeliriStat;
         BaseGeliriMiktar = baseGeliriMiktar;
+    }
+
+    public OrderData KopyalaVeKoyAta(KoyData koy)
+    {
+        OrderData kopya = new OrderData(DanismanTipi, EmirTuru, EtkilenenStat, BasariliDegisim, BasarisizDegisim,
+            BasariSansi, ToplamSure, SonucSansaBagli, MaliyetStat, MaliyetMiktar,
+            BaseGeliriEtkiler, BaseGeliriStat, BaseGeliriMiktar);
+        kopya.KoySecimiGerekli = KoySecimiGerekli;
+        kopya.HedefKoy = koy;
+        return kopya;
     }
 }

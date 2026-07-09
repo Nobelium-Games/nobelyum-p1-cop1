@@ -5,7 +5,6 @@ public class GameState
 {
     public int Gun = 1;
 
-    public int Erzak = 50;
     public int Sadakat = 50;
     public int Altin = 50;
     public int Manpower = 50;
@@ -15,7 +14,7 @@ public class GameState
 
     public void BaseGeliriUygula()
     {
-        Erzak += ErzakBaseGelir;
+        KoyYoneticisi.Instance.ErzakDegistir(ErzakBaseGelir);
         Altin += AltinBaseGelir;
     }
 
@@ -40,9 +39,9 @@ public class GameState
         switch (statAdi)
         {
             case "Erzak":
-                return Erzak;
+                return KoyYoneticisi.Instance.ToplamErzak();
             case "Sadakat":
-                return Sadakat;
+                return Sadakat + KoyYoneticisi.Instance.OrtalamaSadakat();
             case "Altin":
                 return Altin;
             case "Manpower":
@@ -59,10 +58,10 @@ public class GameState
         switch (statAdi)
         {
             case "Erzak":
-                Erzak += miktar;
+                KoyYoneticisi.Instance.ErzakDegistir(miktar);
                 break;
             case "Sadakat":
-                Sadakat += miktar;
+                Sadakat = UnityEngine.Mathf.Clamp(Sadakat + miktar, 0, 100);
                 break;
             case "Altin":
                 Altin += miktar;

@@ -3,6 +3,7 @@ using UnityEngine;
 public class OdaEtkilesimTest : MonoBehaviour
 {
     public GameObject DanismanListesiPaneli;
+    public GameObject HaritaEkrani;
 
     public void KapiTiklandi()
     {
@@ -16,11 +17,6 @@ public class OdaEtkilesimTest : MonoBehaviour
 
     public void HaritaTiklandi()
     {
-        Debug.Log("Harita tiklandi.");
-    }
-
-    public void MektuplarTiklandi()
-    {
-        Debug.Log("Mektuplar tiklandi.");
+        HaritaEkrani.SetActive(true);
     }
 }

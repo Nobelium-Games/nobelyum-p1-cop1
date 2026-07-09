@@ -9,13 +9,18 @@ public class StatsUI : MonoBehaviour
     {
         GameState state = GameManager.Instance.State;
 
-        string erzakGelir = (state.ErzakBaseGelir >= 0 ? "+" : "") + state.ErzakBaseGelir;
-        string altinGelir = (state.AltinBaseGelir >= 0 ? "+" : "") + state.AltinBaseGelir;
+        int toplamErzak = KoyYoneticisi.Instance.ToplamErzak();
+        int toplamErzakGelir = state.ErzakBaseGelir + KoyYoneticisi.Instance.ToplamErzakYieldi();
+        int toplamAltinGelir = state.AltinBaseGelir + KoyYoneticisi.Instance.ToplamAltinYieldi();
+        int toplamSadakat = state.Sadakat + KoyYoneticisi.Instance.OrtalamaSadakat();
+
+        string erzakGelir = (toplamErzakGelir >= 0 ? "+" : "") + toplamErzakGelir;
+        string altinGelir = (toplamAltinGelir >= 0 ? "+" : "") + toplamAltinGelir;
 
         StatlarText.text =
-            "Erzak: " + state.Erzak + " <sup>" + erzakGelir + "</sup>\n" +
+            "Erzak: " + toplamErzak + " <sup>" + erzakGelir + "</sup>\n" +
             "Altin: " + state.Altin + " <sup>" + altinGelir + "</sup>\n" +
             "Manpower: " + state.Manpower + "\n" +
-            "Sadakat: " + state.Sadakat;
+            "Sadakat: " + toplamSadakat;
     }
 }

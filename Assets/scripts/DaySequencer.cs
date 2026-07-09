@@ -3,39 +3,34 @@ using UnityEngine;
 
 public class DaySequencer
 {
-    public List<NPCData> SiradakiListeyiOlustur(GameState state, NPCData koyluNpc, NPCData askerNpc, NPCData ayyasNpc)
+    public List<SiraGirisi> SiradakiListeyiOlustur(GameState state, NPCData koyluNpc, NPCData askerNpc, NPCData ayyasNpc)
     {
-        List<NPCData> yeniSira = new List<NPCData>();
+        List<SiraGirisi> yeniSira = new List<SiraGirisi>();
 
         // Kural 0: 10. gun sabit hikaye karakteri (ayyas adam) gelir
         if (state.Gun == 10)
         {
-            yeniSira.Add(ayyasNpc);
+            yeniSira.Add(new SiraGirisi { Npc = ayyasNpc, IlgiliKoy = null });
             Debug.Log("10. gun, ayyas adam geldi");
         }
 
-        // Kural 1: Erzak dusukse, koylu gelme ihtimali yuksek
-        if (state.Erzak < 40)
+        // Kural 1: Erzagi 50'nin altinda olan her koy, kendi zarini atar.
+        // Zar, koyun erzagindan yuksek cikarsa o koy sikayetci koylusunu gonderir.
+        foreach (KoyData koy in KoyYoneticisi.Instance.Koyler)
         {
-            float sans = Random.Range(0f, 1f);
-            if (sans < 0.8f) // %80 ihtimal
+            if (koy.Erzak < 50)
             {
-                yeniSira.Add(koyluNpc);
-                Debug.Log("Erzak dusuk, koylu geldi (sans: " + sans + ")");
-            }
-        }
-        else
-        {
-            float sans = Random.Range(0f, 1f);
-            if (sans < 0.2f) // erzak normalse dusuk ihtimalle yine gelebilir
-            {
-                yeniSira.Add(koyluNpc);
-                Debug.Log("Erzak normal ama koylu yine de geldi (sans: " + sans + ")");
+                int zar = Random.Range(0, 51);
+                if (zar > koy.Erzak)
+                {
+                    yeniSira.Add(new SiraGirisi { Npc = koyluNpc, IlgiliKoy = koy });
+                    Debug.Log(koy.Isim + " icin koylu geldi (zar: " + zar + ", erzak: " + koy.Erzak + ")");
+                }
             }
         }
 
         // Kural 2: Asker her zaman gelsin (simdilik sabit/test amacli)
-        yeniSira.Add(askerNpc);
+        yeniSira.Add(new SiraGirisi { Npc = askerNpc, IlgiliKoy = null });
 
         return yeniSira;
     }

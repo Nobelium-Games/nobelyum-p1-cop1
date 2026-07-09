@@ -36,12 +36,23 @@ public class DayResolver
                 }
                 else if (devam.Emir.BaseGeliriEtkiler)
                 {
-                    state.BaseGeliriArtir(devam.Emir.BaseGeliriStat, devam.Emir.BaseGeliriMiktar);
+                    if (devam.Emir.HedefKoy != null && !string.IsNullOrEmpty(devam.Emir.HedefKoy.Isim) && devam.Emir.BaseGeliriStat == "Erzak")
+                    {
+                        devam.Emir.HedefKoy.ErzakYield += devam.Emir.BaseGeliriMiktar;
+                        BildirimYoneticisi.Instance.Bildirim(
+                            "Erzak Yield (" + devam.Emir.HedefKoy.Isim + ")", devam.Emir.BaseGeliriMiktar);
+                    }
+                    else
+                    {
+                        state.BaseGeliriArtir(devam.Emir.BaseGeliriStat, devam.Emir.BaseGeliriMiktar);
+                        BildirimYoneticisi.Instance.Bildirim(devam.Emir.BaseGeliriStat + " Base Degeri", devam.Emir.BaseGeliriMiktar);
+                    }
                     mesajListesi.Add("<color=yellow>" + devam.Emir.EmirTuru + " tamamlandi!</color>");
                 }
                 else
                 {
                     state.StatDegistir(devam.Emir.EtkilenenStat, devam.Emir.BasariliDegisim);
+                    BildirimYoneticisi.Instance.Bildirim(devam.Emir.EtkilenenStat, devam.Emir.BasariliDegisim);
                     mesajListesi.Add("<color=yellow>" + devam.Emir.EmirTuru + " tamamlandi!</color>");
                 }
             }
@@ -63,11 +74,13 @@ public class DayResolver
         if (basarili)
         {
             state.StatDegistir(emir.EtkilenenStat, emir.BasariliDegisim);
+            BildirimYoneticisi.Instance.Bildirim(emir.EtkilenenStat, emir.BasariliDegisim);
             mesajListesi.Add("<color=green>" + emir.EmirTuru + " basarili oldu!</color>");
         }
         else
         {
             state.StatDegistir(emir.EtkilenenStat, emir.BasarisizDegisim);
+            BildirimYoneticisi.Instance.Bildirim(emir.EtkilenenStat, emir.BasarisizDegisim);
             mesajListesi.Add("<color=red>" + emir.EmirTuru + " basarisiz oldu.</color>");
         }
     }

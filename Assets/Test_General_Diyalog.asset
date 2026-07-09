@@ -15,7 +15,7 @@ MonoBehaviour:
   DialogueID: 
   Nodler:
   - NodeID: 1
-    NPCSozu: "Bir g\xF6revim var"
+    NPCSozu: Emrinizdeyim
     Secenekler:
     - SecenekMetni: "K\xF6y Ya\u011Fmala"
       SonrakiNodeID: 2
@@ -31,6 +31,40 @@ MonoBehaviour:
         SonucSansaBagli: 0
         MaliyetStat: 
         MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+    - SecenekMetni: Asker Topla
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: General
+        EmirTuru: Asker Topla
+        EtkilenenStat: Manpower
+        BasariliDegisim: 35
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 1
+        SonucSansaBagli: 1
+        MaliyetStat: Altin
+        MaliyetMiktar: 15
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+    - SecenekMetni: Asker Topla
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: General
+        EmirTuru: Asker Topla
+        EtkilenenStat: Manpower
+        BasariliDegisim: 35
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 1
+        SonucSansaBagli: 1
+        MaliyetStat: Altin
+        MaliyetMiktar: 15
         BaseGeliriEtkiler: 0
         BaseGeliriStat: 
         BaseGeliriMiktar: 0

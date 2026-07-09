@@ -1,0 +1,84 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class KoyYoneticisi : MonoBehaviour
+{
+    public static KoyYoneticisi Instance;
+
+    public List<KoyData> Koyler = new List<KoyData>();
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
+    public int ToplamErzak()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            toplam += koy.Erzak;
+        }
+        return toplam;
+    }
+
+    public void ErzakDegistir(int miktar)
+    {
+        if (Koyler.Count == 0)
+        {
+            return;
+        }
+
+        int koyBasinaDusen = miktar / Koyler.Count;
+        int kalan = miktar % Koyler.Count;
+
+        for (int i = 0; i < Koyler.Count; i++)
+        {
+            int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
+            Koyler[i].Erzak += buKoyeUygulanacak;
+        }
+    }
+
+    public void ErzagiGunlukArtir()
+    {
+        foreach (KoyData koy in Koyler)
+        {
+            koy.Erzak += koy.ErzakYield;
+        }
+    }
+
+    public int ToplamErzakYieldi()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            toplam += koy.ErzakYield;
+        }
+        return toplam;
+    }
+
+    public int ToplamAltinYieldi()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            toplam += koy.AltinYield;
+        }
+        return toplam;
+    }
+
+    public int OrtalamaSadakat()
+    {
+        if (Koyler.Count == 0)
+        {
+            return 0;
+        }
+
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            toplam += koy.Sadakat;
+        }
+        return toplam / Koyler.Count;
+    }
+}

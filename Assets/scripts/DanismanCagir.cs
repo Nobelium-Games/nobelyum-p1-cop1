@@ -6,7 +6,7 @@ public class DanismanCagir : MonoBehaviour
     public GameObject DanismanListesiPaneli;
 
     public NPCData General;
-    public NPCData MaliyeBakani;
+    public NPCData Insaatci;
 
     public void GeneralCagir()
     {
@@ -14,9 +14,9 @@ public class DanismanCagir : MonoBehaviour
         Dialog.DiyalogBaslat(General.Diyalog, General.Portre, General.Isim, true);
     }
 
-    public void MaliyeBakaniCagir()
+    public void InsaatciCagir()
     {
         DanismanListesiPaneli.SetActive(false);
-        Dialog.DiyalogBaslat(MaliyeBakani.Diyalog, MaliyeBakani.Portre, MaliyeBakani.Isim, true);
+        Dialog.DiyalogBaslat(Insaatci.Diyalog, Insaatci.Portre, Insaatci.Isim, true);
     }
 }

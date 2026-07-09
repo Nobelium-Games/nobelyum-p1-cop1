@@ -28,7 +28,7 @@ public class DayCycleManager : MonoBehaviour
     private DaySequencer sequencer = new DaySequencer();
     private DayResolver resolver = new DayResolver();
 
-    private List<NPCData> gunlukSira;
+    private List<SiraGirisi> gunlukSira;
     private int suankiNpcIndex = 0;
     private List<DevamEdenEmir> devamEdenEmirler = new List<DevamEdenEmir>();
 
@@ -55,6 +55,8 @@ public class DayCycleManager : MonoBehaviour
     void YeniGuneBasla()
 {
     GameManager.Instance.State.BaseGeliriUygula();
+    KoyYoneticisi.Instance.ErzagiGunlukArtir();
+    GameManager.Instance.State.Altin += KoyYoneticisi.Instance.ToplamAltinYieldi();
 
     gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc, AyyasNpc);
 
@@ -64,7 +66,7 @@ public class DayCycleManager : MonoBehaviour
         elci.Isim = "Ulak";
         elci.Diyalog = ElciDiyaloguOlustur(sonGeceSonuclari);
 
-        gunlukSira.Insert(0, elci);
+        gunlukSira.Insert(0, new SiraGirisi { Npc = elci, IlgiliKoy = null });
     }
 
     suankiNpcIndex = 0;
@@ -81,9 +83,10 @@ public class DayCycleManager : MonoBehaviour
             return;
         }
 
-        NPCData npc = gunlukSira[suankiNpcIndex];
+        SiraGirisi girisi = gunlukSira[suankiNpcIndex];
+        NPCData npc = girisi.Npc;
         Debug.Log("Sirada: " + npc.Isim);
-        Dialog.DiyalogBaslat(npc.Diyalog, npc.Portre, npc.Isim);
+        Dialog.DiyalogBaslat(npc.Diyalog, npc.Portre, npc.Isim, false, girisi.IlgiliKoy);
     }
 
     public void SiradakiyeGec()
