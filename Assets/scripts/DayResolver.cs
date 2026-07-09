@@ -38,9 +38,10 @@ public class DayResolver
                 {
                     if (devam.Emir.HedefKoy != null && !string.IsNullOrEmpty(devam.Emir.HedefKoy.Isim) && devam.Emir.BaseGeliriStat == "Erzak")
                     {
-                        devam.Emir.HedefKoy.ErzakYield += devam.Emir.BaseGeliriMiktar;
+                        int eskiYield = devam.Emir.HedefKoy.ErzakYield;
+                        devam.Emir.HedefKoy.ErzakYield = eskiYield * 2;
                         BildirimYoneticisi.Instance.Bildirim(
-                            "Erzak Yield (" + devam.Emir.HedefKoy.Isim + ")", devam.Emir.BaseGeliriMiktar);
+                            "Erzak Yield (" + devam.Emir.HedefKoy.Isim + ")", devam.Emir.HedefKoy.ErzakYield - eskiYield);
                     }
                     else
                     {

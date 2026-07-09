@@ -20,7 +20,7 @@ public class KoySecimPaneli : MonoBehaviour
         ButonSablonu.SetActive(false);
     }
 
-    public void KoySec(Action<KoyData> callback)
+    public void KoySec(Action<KoyData> callback, OrderData emirSablonu = null)
     {
         secilinceCagrilacak = callback;
 
@@ -34,10 +34,19 @@ public class KoySecimPaneli : MonoBehaviour
         {
             GameObject yeniButon = Instantiate(ButonSablonu, ButonSablonu.transform.parent);
             yeniButon.SetActive(true);
-            yeniButon.GetComponentInChildren<TMP_Text>().text = koy.Isim;
+
+            bool slotDolu = emirSablonu != null && emirSablonu.BinaSlotuKullanir
+                && koy.DoluBinaSlotu >= koy.MaxBinaSlotu;
+
+            yeniButon.GetComponentInChildren<TMP_Text>().text = slotDolu
+                ? koy.Isim + " (Dolu)"
+                : koy.Isim;
+
+            Button buton = yeniButon.GetComponent<Button>();
+            buton.interactable = !slotDolu;
 
             KoyData secilenKoy = koy;
-            yeniButon.GetComponent<Button>().onClick.AddListener(() => KoySecildi(secilenKoy));
+            buton.onClick.AddListener(() => KoySecildi(secilenKoy));
 
             olusturulanButonlar.Add(yeniButon);
         }

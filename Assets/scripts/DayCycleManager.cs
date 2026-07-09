@@ -124,6 +124,11 @@ public class DayCycleManager : MonoBehaviour
     
     public void UyuyaBas()
 {
+    if (KoySecimPaneli.Instance != null)
+    {
+        KoySecimPaneli.Instance.Panel.SetActive(false);
+    }
+
     AsamaDegistir(GunAsamasi.Resolve);
 
     GameManager.Instance.State.Gun++;

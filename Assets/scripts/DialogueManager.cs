@@ -173,9 +173,13 @@ public class DialogueManager : MonoBehaviour
             OrderData sablon = secenek.VerilecekEmir;
             KoySecimPaneli.Instance.KoySec((KoyData secilenKoy) =>
             {
+                if (sablon.BinaSlotuKullanir)
+                {
+                    secilenKoy.DoluBinaSlotu++;
+                }
                 Orders.EmirEkle(sablon.KopyalaVeKoyAta(secilenKoy));
                 DiyalogBitir();
-            });
+            }, sablon);
             return;
         }
 

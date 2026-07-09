@@ -10,6 +10,12 @@ public class KoyYoneticisi : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // Yeni oyuna baslarken her koyun Erzak Yield'i 1-4 arasi rastgele belirlensin
+        foreach (KoyData koy in Koyler)
+        {
+            koy.ErzakYield = Random.Range(1, 5);
+        }
     }
 
     public int ToplamErzak()

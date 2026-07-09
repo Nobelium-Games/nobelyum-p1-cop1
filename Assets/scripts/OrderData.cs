@@ -19,6 +19,7 @@ public class OrderData
 
     public bool KoySecimiGerekli;
     public KoyData HedefKoy;
+    public bool BinaSlotuKullanir;
 
     public OrderData() { }
 
@@ -48,6 +49,7 @@ public class OrderData
             BaseGeliriEtkiler, BaseGeliriStat, BaseGeliriMiktar);
         kopya.KoySecimiGerekli = KoySecimiGerekli;
         kopya.HedefKoy = koy;
+        kopya.BinaSlotuKullanir = BinaSlotuKullanir;
         return kopya;
     }
 }
