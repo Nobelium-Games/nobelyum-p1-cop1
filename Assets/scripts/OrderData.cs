@@ -20,6 +20,9 @@ public class OrderData
     public bool KoySecimiGerekli;
     public KoyData HedefKoy;
     public bool BinaSlotuKullanir;
+    public bool IsyanliKoyGerekli;
+    public bool ManpowerMiktariSorulsun;
+    public bool IsyanBastirir;
 
     public OrderData() { }
 
@@ -50,6 +53,9 @@ public class OrderData
         kopya.KoySecimiGerekli = KoySecimiGerekli;
         kopya.HedefKoy = koy;
         kopya.BinaSlotuKullanir = BinaSlotuKullanir;
+        kopya.IsyanliKoyGerekli = IsyanliKoyGerekli;
+        kopya.ManpowerMiktariSorulsun = ManpowerMiktariSorulsun;
+        kopya.IsyanBastirir = IsyanBastirir;
         return kopya;
     }
 }

@@ -72,6 +72,20 @@ public class DayResolver
         float zar = Random.Range(0f, 1f);
         bool basarili = zar < emir.BasariSansi;
 
+        if (emir.IsyanBastirir && emir.HedefKoy != null)
+        {
+            if (basarili)
+            {
+                emir.HedefKoy.IsyanHalinde = false;
+                mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyundeki isyan bastirildi!</color>");
+            }
+            else
+            {
+                mesajListesi.Add("<color=red>" + emir.HedefKoy.Isim + " koyundeki isyani bastiramadik.</color>");
+            }
+            return;
+        }
+
         if (basarili)
         {
             state.StatDegistir(emir.EtkilenenStat, emir.BasariliDegisim);

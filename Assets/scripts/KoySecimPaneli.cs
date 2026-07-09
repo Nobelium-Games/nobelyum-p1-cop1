@@ -39,7 +39,9 @@ public class KoySecimPaneli : MonoBehaviour
                 && koy.DoluBinaSlotu >= koy.MaxBinaSlotu;
             bool isyanEngeli = emirSablonu != null && emirSablonu.BinaSlotuKullanir
                 && koy.IsyanHalinde;
-            bool tiklanamaz = slotDolu || isyanEngeli;
+            bool isyansizEngeli = emirSablonu != null && emirSablonu.IsyanliKoyGerekli
+                && !koy.IsyanHalinde;
+            bool tiklanamaz = slotDolu || isyanEngeli || isyansizEngeli;
 
             string etiket = koy.Isim;
             if (isyanEngeli)
@@ -49,6 +51,10 @@ public class KoySecimPaneli : MonoBehaviour
             else if (slotDolu)
             {
                 etiket += " (Dolu)";
+            }
+            else if (isyansizEngeli)
+            {
+                etiket += " (Isyan Yok)";
             }
 
             yeniButon.GetComponentInChildren<TMP_Text>().text = etiket;

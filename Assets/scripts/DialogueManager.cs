@@ -177,6 +177,23 @@ public class DialogueManager : MonoBehaviour
                 {
                     secilenKoy.DoluBinaSlotu++;
                 }
+
+                if (sablon.ManpowerMiktariSorulsun)
+                {
+                    ManpowerSeciciPaneli.Instance.Sor((int miktar) =>
+                    {
+                        GameManager.Instance.State.StatDegistir("Manpower", -miktar);
+                        BildirimYoneticisi.Instance.Bildirim("Manpower", -miktar);
+
+                        OrderData kopya = sablon.KopyalaVeKoyAta(secilenKoy);
+                        kopya.MaliyetStat = "";
+                        kopya.MaliyetMiktar = 0;
+                        Orders.EmirEkle(kopya);
+                        DiyalogBitir();
+                    });
+                    return;
+                }
+
                 Orders.EmirEkle(sablon.KopyalaVeKoyAta(secilenKoy));
                 DiyalogBitir();
             }, sablon);

@@ -129,6 +129,11 @@ public class DayCycleManager : MonoBehaviour
         KoySecimPaneli.Instance.Panel.SetActive(false);
     }
 
+    if (ManpowerSeciciPaneli.Instance != null)
+    {
+        ManpowerSeciciPaneli.Instance.Panel.SetActive(false);
+    }
+
     AsamaDegistir(GunAsamasi.Resolve);
 
     GameManager.Instance.State.Gun++;

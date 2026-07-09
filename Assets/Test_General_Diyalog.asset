@@ -17,57 +17,68 @@ MonoBehaviour:
   - NodeID: 1
     NPCSozu: Emrinizdeyim
     Secenekler:
-    - SecenekMetni: "K\xF6y Ya\u011Fmala"
-      SonrakiNodeID: 2
+    - SecenekMetni: Asker Topla
+      SonrakiNodeID: 
       StatEtkileri: []
       VerilecekEmir:
-        DanismanTipi: 
-        EmirTuru: 
+        DanismanTipi: General
+        EmirTuru: Asker Topla
+        EtkilenenStat: Manpower
+        BasariliDegisim: 35
+        BasarisizDegisim: 0
+        BasariSansi: 0
+        ToplamSure: 1
+        SonucSansaBagli: 1
+        MaliyetStat: Altin
+        MaliyetMiktar: 15
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 0
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          ErzakYield: 1
+          AltinYield: 0
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+        BinaSlotuKullanir: 0
+        IsyanliKoyGerekli: 0
+        ManpowerMiktariSorulsun: 0
+        IsyanBastirir: 0
+    - SecenekMetni: "\u0130syan Bast\u0131r"
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: General
+        EmirTuru: "Isyan Bast\u0131r"
         EtkilenenStat: 
         BasariliDegisim: 0
         BasarisizDegisim: 0
-        BasariSansi: 0
+        BasariSansi: 1
         ToplamSure: 0
         SonucSansaBagli: 0
-        MaliyetStat: 
-        MaliyetMiktar: 0
-        BaseGeliriEtkiler: 0
-        BaseGeliriStat: 
-        BaseGeliriMiktar: 0
-    - SecenekMetni: Asker Topla
-      SonrakiNodeID: 
-      StatEtkileri: []
-      VerilecekEmir:
-        DanismanTipi: General
-        EmirTuru: Asker Topla
-        EtkilenenStat: Manpower
-        BasariliDegisim: 35
-        BasarisizDegisim: 0
-        BasariSansi: 0
-        ToplamSure: 1
-        SonucSansaBagli: 1
         MaliyetStat: Altin
         MaliyetMiktar: 15
         BaseGeliriEtkiler: 0
         BaseGeliriStat: 
         BaseGeliriMiktar: 0
-    - SecenekMetni: Asker Topla
-      SonrakiNodeID: 
-      StatEtkileri: []
-      VerilecekEmir:
-        DanismanTipi: General
-        EmirTuru: Asker Topla
-        EtkilenenStat: Manpower
-        BasariliDegisim: 35
-        BasarisizDegisim: 0
-        BasariSansi: 0
-        ToplamSure: 1
-        SonucSansaBagli: 1
-        MaliyetStat: Altin
-        MaliyetMiktar: 15
-        BaseGeliriEtkiler: 0
-        BaseGeliriStat: 
-        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 1
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          ErzakYield: 1
+          AltinYield: 0
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+        BinaSlotuKullanir: 0
+        IsyanliKoyGerekli: 1
+        ManpowerMiktariSorulsun: 1
+        IsyanBastirir: 1
   - NodeID: 2
     NPCSozu: "Hangi K\xF6y\xFC?"
     Secenekler:
@@ -88,3 +99,17 @@ MonoBehaviour:
         BaseGeliriEtkiler: 0
         BaseGeliriStat: 
         BaseGeliriMiktar: 0
+        KoySecimiGerekli: 0
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          ErzakYield: 1
+          AltinYield: 0
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+        BinaSlotuKullanir: 0
+        IsyanliKoyGerekli: 0
+        ManpowerMiktariSorulsun: 0
+        IsyanBastirir: 0
