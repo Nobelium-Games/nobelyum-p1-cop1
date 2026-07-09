@@ -26,7 +26,7 @@ MonoBehaviour:
         EtkilenenStat: Manpower
         BasariliDegisim: 35
         BasarisizDegisim: 0
-        BasariSansi: 0
+        BasariSansi: 0.9
         ToplamSure: 1
         SonucSansaBagli: 1
         MaliyetStat: Altin
@@ -41,6 +41,7 @@ MonoBehaviour:
           Erzak: 20
           ErzakYield: 1
           AltinYield: 0
+          Savunma: 20
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
           IsyanHalinde: 0
@@ -48,6 +49,7 @@ MonoBehaviour:
         IsyanliKoyGerekli: 0
         ManpowerMiktariSorulsun: 0
         IsyanBastirir: 0
+        GonderilenManpower: 0
     - SecenekMetni: "\u0130syan Bast\u0131r"
       SonrakiNodeID: 
       StatEtkileri: []
@@ -60,8 +62,8 @@ MonoBehaviour:
         BasariSansi: 1
         ToplamSure: 0
         SonucSansaBagli: 0
-        MaliyetStat: Altin
-        MaliyetMiktar: 15
+        MaliyetStat: 
+        MaliyetMiktar: 0
         BaseGeliriEtkiler: 0
         BaseGeliriStat: 
         BaseGeliriMiktar: 0
@@ -72,6 +74,7 @@ MonoBehaviour:
           Erzak: 20
           ErzakYield: 1
           AltinYield: 0
+          Savunma: 20
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
           IsyanHalinde: 0
@@ -79,6 +82,7 @@ MonoBehaviour:
         IsyanliKoyGerekli: 1
         ManpowerMiktariSorulsun: 1
         IsyanBastirir: 1
+        GonderilenManpower: 0
   - NodeID: 2
     NPCSozu: "Hangi K\xF6y\xFC?"
     Secenekler:
@@ -106,6 +110,7 @@ MonoBehaviour:
           Erzak: 20
           ErzakYield: 1
           AltinYield: 0
+          Savunma: 20
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
           IsyanHalinde: 0
@@ -113,3 +118,4 @@ MonoBehaviour:
         IsyanliKoyGerekli: 0
         ManpowerMiktariSorulsun: 0
         IsyanBastirir: 0
+        GonderilenManpower: 0

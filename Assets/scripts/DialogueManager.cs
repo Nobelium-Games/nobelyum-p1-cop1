@@ -188,6 +188,7 @@ public class DialogueManager : MonoBehaviour
                         OrderData kopya = sablon.KopyalaVeKoyAta(secilenKoy);
                         kopya.MaliyetStat = "";
                         kopya.MaliyetMiktar = 0;
+                        kopya.GonderilenManpower = miktar;
                         Orders.EmirEkle(kopya);
                         DiyalogBitir();
                     });

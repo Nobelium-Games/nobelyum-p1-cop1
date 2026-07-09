@@ -23,6 +23,7 @@ public class OrderData
     public bool IsyanliKoyGerekli;
     public bool ManpowerMiktariSorulsun;
     public bool IsyanBastirir;
+    public int GonderilenManpower;
 
     public OrderData() { }
 
@@ -56,6 +57,7 @@ public class OrderData
         kopya.IsyanliKoyGerekli = IsyanliKoyGerekli;
         kopya.ManpowerMiktariSorulsun = ManpowerMiktariSorulsun;
         kopya.IsyanBastirir = IsyanBastirir;
+        kopya.GonderilenManpower = GonderilenManpower;
         return kopya;
     }
 }

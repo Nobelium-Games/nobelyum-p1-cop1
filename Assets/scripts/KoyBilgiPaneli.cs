@@ -13,6 +13,7 @@ public class KoyBilgiPaneli : MonoBehaviour
     public TMP_Text AltinYieldText;
     public TMP_Text SlotText;
     public TMP_Text DurumText;
+    public TMP_Text SavunmaText;
 
     void Awake()
     {
@@ -29,6 +30,7 @@ public class KoyBilgiPaneli : MonoBehaviour
         ErzakYieldText.text = "Erzak Yield: " + YieldMetni(koy.ErzakYield, koy.IsyanHalinde);
         AltinYieldText.text = "Altin Yield: " + YieldMetni(koy.AltinYield, koy.IsyanHalinde);
         SlotText.text = "Bina Slotu: " + koy.DoluBinaSlotu + "/" + koy.MaxBinaSlotu;
+        SavunmaText.text = "Savunma: " + koy.Savunma;
 
         Panel.SetActive(true);
     }

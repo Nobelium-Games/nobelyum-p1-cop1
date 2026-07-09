@@ -69,12 +69,13 @@ public class DayResolver
 
     void ZarAtVeUygula(GameState state, OrderData emir, List<string> mesajListesi)
     {
-        float zar = Random.Range(0f, 1f);
-        bool basarili = zar < emir.BasariSansi;
-
         if (emir.IsyanBastirir && emir.HedefKoy != null)
         {
-            if (basarili)
+            int toplamGuc = emir.GonderilenManpower + emir.HedefKoy.Savunma;
+            float bastirmaSansi = toplamGuc <= 0 ? 0.5f : (float)emir.GonderilenManpower / toplamGuc;
+            bool bastirmaBasarili = Random.Range(0f, 1f) < bastirmaSansi;
+
+            if (bastirmaBasarili)
             {
                 emir.HedefKoy.IsyanHalinde = false;
                 mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyundeki isyan bastirildi!</color>");
@@ -85,6 +86,9 @@ public class DayResolver
             }
             return;
         }
+
+        float zar = Random.Range(0f, 1f);
+        bool basarili = zar < emir.BasariSansi;
 
         if (basarili)
         {

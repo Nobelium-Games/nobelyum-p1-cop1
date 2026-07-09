@@ -39,7 +39,15 @@ public class DayCycleManager : MonoBehaviour
 
     void Start()
     {
+        GelirleriUygula();
         YeniGuneBasla();
+    }
+
+    void GelirleriUygula()
+    {
+        GameManager.Instance.State.BaseGeliriUygula();
+        KoyYoneticisi.Instance.ErzagiGunlukArtir();
+        GameManager.Instance.State.Altin += KoyYoneticisi.Instance.ToplamAltinYieldi();
     }
 
     void AsamaDegistir(GunAsamasi yeniAsama)
@@ -54,10 +62,6 @@ public class DayCycleManager : MonoBehaviour
 
     void YeniGuneBasla()
 {
-    GameManager.Instance.State.BaseGeliriUygula();
-    KoyYoneticisi.Instance.ErzagiGunlukArtir();
-    GameManager.Instance.State.Altin += KoyYoneticisi.Instance.ToplamAltinYieldi();
-
     gunlukSira = sequencer.SiradakiListeyiOlustur(GameManager.Instance.State, KoyluNpc, AskerNpc, AyyasNpc);
 
     if (sonGeceSonuclari.Count > 0)
@@ -138,6 +142,10 @@ public class DayCycleManager : MonoBehaviour
 
     GameManager.Instance.State.Gun++;
     Debug.Log("Yeni gun: " + GameManager.Instance.State.Gun);
+
+    // Gece olaylarindan (isyan kontrolu, emirlerin sonuclanmasi) ONCE gelir uygulaniyor,
+    // boylece Uyu'ya basmadan once ekranda gorunen tahmini gelirle gerceklesen bire bir eslesiyor.
+    GelirleriUygula();
 
     sonGeceSonuclari = new List<string>();
 

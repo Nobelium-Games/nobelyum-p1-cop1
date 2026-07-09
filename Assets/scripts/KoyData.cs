@@ -8,6 +8,7 @@ public class KoyData
     public int Erzak = 20;
     public int ErzakYield = 1;
     public int AltinYield = 0;
+    public int Savunma = 20;
 
     public int MaxBinaSlotu = 3;
     public int DoluBinaSlotu = 0;
