@@ -78,6 +78,8 @@ public class DayResolver
             if (bastirmaBasarili)
             {
                 emir.HedefKoy.IsyanHalinde = false;
+                emir.HedefKoy.Sadakat = Mathf.Clamp(emir.HedefKoy.Sadakat + 10, 0, 100);
+                BildirimYoneticisi.Instance.Bildirim("Sadakat (" + emir.HedefKoy.Isim + ")", 10);
                 mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyundeki isyan bastirildi!</color>");
             }
             else

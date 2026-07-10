@@ -9,6 +9,7 @@ public class KoyBilgiPaneli : MonoBehaviour
     public TMP_Text IsimText;
     public TMP_Text SadakatText;
     public TMP_Text ErzakText;
+    public TMP_Text NufusText;
     public TMP_Text ErzakYieldText;
     public TMP_Text AltinYieldText;
     public TMP_Text SlotText;
@@ -27,6 +28,7 @@ public class KoyBilgiPaneli : MonoBehaviour
         DurumText.text = koy.IsyanHalinde ? "<color=red>ISYAN HALINDE</color>" : "";
         SadakatText.text = "Sadakat: " + koy.Sadakat;
         ErzakText.text = "Erzak: " + koy.Erzak;
+        NufusText.text = "Nufus: " + koy.Nufus + " <sup>" + YieldMetni(KoyYoneticisi.Instance.NufusYieldHesapla(koy), koy.IsyanHalinde) + "</sup>";
         ErzakYieldText.text = "Erzak Yield: " + YieldMetni(koy.ErzakYield, koy.IsyanHalinde);
         AltinYieldText.text = "Altin Yield: " + YieldMetni(koy.AltinYield, koy.IsyanHalinde);
         SlotText.text = "Bina Slotu: " + koy.DoluBinaSlotu + "/" + koy.MaxBinaSlotu;

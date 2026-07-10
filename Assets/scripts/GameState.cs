@@ -15,6 +15,7 @@ public class GameState
     public void BaseGeliriUygula()
     {
         KoyYoneticisi.Instance.ErzakDegistir(ErzakBaseGelir);
+        KoyYoneticisi.Instance.NufusuGunlukArtir();
         Altin += AltinBaseGelir;
     }
 
@@ -40,6 +41,8 @@ public class GameState
         {
             case "Erzak":
                 return KoyYoneticisi.Instance.ToplamErzak();
+            case "Nufus":
+                return KoyYoneticisi.Instance.ToplamNufus();
             case "Sadakat":
                 return Sadakat + KoyYoneticisi.Instance.OrtalamaSadakat();
             case "Altin":
@@ -59,6 +62,9 @@ public class GameState
         {
             case "Erzak":
                 KoyYoneticisi.Instance.ErzakDegistir(miktar);
+                break;
+            case "Nufus":
+                KoyYoneticisi.Instance.NufusDegistir(miktar);
                 break;
             case "Sadakat":
                 Sadakat = UnityEngine.Mathf.Clamp(Sadakat + miktar, 0, 100);

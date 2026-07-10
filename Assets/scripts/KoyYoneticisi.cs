@@ -7,6 +7,10 @@ public class KoyYoneticisi : MonoBehaviour
 
     public List<KoyData> Koyler = new List<KoyData>();
 
+    [Header("Nufus Buyume Ayarlari")]
+    public float NufusEsik = 1f;
+    public float NufusKatsayi = 10f;
+
     void Awake()
     {
         Instance = this;
@@ -43,6 +47,70 @@ public class KoyYoneticisi : MonoBehaviour
             int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
             Koyler[i].Erzak += buKoyeUygulanacak;
         }
+    }
+
+    public int ToplamNufus()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            toplam += koy.Nufus;
+        }
+        return toplam;
+    }
+
+    public void NufusDegistir(int miktar)
+    {
+        if (Koyler.Count == 0)
+        {
+            return;
+        }
+
+        int koyBasinaDusen = miktar / Koyler.Count;
+        int kalan = miktar % Koyler.Count;
+
+        for (int i = 0; i < Koyler.Count; i++)
+        {
+            int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
+            Koyler[i].Nufus += buKoyeUygulanacak;
+        }
+    }
+
+    public int NufusYieldHesapla(KoyData koy)
+    {
+        if (koy.Nufus <= 0)
+        {
+            return 0;
+        }
+
+        float kisiBasiStok = (float)koy.Erzak / koy.Nufus;
+        return Mathf.RoundToInt((kisiBasiStok - NufusEsik) * NufusKatsayi);
+    }
+
+    public void NufusuGunlukArtir()
+    {
+        foreach (KoyData koy in Koyler)
+        {
+            if (koy.IsyanHalinde)
+            {
+                continue;
+            }
+            koy.Nufus += NufusYieldHesapla(koy);
+        }
+    }
+
+    public int ToplamNufusYieldi()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            if (koy.IsyanHalinde)
+            {
+                continue;
+            }
+            toplam += NufusYieldHesapla(koy);
+        }
+        return toplam;
     }
 
     public void ErzagiGunlukArtir()
