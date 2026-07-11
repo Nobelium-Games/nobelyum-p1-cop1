@@ -112,7 +112,7 @@ public class DayResolver
 
             if (saldiriBasarili)
             {
-                emir.HedefKoy.Sahip = Krallik.Oyuncu;
+                emir.HedefKoy.Sahip = KoyYoneticisi.Instance.OyuncuKralligi;
                 emir.HedefKoy.Garnizon = hayattaKalanManpower;
                 mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyu ele gecirildi! (" + kaybedilenManpower + " asker kaybettik, " + hayattaKalanManpower + " asker koyde garnizon olarak kaldi)</color>");
             }

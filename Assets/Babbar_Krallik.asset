@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d03fa23711602bb44ab57542545ab36b, type: 3}
+  m_Name: Babbar_Krallik
+  m_EditorClassIdentifier: Assembly-CSharp::KrallikData
+  Isim: "Babbar Krall\u0131\u011F\u0131"
+  HaritaRengi: {r: 0.2, g: 0.4, b: 1, a: 1}
+  Bayrak: {fileID: -5789408411567217797, guid: b43283a8abbb91c43a003b300f482fd2, type: 3}

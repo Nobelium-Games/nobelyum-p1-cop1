@@ -6,7 +6,6 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
 {
     public Color HoverRengi = Color.yellow;
     public Color IsyanRengi = Color.red;
-    public Color DusmanRengi = Color.blue;
 
     private TMP_Text metin;
     private Color normalRenk;
@@ -30,9 +29,9 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
         {
             metin.color = IsyanRengi;
         }
-        else if (koy != null && koy.Sahip == Krallik.Dusman)
+        else if (koy != null && koy.Sahip != null && koy.Sahip != KoyYoneticisi.Instance.OyuncuKralligi)
         {
-            metin.color = DusmanRengi;
+            metin.color = koy.Sahip.HaritaRengi;
         }
         else
         {
@@ -58,11 +57,18 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
     public void OnPointerEnter(PointerEventData eventData)
     {
         metin.color = HoverRengi;
+
+        KoyData koy = BulKoy();
+        if (koy != null && koy.Sahip != null)
+        {
+            TooltipUI.Instance.Goster(koy.Sahip.Isim);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         GuncelleRenk();
+        TooltipUI.Instance.Gizle();
     }
 
     public void OnPointerClick(PointerEventData eventData)

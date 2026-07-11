@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class KoyBilgiPaneli : MonoBehaviour
@@ -7,6 +8,7 @@ public class KoyBilgiPaneli : MonoBehaviour
 
     public GameObject Panel;
     public TMP_Text IsimText;
+    public Image BayrakImage;
     public TMP_Text SadakatText;
     public TMP_Text ErzakText;
     public TMP_Text NufusText;
@@ -25,9 +27,17 @@ public class KoyBilgiPaneli : MonoBehaviour
 
     public void Goster(KoyData koy)
     {
-        bool bizeAit = koy.Sahip == Krallik.Oyuncu;
+        bool bizeAit = koy.Sahip == KoyYoneticisi.Instance.OyuncuKralligi;
 
         IsimText.text = koy.Isim;
+
+        bool bayrakVar = koy.Sahip != null && koy.Sahip.Bayrak != null;
+        BayrakImage.gameObject.SetActive(bayrakVar);
+        if (bayrakVar)
+        {
+            BayrakImage.sprite = koy.Sahip.Bayrak;
+        }
+
         SavunmaText.text = "Savunma: " + koy.Savunma;
         GarnizonText.text = "Garnizon: " + koy.Garnizon;
 
@@ -45,7 +55,14 @@ public class KoyBilgiPaneli : MonoBehaviour
             SadakatText.text = "Sadakat: " + koy.Sadakat;
             ErzakText.text = "Erzak: " + koy.Erzak;
             NufusText.text = "Nufus: " + koy.Nufus + " <sup>" + YieldMetni(KoyYoneticisi.Instance.NufusYieldHesapla(koy), koy.IsyanHalinde) + "</sup>";
-            ErzakYieldText.text = "Erzak Yield: " + YieldMetni(koy.ErzakYield, koy.IsyanHalinde);
+            ErzakYieldText.text = "<link=\"gelir\">Erzak Yield: " + YieldMetni(KoyYoneticisi.Instance.NetErzakYieldHesapla(koy), koy.IsyanHalinde) + "</link>";
+
+            StatTooltip erzakYieldTooltip = ErzakYieldText.GetComponent<StatTooltip>();
+            if (erzakYieldTooltip != null)
+            {
+                KoyData koyReferansi = koy;
+                erzakYieldTooltip.GelirMetinFonksiyonu = () => KoyYoneticisi.Instance.ErzakYieldKoyBilgisiMetni(koyReferansi);
+            }
             AltinYieldText.text = "Altin Yield: " + YieldMetni(koy.AltinYield, koy.IsyanHalinde);
             SlotText.text = "Bina Slotu: " + koy.DoluBinaSlotu + "/" + koy.MaxBinaSlotu;
         }

@@ -84,12 +84,12 @@ public class DialogueManager : MonoBehaviour
 
         foreach (KoyData koy in KoyYoneticisi.Instance.Koyler)
         {
-            if (sablon.DusmanKoyuGerekli && koy.Sahip != Krallik.Dusman)
+            if (sablon.DusmanKoyuGerekli && koy.Sahip == KoyYoneticisi.Instance.OyuncuKralligi)
             {
                 continue;
             }
 
-            if (!sablon.DusmanKoyuGerekli && koy.Sahip != Krallik.Oyuncu)
+            if (!sablon.DusmanKoyuGerekli && koy.Sahip != KoyYoneticisi.Instance.OyuncuKralligi)
             {
                 continue;
             }
@@ -164,7 +164,7 @@ public class DialogueManager : MonoBehaviour
     {
         if (aktifKoy != null && statAdi == "Erzak")
         {
-            aktifKoy.Erzak += miktar;
+            aktifKoy.Erzak = Mathf.Max(0, aktifKoy.Erzak + miktar);
         }
         else if (aktifKoy != null && statAdi == "Sadakat")
         {

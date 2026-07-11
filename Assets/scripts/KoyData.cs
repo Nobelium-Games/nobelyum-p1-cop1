@@ -8,6 +8,7 @@ public class KoyData
     public int Erzak = 20;
     public int Nufus = 30;
     public int ErzakYield = 1;
+    public int BaseErzakYield = 1;
     public int AltinYield = 0;
     public int Savunma = 20;
 
@@ -16,6 +17,6 @@ public class KoyData
 
     public bool IsyanHalinde = false;
 
-    public Krallik Sahip = Krallik.Oyuncu;
+    public KrallikData Sahip;
     public int Garnizon = 0;
 }

@@ -14,7 +14,21 @@ public class StatsUI : MonoBehaviour
         StatTooltip erzakTooltip = ErzakText.GetComponent<StatTooltip>();
         if (erzakTooltip != null)
         {
-            erzakTooltip.MetinFonksiyonu = KoyYoneticisi.Instance.ErzakDagilimMetni;
+            erzakTooltip.StokMetinFonksiyonu = KoyYoneticisi.Instance.ErzakDagilimMetni;
+            erzakTooltip.GelirMetinFonksiyonu = KoyYoneticisi.Instance.ErzakYieldDagilimMetni;
+        }
+
+        StatTooltip altinTooltip = AltinText.GetComponent<StatTooltip>();
+        if (altinTooltip != null)
+        {
+            altinTooltip.GelirMetinFonksiyonu = KoyYoneticisi.Instance.AltinYieldDagilimMetni;
+        }
+
+        StatTooltip nufusTooltip = NufusText.GetComponent<StatTooltip>();
+        if (nufusTooltip != null)
+        {
+            nufusTooltip.StokMetinFonksiyonu = KoyYoneticisi.Instance.NufusDagilimMetni;
+            nufusTooltip.GelirMetinFonksiyonu = KoyYoneticisi.Instance.NufusYieldDagilimMetni;
         }
     }
 
@@ -33,10 +47,10 @@ public class StatsUI : MonoBehaviour
         string altinGelir = GelirMetni(toplamAltinGelir);
         string nufusGelirMetni = GelirMetni(nufusGelir);
 
-        ErzakText.text = "Erzak: " + toplamErzak + " <sup>" + erzakGelir + "</sup>";
-        AltinText.text = "Altin: " + state.Altin + " <sup>" + altinGelir + "</sup>";
+        ErzakText.text = "<link=\"stok\">Erzak: " + toplamErzak + "</link> <link=\"gelir\"><sup>" + erzakGelir + "</sup></link>";
+        AltinText.text = "<link=\"gelir\">Altin: " + state.Altin + " <sup>" + altinGelir + "</sup></link>";
         ManpowerText.text = "Manpower: " + state.Manpower;
-        NufusText.text = "Nufus: " + toplamNufus + " <sup>" + nufusGelirMetni + "</sup>";
+        NufusText.text = "<link=\"stok\">Nufus: " + toplamNufus + "</link> <link=\"gelir\"><sup>" + nufusGelirMetni + "</sup></link>";
         SadakatText.text = "Sadakat: " + toplamSadakat;
     }
 

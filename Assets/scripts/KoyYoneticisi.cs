@@ -7,6 +7,9 @@ public class KoyYoneticisi : MonoBehaviour
 
     public List<KoyData> Koyler = new List<KoyData>();
 
+    [Header("Krallik Ayarlari")]
+    public KrallikData OyuncuKralligi;
+
     [Header("Nufus Buyume Ayarlari")]
     public float NufusEsik = 1f;
     public float NufusKatsayi = 10f;
@@ -22,12 +25,13 @@ public class KoyYoneticisi : MonoBehaviour
         foreach (KoyData koy in Koyler)
         {
             koy.ErzakYield = Random.Range(1, 5);
+            koy.BaseErzakYield = koy.ErzakYield;
         }
     }
 
     bool BizeAitDegil(KoyData koy)
     {
-        return koy.IsyanHalinde || koy.Sahip != Krallik.Oyuncu;
+        return koy.IsyanHalinde || koy.Sahip != OyuncuKralligi;
     }
 
     public int ToplamErzak()
@@ -58,7 +62,7 @@ public class KoyYoneticisi : MonoBehaviour
         for (int i = 0; i < bizimKoylerimiz.Count; i++)
         {
             int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
-            bizimKoylerimiz[i].Erzak += buKoyeUygulanacak;
+            bizimKoylerimiz[i].Erzak = Mathf.Max(0, bizimKoylerimiz[i].Erzak + buKoyeUygulanacak);
         }
     }
 
@@ -90,7 +94,7 @@ public class KoyYoneticisi : MonoBehaviour
         for (int i = 0; i < bizimKoylerimiz.Count; i++)
         {
             int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
-            bizimKoylerimiz[i].Nufus += buKoyeUygulanacak;
+            bizimKoylerimiz[i].Nufus = Mathf.Max(0, bizimKoylerimiz[i].Nufus + buKoyeUygulanacak);
         }
     }
 
@@ -113,7 +117,7 @@ public class KoyYoneticisi : MonoBehaviour
             {
                 continue;
             }
-            koy.Nufus += NufusYieldHesapla(koy);
+            koy.Nufus = Mathf.Max(0, koy.Nufus + NufusYieldHesapla(koy));
         }
     }
 
@@ -131,6 +135,11 @@ public class KoyYoneticisi : MonoBehaviour
         return toplam;
     }
 
+    public int NetErzakYieldHesapla(KoyData koy)
+    {
+        return koy.ErzakYield - koy.Garnizon;
+    }
+
     public void ErzagiGunlukArtir()
     {
         foreach (KoyData koy in Koyler)
@@ -139,7 +148,7 @@ public class KoyYoneticisi : MonoBehaviour
             {
                 continue;
             }
-            koy.Erzak += koy.ErzakYield;
+            koy.Erzak = Mathf.Max(0, koy.Erzak + NetErzakYieldHesapla(koy));
         }
     }
 
@@ -152,7 +161,7 @@ public class KoyYoneticisi : MonoBehaviour
             {
                 continue;
             }
-            toplam += koy.ErzakYield;
+            toplam += NetErzakYieldHesapla(koy);
         }
         return toplam;
     }
@@ -175,7 +184,7 @@ public class KoyYoneticisi : MonoBehaviour
     {
         foreach (KoyData koy in Koyler)
         {
-            if (koy.Sahip != Krallik.Oyuncu || koy.IsyanHalinde || koy.Sadakat >= 50)
+            if (koy.Sahip != OyuncuKralligi || koy.IsyanHalinde || koy.Sadakat >= 50)
             {
                 continue;
             }
@@ -196,21 +205,55 @@ public class KoyYoneticisi : MonoBehaviour
 
     public string ErzakDagilimMetni()
     {
-        string metin = "";
-        foreach (KoyData koy in Koyler)
+        return "Koyler: " + ToplamErzak();
+    }
+
+    public string ErzakYieldDagilimMetni()
+    {
+        return "Koyler: " + IsaretliMetin(ToplamErzakYieldi());
+    }
+
+    public string ErzakYieldKoyBilgisiMetni(KoyData koy)
+    {
+        string metin = "Baz: " + IsaretliMetin(koy.BaseErzakYield);
+
+        int degirmenBonus = koy.ErzakYield - koy.BaseErzakYield;
+        if (degirmenBonus != 0)
         {
-            if (BizeAitDegil(koy))
-            {
-                continue;
-            }
-            metin += koy.Isim + ": " + koy.Erzak + "\n";
+            metin += "\nDegirmen: " + IsaretliMetin(degirmenBonus);
         }
-        return metin.TrimEnd('\n');
+
+        if (koy.Garnizon != 0)
+        {
+            metin += "\nGarnizon: -" + koy.Garnizon;
+        }
+
+        return metin;
+    }
+
+    public string NufusDagilimMetni()
+    {
+        return "Koyler: " + ToplamNufus();
+    }
+
+    public string NufusYieldDagilimMetni()
+    {
+        return "Koyler: " + IsaretliMetin(ToplamNufusYieldi());
+    }
+
+    public string AltinYieldDagilimMetni()
+    {
+        return "Koyler: " + IsaretliMetin(ToplamAltinYieldi());
+    }
+
+    string IsaretliMetin(int miktar)
+    {
+        return miktar > 0 ? "+" + miktar : miktar.ToString();
     }
 
     public int OrtalamaSadakat()
     {
-        List<KoyData> bizimKoylerimiz = Koyler.FindAll(koy => koy.Sahip == Krallik.Oyuncu);
+        List<KoyData> bizimKoylerimiz = Koyler.FindAll(koy => koy.Sahip == OyuncuKralligi);
         if (bizimKoylerimiz.Count == 0)
         {
             return 0;
