@@ -71,20 +71,59 @@ public class DayResolver
     {
         if (emir.IsyanBastirir && emir.HedefKoy != null)
         {
-            int toplamGuc = emir.GonderilenManpower + emir.HedefKoy.Savunma;
+            int toplamGuc = emir.GonderilenManpower + emir.HedefKoy.Nufus;
             float bastirmaSansi = toplamGuc <= 0 ? 0.5f : (float)emir.GonderilenManpower / toplamGuc;
             bool bastirmaBasarili = Random.Range(0f, 1f) < bastirmaSansi;
+
+            float kayipYuzdesi = bastirmaBasarili ? 0.15f : 0.80f;
+            int kaybedilenManpower = Mathf.RoundToInt(emir.GonderilenManpower * kayipYuzdesi);
+            int geriDonenManpower = emir.GonderilenManpower - kaybedilenManpower;
+
+            if (geriDonenManpower > 0)
+            {
+                state.StatDegistir("Manpower", geriDonenManpower);
+                BildirimYoneticisi.Instance.Bildirim("Manpower", geriDonenManpower);
+            }
 
             if (bastirmaBasarili)
             {
                 emir.HedefKoy.IsyanHalinde = false;
                 emir.HedefKoy.Sadakat = Mathf.Clamp(emir.HedefKoy.Sadakat + 10, 0, 100);
                 BildirimYoneticisi.Instance.Bildirim("Sadakat (" + emir.HedefKoy.Isim + ")", 10);
-                mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyundeki isyan bastirildi!</color>");
+                mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyundeki isyan bastirildi! (" + kaybedilenManpower + " asker kaybettik, " + geriDonenManpower + " asker geri dondu)</color>");
             }
             else
             {
-                mesajListesi.Add("<color=red>" + emir.HedefKoy.Isim + " koyundeki isyani bastiramadik.</color>");
+                mesajListesi.Add("<color=red>" + emir.HedefKoy.Isim + " koyundeki isyani bastiramadik. (" + kaybedilenManpower + " asker kaybettik, " + geriDonenManpower + " asker geri dondu)</color>");
+            }
+            return;
+        }
+
+        if (emir.SaldiriBaslatir && emir.HedefKoy != null)
+        {
+            float etkinSavunma = KoyYoneticisi.Instance.EtkinSavunmaHesapla(emir.HedefKoy);
+            float toplamGuc = emir.GonderilenManpower + etkinSavunma;
+            float saldiriSansi = toplamGuc <= 0f ? 0.5f : emir.GonderilenManpower / toplamGuc;
+            bool saldiriBasarili = Random.Range(0f, 1f) < saldiriSansi;
+
+            float kayipYuzdesi = saldiriBasarili ? 0.15f : 0.80f;
+            int kaybedilenManpower = Mathf.RoundToInt(emir.GonderilenManpower * kayipYuzdesi);
+            int hayattaKalanManpower = emir.GonderilenManpower - kaybedilenManpower;
+
+            if (saldiriBasarili)
+            {
+                emir.HedefKoy.Sahip = Krallik.Oyuncu;
+                emir.HedefKoy.Garnizon = hayattaKalanManpower;
+                mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyu ele gecirildi! (" + kaybedilenManpower + " asker kaybettik, " + hayattaKalanManpower + " asker koyde garnizon olarak kaldi)</color>");
+            }
+            else
+            {
+                if (hayattaKalanManpower > 0)
+                {
+                    state.StatDegistir("Manpower", hayattaKalanManpower);
+                    BildirimYoneticisi.Instance.Bildirim("Manpower", hayattaKalanManpower);
+                }
+                mesajListesi.Add("<color=red>" + emir.HedefKoy.Isim + " koyune saldiri basarisiz oldu. (" + kaybedilenManpower + " asker kaybettik, " + hayattaKalanManpower + " asker geri dondu)</color>");
             }
             return;
         }

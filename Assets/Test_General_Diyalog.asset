@@ -83,6 +83,43 @@ MonoBehaviour:
         ManpowerMiktariSorulsun: 1
         IsyanBastirir: 1
         GonderilenManpower: 0
+        DusmanKoyuGerekli: 0
+        SaldiriBaslatir: 0
+    - SecenekMetni: Saldir
+      SonrakiNodeID:
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: General
+        EmirTuru: Saldiri
+        EtkilenenStat:
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 1
+        ToplamSure: 0
+        SonucSansaBagli: 0
+        MaliyetStat:
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat:
+        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 1
+        HedefKoy:
+          Isim:
+          Sadakat: 50
+          Erzak: 20
+          ErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+        BinaSlotuKullanir: 0
+        IsyanliKoyGerekli: 0
+        ManpowerMiktariSorulsun: 1
+        IsyanBastirir: 0
+        GonderilenManpower: 0
+        DusmanKoyuGerekli: 1
+        SaldiriBaslatir: 1
   - NodeID: 2
     NPCSozu: "Hangi K\xF6y\xFC?"
     Secenekler:

@@ -11,6 +11,9 @@ public class KoyYoneticisi : MonoBehaviour
     public float NufusEsik = 1f;
     public float NufusKatsayi = 10f;
 
+    [Header("Savas Ayarlari")]
+    public float GarnizonKatsayisi = 10f;
+
     void Awake()
     {
         Instance = this;
@@ -22,11 +25,20 @@ public class KoyYoneticisi : MonoBehaviour
         }
     }
 
+    bool BizeAitDegil(KoyData koy)
+    {
+        return koy.IsyanHalinde || koy.Sahip != Krallik.Oyuncu;
+    }
+
     public int ToplamErzak()
     {
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
+            if (BizeAitDegil(koy))
+            {
+                continue;
+            }
             toplam += koy.Erzak;
         }
         return toplam;
@@ -34,18 +46,19 @@ public class KoyYoneticisi : MonoBehaviour
 
     public void ErzakDegistir(int miktar)
     {
-        if (Koyler.Count == 0)
+        List<KoyData> bizimKoylerimiz = Koyler.FindAll(koy => !BizeAitDegil(koy));
+        if (bizimKoylerimiz.Count == 0)
         {
             return;
         }
 
-        int koyBasinaDusen = miktar / Koyler.Count;
-        int kalan = miktar % Koyler.Count;
+        int koyBasinaDusen = miktar / bizimKoylerimiz.Count;
+        int kalan = miktar % bizimKoylerimiz.Count;
 
-        for (int i = 0; i < Koyler.Count; i++)
+        for (int i = 0; i < bizimKoylerimiz.Count; i++)
         {
             int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
-            Koyler[i].Erzak += buKoyeUygulanacak;
+            bizimKoylerimiz[i].Erzak += buKoyeUygulanacak;
         }
     }
 
@@ -54,6 +67,10 @@ public class KoyYoneticisi : MonoBehaviour
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
+            if (BizeAitDegil(koy))
+            {
+                continue;
+            }
             toplam += koy.Nufus;
         }
         return toplam;
@@ -61,18 +78,19 @@ public class KoyYoneticisi : MonoBehaviour
 
     public void NufusDegistir(int miktar)
     {
-        if (Koyler.Count == 0)
+        List<KoyData> bizimKoylerimiz = Koyler.FindAll(koy => !BizeAitDegil(koy));
+        if (bizimKoylerimiz.Count == 0)
         {
             return;
         }
 
-        int koyBasinaDusen = miktar / Koyler.Count;
-        int kalan = miktar % Koyler.Count;
+        int koyBasinaDusen = miktar / bizimKoylerimiz.Count;
+        int kalan = miktar % bizimKoylerimiz.Count;
 
-        for (int i = 0; i < Koyler.Count; i++)
+        for (int i = 0; i < bizimKoylerimiz.Count; i++)
         {
             int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
-            Koyler[i].Nufus += buKoyeUygulanacak;
+            bizimKoylerimiz[i].Nufus += buKoyeUygulanacak;
         }
     }
 
@@ -91,7 +109,7 @@ public class KoyYoneticisi : MonoBehaviour
     {
         foreach (KoyData koy in Koyler)
         {
-            if (koy.IsyanHalinde)
+            if (BizeAitDegil(koy))
             {
                 continue;
             }
@@ -104,7 +122,7 @@ public class KoyYoneticisi : MonoBehaviour
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
-            if (koy.IsyanHalinde)
+            if (BizeAitDegil(koy))
             {
                 continue;
             }
@@ -117,7 +135,7 @@ public class KoyYoneticisi : MonoBehaviour
     {
         foreach (KoyData koy in Koyler)
         {
-            if (koy.IsyanHalinde)
+            if (BizeAitDegil(koy))
             {
                 continue;
             }
@@ -130,7 +148,7 @@ public class KoyYoneticisi : MonoBehaviour
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
-            if (koy.IsyanHalinde)
+            if (BizeAitDegil(koy))
             {
                 continue;
             }
@@ -144,7 +162,7 @@ public class KoyYoneticisi : MonoBehaviour
         int toplam = 0;
         foreach (KoyData koy in Koyler)
         {
-            if (koy.IsyanHalinde)
+            if (BizeAitDegil(koy))
             {
                 continue;
             }
@@ -157,7 +175,7 @@ public class KoyYoneticisi : MonoBehaviour
     {
         foreach (KoyData koy in Koyler)
         {
-            if (koy.IsyanHalinde || koy.Sadakat >= 50)
+            if (koy.Sahip != Krallik.Oyuncu || koy.IsyanHalinde || koy.Sadakat >= 50)
             {
                 continue;
             }
@@ -171,18 +189,38 @@ public class KoyYoneticisi : MonoBehaviour
         }
     }
 
+    public float EtkinSavunmaHesapla(KoyData koy)
+    {
+        return koy.Savunma * (1f + koy.Garnizon / GarnizonKatsayisi);
+    }
+
+    public string ErzakDagilimMetni()
+    {
+        string metin = "";
+        foreach (KoyData koy in Koyler)
+        {
+            if (BizeAitDegil(koy))
+            {
+                continue;
+            }
+            metin += koy.Isim + ": " + koy.Erzak + "\n";
+        }
+        return metin.TrimEnd('\n');
+    }
+
     public int OrtalamaSadakat()
     {
-        if (Koyler.Count == 0)
+        List<KoyData> bizimKoylerimiz = Koyler.FindAll(koy => koy.Sahip == Krallik.Oyuncu);
+        if (bizimKoylerimiz.Count == 0)
         {
             return 0;
         }
 
         int toplam = 0;
-        foreach (KoyData koy in Koyler)
+        foreach (KoyData koy in bizimKoylerimiz)
         {
             toplam += koy.Sadakat;
         }
-        return toplam / Koyler.Count;
+        return toplam / bizimKoylerimiz.Count;
     }
 }

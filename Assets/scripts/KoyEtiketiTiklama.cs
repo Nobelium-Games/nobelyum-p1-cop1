@@ -6,6 +6,7 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
 {
     public Color HoverRengi = Color.yellow;
     public Color IsyanRengi = Color.red;
+    public Color DusmanRengi = Color.blue;
 
     private TMP_Text metin;
     private Color normalRenk;
@@ -24,7 +25,19 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
     void GuncelleRenk()
     {
         KoyData koy = BulKoy();
-        metin.color = (koy != null && koy.IsyanHalinde) ? IsyanRengi : normalRenk;
+
+        if (koy != null && koy.IsyanHalinde)
+        {
+            metin.color = IsyanRengi;
+        }
+        else if (koy != null && koy.Sahip == Krallik.Dusman)
+        {
+            metin.color = DusmanRengi;
+        }
+        else
+        {
+            metin.color = normalRenk;
+        }
     }
 
     KoyData BulKoy()

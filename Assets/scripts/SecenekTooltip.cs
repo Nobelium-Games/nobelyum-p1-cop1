@@ -4,11 +4,11 @@ using UnityEngine.EventSystems;
 public class SecenekTooltip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     public DialogueManager Dialog;
-    public int SecenekIndex;
+    [HideInInspector] public DialogueChoice Secenek;
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        string metin = Dialog.MaliyetMetniAl(SecenekIndex);
+        string metin = Dialog.MaliyetMetniAl(Secenek);
 
         if (!string.IsNullOrEmpty(metin))
         {

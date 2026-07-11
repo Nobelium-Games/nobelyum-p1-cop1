@@ -15,4 +15,7 @@ public class KoyData
     public int DoluBinaSlotu = 0;
 
     public bool IsyanHalinde = false;
+
+    public Krallik Sahip = Krallik.Oyuncu;
+    public int Garnizon = 0;
 }

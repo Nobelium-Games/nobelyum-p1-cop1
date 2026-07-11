@@ -3,7 +3,20 @@ using TMPro;
 
 public class StatsUI : MonoBehaviour
 {
-    public TMP_Text StatlarText;
+    public TMP_Text ErzakText;
+    public TMP_Text AltinText;
+    public TMP_Text ManpowerText;
+    public TMP_Text NufusText;
+    public TMP_Text SadakatText;
+
+    void Start()
+    {
+        StatTooltip erzakTooltip = ErzakText.GetComponent<StatTooltip>();
+        if (erzakTooltip != null)
+        {
+            erzakTooltip.MetinFonksiyonu = KoyYoneticisi.Instance.ErzakDagilimMetni;
+        }
+    }
 
     void Update()
     {
@@ -20,12 +33,11 @@ public class StatsUI : MonoBehaviour
         string altinGelir = GelirMetni(toplamAltinGelir);
         string nufusGelirMetni = GelirMetni(nufusGelir);
 
-        StatlarText.text =
-            "Erzak: " + toplamErzak + " <sup>" + erzakGelir + "</sup>\n" +
-            "Altin: " + state.Altin + " <sup>" + altinGelir + "</sup>\n" +
-            "Manpower: " + state.Manpower + "\n" +
-            "Nufus: " + toplamNufus + " <sup>" + nufusGelirMetni + "</sup>\n" +
-            "Sadakat: " + toplamSadakat;
+        ErzakText.text = "Erzak: " + toplamErzak + " <sup>" + erzakGelir + "</sup>";
+        AltinText.text = "Altin: " + state.Altin + " <sup>" + altinGelir + "</sup>";
+        ManpowerText.text = "Manpower: " + state.Manpower;
+        NufusText.text = "Nufus: " + toplamNufus + " <sup>" + nufusGelirMetni + "</sup>";
+        SadakatText.text = "Sadakat: " + toplamSadakat;
     }
 
     string GelirMetni(int miktar)

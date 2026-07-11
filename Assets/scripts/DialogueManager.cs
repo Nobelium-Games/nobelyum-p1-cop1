@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,17 +8,16 @@ public class DialogueManager : MonoBehaviour
 {
     public TMP_Text NpcIsimText;
     public TMP_Text NpcSozuText;
-    public TMP_Text SecenekButon1Text;
-    public TMP_Text SecenekButon2Text;
     public Image PortreImage;
 
     private DialogueData aktifDiyalog;
     private DialogueNode aktifNode;
-    public GameObject SecenekButon2;
-    public Button SecenekButon1Buton;
-    public Button SecenekButon2Buton;
+    public GameObject SecenekButonSablonu;
+    public Transform SecenekIcerik;
     public OrderManager Orders;
     public GameObject DiyalogKutusuKok;
+
+    private List<GameObject> olusturulanSecenekButonlari = new List<GameObject>();
 
     private bool aktifDanismanDiyalogu = false;
     private KoyData aktifKoy;
@@ -42,40 +43,101 @@ public class DialogueManager : MonoBehaviour
     }
     NpcSozuText.text = soz;
 
-    SecenekButon1Buton.gameObject.SetActive(true);
-    SecenekButon1Text.text = aktifNode.Secenekler[0].SecenekMetni;
-    SecenekButon1Buton.interactable = SecenekKarsilanabilirMi(aktifNode.Secenekler[0]);
-
-    if (aktifNode.Secenekler.Count > 1)
+    foreach (GameObject eskiButon in olusturulanSecenekButonlari)
     {
-        SecenekButon2.SetActive(true);
-        SecenekButon2Text.text = aktifNode.Secenekler[1].SecenekMetni;
-        SecenekButon2Buton.interactable = SecenekKarsilanabilirMi(aktifNode.Secenekler[1]);
+        Destroy(eskiButon);
     }
-    else
+    olusturulanSecenekButonlari.Clear();
+
+    foreach (DialogueChoice secenek in aktifNode.Secenekler)
     {
-        SecenekButon2.SetActive(false);
+        GameObject yeniButon = Instantiate(SecenekButonSablonu, SecenekIcerik);
+        yeniButon.SetActive(true);
+        yeniButon.GetComponentInChildren<TMP_Text>().text = secenek.SecenekMetni;
+
+        Button buton = yeniButon.GetComponent<Button>();
+        buton.interactable = SecenekKarsilanabilirMi(secenek);
+
+        DialogueChoice secilenSecenek = secenek;
+        buton.onClick.AddListener(() => SecenekUygula(secilenSecenek));
+
+        SecenekTooltip tooltip = yeniButon.GetComponent<SecenekTooltip>();
+        if (tooltip != null)
+        {
+            tooltip.Dialog = this;
+            tooltip.Secenek = secilenSecenek;
+        }
+
+        olusturulanSecenekButonlari.Add(yeniButon);
     }
 }
 
-    public void Secenek1Secildi()
+    void KoySecimGoster(OrderData sablon, Action<KoyData> callback)
     {
-        SecenekUygula(aktifNode.Secenekler[0]);
-    }
+        NpcSozuText.text = "Hangi koy?";
 
-    public void Secenek2Secildi()
-    {
-        SecenekUygula(aktifNode.Secenekler[1]);
-    }
-
-    public string MaliyetMetniAl(int secenekIndex)
-    {
-        if (secenekIndex >= aktifNode.Secenekler.Count)
+        foreach (GameObject eskiButon in olusturulanSecenekButonlari)
         {
-            return "";
+            Destroy(eskiButon);
         }
+        olusturulanSecenekButonlari.Clear();
 
-        OrderData emir = aktifNode.Secenekler[secenekIndex].VerilecekEmir;
+        foreach (KoyData koy in KoyYoneticisi.Instance.Koyler)
+        {
+            if (sablon.DusmanKoyuGerekli && koy.Sahip != Krallik.Dusman)
+            {
+                continue;
+            }
+
+            if (!sablon.DusmanKoyuGerekli && koy.Sahip != Krallik.Oyuncu)
+            {
+                continue;
+            }
+
+            GameObject yeniButon = Instantiate(SecenekButonSablonu, SecenekIcerik);
+            yeniButon.SetActive(true);
+
+            bool slotDolu = sablon.BinaSlotuKullanir && koy.DoluBinaSlotu >= koy.MaxBinaSlotu;
+            bool isyanEngeli = sablon.BinaSlotuKullanir && koy.IsyanHalinde;
+            bool isyansizEngeli = sablon.IsyanliKoyGerekli && !koy.IsyanHalinde;
+            bool tiklanamaz = slotDolu || isyanEngeli || isyansizEngeli;
+
+            string etiket = koy.Isim;
+            if (isyanEngeli)
+            {
+                etiket += " (Isyan Halinde)";
+            }
+            else if (slotDolu)
+            {
+                etiket += " (Dolu)";
+            }
+            else if (isyansizEngeli)
+            {
+                etiket += " (Isyan Yok)";
+            }
+
+            yeniButon.GetComponentInChildren<TMP_Text>().text = etiket;
+
+            Button buton = yeniButon.GetComponent<Button>();
+            buton.interactable = !tiklanamaz;
+
+            KoyData secilenKoy = koy;
+            buton.onClick.AddListener(() => callback(secilenKoy));
+
+            SecenekTooltip tooltip = yeniButon.GetComponent<SecenekTooltip>();
+            if (tooltip != null)
+            {
+                tooltip.Dialog = this;
+                tooltip.Secenek = null;
+            }
+
+            olusturulanSecenekButonlari.Add(yeniButon);
+        }
+    }
+
+    public string MaliyetMetniAl(DialogueChoice secenek)
+    {
+        OrderData emir = secenek != null ? secenek.VerilecekEmir : null;
 
         if (emir == null || string.IsNullOrEmpty(emir.MaliyetStat) || emir.MaliyetMiktar == 0)
         {
@@ -167,11 +229,8 @@ public class DialogueManager : MonoBehaviour
         if (secenek.VerilecekEmir != null && !string.IsNullOrEmpty(secenek.VerilecekEmir.DanismanTipi) && secenek.VerilecekEmir.KoySecimiGerekli)
         {
             // Koy secilene kadar diyalog kutusu acik kalir, secim yapilinca kapanir
-            SecenekButon1Buton.gameObject.SetActive(false);
-            SecenekButon2.SetActive(false);
-
             OrderData sablon = secenek.VerilecekEmir;
-            KoySecimPaneli.Instance.KoySec((KoyData secilenKoy) =>
+            KoySecimGoster(sablon, (KoyData secilenKoy) =>
             {
                 if (sablon.BinaSlotuKullanir)
                 {
@@ -197,7 +256,7 @@ public class DialogueManager : MonoBehaviour
 
                 Orders.EmirEkle(sablon.KopyalaVeKoyAta(secilenKoy));
                 DiyalogBitir();
-            }, sablon);
+            });
             return;
         }
 
@@ -224,8 +283,11 @@ public class DialogueManager : MonoBehaviour
     {
         Debug.Log("Diyalog bitti.");
         NpcSozuText.text = "";
-        SecenekButon1Text.text = "";
-        SecenekButon2Text.text = "";
+        foreach (GameObject eskiButon in olusturulanSecenekButonlari)
+        {
+            Destroy(eskiButon);
+        }
+        olusturulanSecenekButonlari.Clear();
         DiyalogKutusuKok.SetActive(false);
         TooltipUI.Instance.Gizle();
         aktifKoy = null;

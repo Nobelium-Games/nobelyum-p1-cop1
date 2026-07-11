@@ -15,6 +15,7 @@ public class KoyBilgiPaneli : MonoBehaviour
     public TMP_Text SlotText;
     public TMP_Text DurumText;
     public TMP_Text SavunmaText;
+    public TMP_Text GarnizonText;
 
     void Awake()
     {
@@ -24,15 +25,30 @@ public class KoyBilgiPaneli : MonoBehaviour
 
     public void Goster(KoyData koy)
     {
+        bool bizeAit = koy.Sahip == Krallik.Oyuncu;
+
         IsimText.text = koy.Isim;
-        DurumText.text = koy.IsyanHalinde ? "<color=red>ISYAN HALINDE</color>" : "";
-        SadakatText.text = "Sadakat: " + koy.Sadakat;
-        ErzakText.text = "Erzak: " + koy.Erzak;
-        NufusText.text = "Nufus: " + koy.Nufus + " <sup>" + YieldMetni(KoyYoneticisi.Instance.NufusYieldHesapla(koy), koy.IsyanHalinde) + "</sup>";
-        ErzakYieldText.text = "Erzak Yield: " + YieldMetni(koy.ErzakYield, koy.IsyanHalinde);
-        AltinYieldText.text = "Altin Yield: " + YieldMetni(koy.AltinYield, koy.IsyanHalinde);
-        SlotText.text = "Bina Slotu: " + koy.DoluBinaSlotu + "/" + koy.MaxBinaSlotu;
         SavunmaText.text = "Savunma: " + koy.Savunma;
+        GarnizonText.text = "Garnizon: " + koy.Garnizon;
+
+        DurumText.gameObject.SetActive(bizeAit);
+        SadakatText.gameObject.SetActive(bizeAit);
+        ErzakText.gameObject.SetActive(bizeAit);
+        NufusText.gameObject.SetActive(bizeAit);
+        ErzakYieldText.gameObject.SetActive(bizeAit);
+        AltinYieldText.gameObject.SetActive(bizeAit);
+        SlotText.gameObject.SetActive(bizeAit);
+
+        if (bizeAit)
+        {
+            DurumText.text = koy.IsyanHalinde ? "<color=red>ISYAN HALINDE</color>" : "";
+            SadakatText.text = "Sadakat: " + koy.Sadakat;
+            ErzakText.text = "Erzak: " + koy.Erzak;
+            NufusText.text = "Nufus: " + koy.Nufus + " <sup>" + YieldMetni(KoyYoneticisi.Instance.NufusYieldHesapla(koy), koy.IsyanHalinde) + "</sup>";
+            ErzakYieldText.text = "Erzak Yield: " + YieldMetni(koy.ErzakYield, koy.IsyanHalinde);
+            AltinYieldText.text = "Altin Yield: " + YieldMetni(koy.AltinYield, koy.IsyanHalinde);
+            SlotText.text = "Bina Slotu: " + koy.DoluBinaSlotu + "/" + koy.MaxBinaSlotu;
+        }
 
         Panel.SetActive(true);
     }
