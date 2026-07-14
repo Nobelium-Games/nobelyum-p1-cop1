@@ -7,6 +7,7 @@ public class DanismanCagir : MonoBehaviour
 
     public NPCData General;
     public NPCData Insaatci;
+    public NPCData Elci;
 
     public void GeneralCagir()
     {
@@ -18,5 +19,11 @@ public class DanismanCagir : MonoBehaviour
     {
         DanismanListesiPaneli.SetActive(false);
         Dialog.DiyalogBaslat(Insaatci.Diyalog, Insaatci.Portre, Insaatci.Isim, true);
+    }
+
+    public void ElciCagir()
+    {
+        DanismanListesiPaneli.SetActive(false);
+        Dialog.DiyalogBaslat(Elci.Diyalog, Elci.Portre, Elci.Isim, true);
     }
 }

@@ -1,27 +1,44 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
+
+public enum HaritaGorunumu
+{
+    Siyasi,
+    Terrain,
+    Kaynak
+}
 
 public class HexHaritaCizici : MonoBehaviour
 {
     public static HexHaritaCizici Instance;
+
+    public HaritaGorunumu AktifGorunum = HaritaGorunumu.Siyasi;
 
     public RectTransform Icerik;
 
     public float TileBoyutu = 40f;
     public float TileSaydamligi = 0.35f;
     public float YerlesimBoyutu = 50f;
+    public float KaynakIkonBoyutu = 16f;
     public Color SinirRengi = Color.black;
+    public Color ErzakIkonRengi = new Color(0.3f, 0.8f, 0.3f);
     public Sprite YerlesimIkonu;
+    public TMP_Text GorunumMetni;
 
     Sprite hexagonSprite;
     Sprite hexagonCerceveSprite;
     Sprite kareSprite;
+    Sprite daireSprite;
 
     Dictionary<KoyData, List<GameObject>> koyTileSinirlari = new Dictionary<KoyData, List<GameObject>>();
     Dictionary<HexTileData, Image> tileGorselleri = new Dictionary<HexTileData, Image>();
     Dictionary<KoyData, Image> yerlesimGorselleri = new Dictionary<KoyData, Image>();
+    Dictionary<HexTileData, GameObject> kaynakGorselleri = new Dictionary<HexTileData, GameObject>();
+    Dictionary<KoyData, GameObject> yerlesimIsimGorselleri = new Dictionary<KoyData, GameObject>();
+    Dictionary<KoyData, GameObject> merkezSinirGorselleri = new Dictionary<KoyData, GameObject>();
 
     void Start()
     {
@@ -30,30 +47,98 @@ public class HexHaritaCizici : MonoBehaviour
         hexagonSprite = SekilUretici.HexagonSprite();
         hexagonCerceveSprite = SekilUretici.HexagonCerceveSprite();
         kareSprite = SekilUretici.KareSprite();
+        daireSprite = SekilUretici.DaireSprite();
 
         EskiCizimleriTemizle();
         koyTileSinirlari.Clear();
         tileGorselleri.Clear();
         yerlesimGorselleri.Clear();
+        kaynakGorselleri.Clear();
+        yerlesimIsimGorselleri.Clear();
+        merkezSinirGorselleri.Clear();
         TileleriCiz();
         YerlesimleriCiz();
+        GorunumMetniniGuncelle();
+    }
+
+    void Update()
+    {
+        if (Keyboard.current == null)
+        {
+            return;
+        }
+
+        if (Keyboard.current.f1Key.wasPressedThisFrame)
+        {
+            AktifGorunum = HaritaGorunumu.Siyasi;
+            RenkleriGuncelle();
+            GorunumMetniniGuncelle();
+        }
+        else if (Keyboard.current.f2Key.wasPressedThisFrame)
+        {
+            AktifGorunum = HaritaGorunumu.Terrain;
+            RenkleriGuncelle();
+            GorunumMetniniGuncelle();
+        }
+        else if (Keyboard.current.f3Key.wasPressedThisFrame)
+        {
+            AktifGorunum = HaritaGorunumu.Kaynak;
+            RenkleriGuncelle();
+            GorunumMetniniGuncelle();
+        }
+    }
+
+    void GorunumMetniniGuncelle()
+    {
+        if (GorunumMetni == null)
+        {
+            return;
+        }
+
+        string aktifAdi = AktifGorunum.ToString();
+        GorunumMetni.text = "F1: Siyasi | F2: Terrain | F3: Kaynak  -  Aktif: " + aktifAdi;
+    }
+
+    Color TileRenginiHesapla(HexTileData tile)
+    {
+        if (AktifGorunum == HaritaGorunumu.Terrain || AktifGorunum == HaritaGorunumu.Kaynak)
+        {
+            return HaritaYoneticisi.Instance.TerrainRengi(tile);
+        }
+        return HaritaYoneticisi.Instance.TileRengi(tile);
     }
 
     public void RenkleriGuncelle()
     {
         foreach (KeyValuePair<HexTileData, Image> kv in tileGorselleri)
         {
-            Color renk = HaritaYoneticisi.Instance.TileRengi(kv.Key);
+            Color renk = TileRenginiHesapla(kv.Key);
             renk.a = TileSaydamligi;
             kv.Value.color = renk;
         }
 
-        if (YerlesimIkonu == null)
+        bool kaynakGorunuyor = AktifGorunum == HaritaGorunumu.Kaynak;
+
+        foreach (KeyValuePair<KoyData, Image> kv in yerlesimGorselleri)
         {
-            foreach (KeyValuePair<KoyData, Image> kv in yerlesimGorselleri)
-            {
-                kv.Value.color = kv.Key.Sahip != null ? kv.Key.Sahip.HaritaRengi : Color.white;
-            }
+            Color rengi = YerlesimIkonu != null ? Color.white : (kv.Key.Sahip != null ? kv.Key.Sahip.HaritaRengi : Color.white);
+            rengi.a = kaynakGorunuyor ? 0f : 1f;
+            kv.Value.color = rengi;
+        }
+
+        foreach (KeyValuePair<HexTileData, GameObject> kv in kaynakGorselleri)
+        {
+            kv.Value.SetActive(kaynakGorunuyor);
+        }
+
+        foreach (KeyValuePair<KoyData, GameObject> kv in yerlesimIsimGorselleri)
+        {
+            kv.Value.SetActive(!kaynakGorunuyor);
+        }
+
+        foreach (KeyValuePair<KoyData, GameObject> kv in merkezSinirGorselleri)
+        {
+            kv.Value.SetActive(kaynakGorunuyor);
         }
     }
 
@@ -86,7 +171,7 @@ public class HexHaritaCizici : MonoBehaviour
         for (int i = Icerik.childCount - 1; i >= 0; i--)
         {
             Transform cocuk = Icerik.GetChild(i);
-            if (cocuk.name.StartsWith("Tile_") || cocuk.name.StartsWith("Yerlesim_"))
+            if (cocuk.name.StartsWith("Tile_") || cocuk.name.StartsWith("Yerlesim_") || cocuk.name.StartsWith("Kaynak_") || cocuk.name.StartsWith("MerkezSinir_"))
             {
                 Destroy(cocuk.gameObject);
             }
@@ -102,7 +187,7 @@ public class HexHaritaCizici : MonoBehaviour
 
             Image resim = obje.AddComponent<Image>();
             resim.sprite = hexagonSprite;
-            Color renk = HaritaYoneticisi.Instance.TileRengi(tile);
+            Color renk = TileRenginiHesapla(tile);
             renk.a = TileSaydamligi;
             resim.color = renk;
             resim.raycastTarget = false;
@@ -132,6 +217,55 @@ public class HexHaritaCizici : MonoBehaviour
                 }
                 koyTileSinirlari[tile.SahipKoy].Add(sinirObjesi);
             }
+
+            float bosluk = 2f;
+            float metinGenislik = 24f;
+            float kaynakGenislik = KaynakIkonBoyutu + bosluk * 3f + metinGenislik;
+            float kaynakYukseklik = KaynakIkonBoyutu + 2f;
+
+            GameObject kaynakObjesi = new GameObject("Kaynak_" + tile.Koordinat.x + "_" + tile.Koordinat.y);
+            RectTransform kaynakRect = SabitCapaliRectOlustur(kaynakObjesi, Icerik);
+            kaynakRect.sizeDelta = new Vector2(kaynakGenislik, kaynakYukseklik);
+            kaynakRect.anchoredPosition = rect.anchoredPosition;
+
+            GameObject kaynakArkaplanObjesi = new GameObject("KaynakArkaplan");
+            RectTransform kaynakArkaplanRect = SabitCapaliRectOlustur(kaynakArkaplanObjesi, kaynakObjesi.transform);
+            kaynakArkaplanRect.sizeDelta = new Vector2(kaynakGenislik, kaynakYukseklik);
+            kaynakArkaplanRect.anchoredPosition = Vector2.zero;
+
+            Image kaynakArkaplan = kaynakArkaplanObjesi.AddComponent<Image>();
+            kaynakArkaplan.sprite = kareSprite;
+            kaynakArkaplan.color = new Color(0f, 0f, 0f, 0.45f);
+            kaynakArkaplan.raycastTarget = false;
+
+            GameObject kaynakIkonObjesi = new GameObject("KaynakIkon");
+            RectTransform kaynakIkonRect = SabitCapaliRectOlustur(kaynakIkonObjesi, kaynakObjesi.transform);
+            kaynakIkonRect.sizeDelta = new Vector2(KaynakIkonBoyutu, KaynakIkonBoyutu);
+            kaynakIkonRect.anchoredPosition = new Vector2(-kaynakGenislik / 2f + bosluk + KaynakIkonBoyutu / 2f, 0f);
+
+            Image kaynakIkon = kaynakIkonObjesi.AddComponent<Image>();
+            kaynakIkon.sprite = daireSprite;
+            kaynakIkon.color = ErzakIkonRengi;
+            kaynakIkon.raycastTarget = false;
+
+            GameObject kaynakMetinObjesi = new GameObject("KaynakMetin");
+            RectTransform kaynakMetinRect = SabitCapaliRectOlustur(kaynakMetinObjesi, kaynakObjesi.transform);
+            kaynakMetinRect.sizeDelta = new Vector2(metinGenislik, kaynakYukseklik);
+            kaynakMetinRect.anchoredPosition = new Vector2(-kaynakGenislik / 2f + bosluk * 2f + KaynakIkonBoyutu + metinGenislik / 2f, 0f);
+
+            TMP_Text kaynakMetin = kaynakMetinObjesi.AddComponent<TextMeshProUGUI>();
+            kaynakMetin.enableAutoSizing = false;
+            kaynakMetin.enableWordWrapping = false;
+            kaynakMetin.overflowMode = TextOverflowModes.Overflow;
+            kaynakMetin.fontSize = 12f;
+            kaynakMetin.fontStyle = FontStyles.Bold;
+            kaynakMetin.alignment = TextAlignmentOptions.Center;
+            kaynakMetin.raycastTarget = false;
+            kaynakMetin.color = Color.white;
+            kaynakMetin.text = "+" + tile.ErzakDegeri;
+
+            kaynakObjesi.SetActive(AktifGorunum == HaritaGorunumu.Kaynak);
+            kaynakGorselleri[tile] = kaynakObjesi;
         }
     }
 
@@ -169,6 +303,22 @@ public class HexHaritaCizici : MonoBehaviour
             isimText.raycastTarget = false;
             isimText.color = Color.white;
             isimText.text = koy.Isim;
+
+            isimObjesi.SetActive(AktifGorunum != HaritaGorunumu.Kaynak);
+            yerlesimIsimGorselleri[koy] = isimObjesi;
+
+            GameObject merkezSinirObjesi = new GameObject("MerkezSinir_" + koy.Isim);
+            RectTransform merkezSinirRect = SabitCapaliRectOlustur(merkezSinirObjesi, Icerik);
+            merkezSinirRect.sizeDelta = new Vector2(TileBoyutu * Mathf.Sqrt(3f), TileBoyutu * 2f);
+            merkezSinirRect.anchoredPosition = EksenselKonum(koy.MerkezTileKoordinati);
+
+            Image merkezSinirResim = merkezSinirObjesi.AddComponent<Image>();
+            merkezSinirResim.sprite = hexagonCerceveSprite;
+            merkezSinirResim.color = SinirRengi;
+            merkezSinirResim.raycastTarget = false;
+
+            merkezSinirObjesi.SetActive(AktifGorunum == HaritaGorunumu.Kaynak);
+            merkezSinirGorselleri[koy] = merkezSinirObjesi;
         }
     }
 

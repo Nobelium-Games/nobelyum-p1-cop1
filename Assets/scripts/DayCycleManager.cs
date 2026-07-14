@@ -147,6 +147,7 @@ public class DayCycleManager : MonoBehaviour
 
     KoyYoneticisi.Instance.IsyanKontrolEt(sonGeceSonuclari);
     KoyYoneticisi.Instance.DiplomasiKontrolEt(sonGeceSonuclari);
+    KoyYoneticisi.Instance.DusmanSaldirilariniKontrolEt(sonGeceSonuclari);
 
     devamEdenEmirler = resolver.SonucMesajlariniOlustur(
         GameManager.Instance.State,

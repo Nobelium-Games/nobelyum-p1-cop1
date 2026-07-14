@@ -16,6 +16,7 @@ public class KoyYoneticisi : MonoBehaviour
 
     [Header("Savas Ayarlari")]
     public float GarnizonKatsayisi = 10f;
+    public float DusmanSaldiriIhtimali = 0.2f;
 
     [Header("Diplomasi Ayarlari")]
     public List<DiplomasiVerisi> Diplomasiler = new List<DiplomasiVerisi>();
@@ -235,7 +236,8 @@ public class KoyYoneticisi : MonoBehaviour
 
     public float EtkinSavunmaHesapla(KoyData koy)
     {
-        return koy.Savunma * (1f + koy.Garnizon / GarnizonKatsayisi);
+        float terrainCarpani = Harita != null ? Harita.KoyunTerrainSavunmaCarpani(koy) : 1f;
+        return koy.Savunma * terrainCarpani * (1f + koy.Garnizon / GarnizonKatsayisi);
     }
 
     public List<KoyData> GarnizonluKoyler()
@@ -269,6 +271,15 @@ public class KoyYoneticisi : MonoBehaviour
         }
     }
 
+    public void BarisYap(KrallikData krallik)
+    {
+        DiplomasiVerisi veri = DiplomasiVerisiBul(krallik);
+        if (veri != null)
+        {
+            veri.SavastaMi = false;
+        }
+    }
+
     public void DiplomasiKontrolEt(List<string> mesajListesi)
     {
         foreach (DiplomasiVerisi veri in Diplomasiler)
@@ -285,6 +296,86 @@ public class KoyYoneticisi : MonoBehaviour
                 mesajListesi.Add("<color=red>" + veri.Krallik.Isim + " bize savas actı!</color>");
             }
         }
+    }
+
+    public void DusmanSaldirilariniKontrolEt(List<string> mesajListesi)
+    {
+        if (Harita == null)
+        {
+            return;
+        }
+
+        List<KoyData> bizimKoyler = Koyler.FindAll(koy => koy.Sahip == OyuncuKralligi);
+        if (bizimKoyler.Count == 0)
+        {
+            return;
+        }
+
+        foreach (KoyData dusmanKoy in Koyler)
+        {
+            if (dusmanKoy.Sahip == OyuncuKralligi || dusmanKoy.Garnizon <= 0)
+            {
+                continue;
+            }
+
+            if (!SavastaMi(dusmanKoy.Sahip))
+            {
+                continue;
+            }
+
+            if (Random.Range(0f, 1f) > DusmanSaldiriIhtimali)
+            {
+                continue;
+            }
+
+            KoyData hedefKoy = EnYakinBizimKoy(dusmanKoy, bizimKoyler);
+            if (hedefKoy == null)
+            {
+                continue;
+            }
+
+            float etkinSavunma = EtkinSavunmaHesapla(hedefKoy);
+            float saldiriSansi = dusmanKoy.Garnizon / (dusmanKoy.Garnizon + etkinSavunma);
+            bool basarili = Random.Range(0f, 1f) < saldiriSansi;
+
+            if (basarili)
+            {
+                int hayattaKalan = Mathf.RoundToInt(dusmanKoy.Garnizon * (1f - 0.15f));
+                dusmanKoy.Garnizon = 0;
+                hedefKoy.Sahip = dusmanKoy.Sahip;
+                hedefKoy.Garnizon = hayattaKalan;
+
+                mesajListesi.Add("<color=red>" + dusmanKoy.Sahip.Isim + " ordusu " + hedefKoy.Isim + " koyumuzu ele gecirdi!</color>");
+
+                if (HexHaritaCizici.Instance != null)
+                {
+                    HexHaritaCizici.Instance.RenkleriGuncelle();
+                }
+            }
+            else
+            {
+                int hayattaKalan = Mathf.RoundToInt(dusmanKoy.Garnizon * (1f - 0.80f));
+                dusmanKoy.Garnizon = hayattaKalan;
+
+                mesajListesi.Add("<color=green>" + hedefKoy.Isim + " savunmasi " + dusmanKoy.Sahip.Isim + " saldirisini puskurttu!</color>");
+            }
+        }
+    }
+
+    KoyData EnYakinBizimKoy(KoyData dusmanKoy, List<KoyData> bizimKoyler)
+    {
+        KoyData enYakin = null;
+        int enKucukMesafe = int.MaxValue;
+        foreach (KoyData koy in bizimKoyler)
+        {
+            int mesafe = Harita.KoyMesafesi(dusmanKoy, koy);
+            if (mesafe < enKucukMesafe)
+            {
+                enKucukMesafe = mesafe;
+                enYakin = koy;
+            }
+        }
+        return enYakin;
     }
 
     public string ErzakDagilimMetni()

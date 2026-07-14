@@ -18,6 +18,11 @@ public class DaySequencer
         // Zar, koyun erzagindan yuksek cikarsa o koy sikayetci koylusunu gonderir.
         foreach (KoyData koy in KoyYoneticisi.Instance.Koyler)
         {
+            if (koy.Sahip != KoyYoneticisi.Instance.OyuncuKralligi)
+            {
+                continue;
+            }
+
             if (koy.Erzak < 50)
             {
                 int zar = Random.Range(0, 51);

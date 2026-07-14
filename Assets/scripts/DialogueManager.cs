@@ -337,6 +337,14 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
+        if (emir != null && emir.BarisTeklifEder && emir.HedefKrallik != null)
+        {
+            if (!KoyYoneticisi.Instance.SavastaMi(emir.HedefKrallik))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 

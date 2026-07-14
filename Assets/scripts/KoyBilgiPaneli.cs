@@ -38,7 +38,8 @@ public class KoyBilgiPaneli : MonoBehaviour
             BayrakImage.sprite = koy.Sahip.Bayrak;
         }
 
-        SavunmaText.text = "Savunma: " + koy.Savunma;
+        float etkinSavunma = KoyYoneticisi.Instance.EtkinSavunmaHesapla(koy);
+        SavunmaText.text = "Savunma: " + Mathf.RoundToInt(etkinSavunma) + " (baz: " + koy.Savunma + ")";
         GarnizonText.text = "Garnizon: " + koy.Garnizon;
 
         DurumText.gameObject.SetActive(bizeAit);

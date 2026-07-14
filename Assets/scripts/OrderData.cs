@@ -30,6 +30,11 @@ public class OrderData
     public KoyData KaynakKoy;
     public bool GarnizonEkler;
 
+    public KrallikData HedefKrallik;
+    public bool DiplomasiyiArttirir;
+    public int DiplomasiMiktari;
+    public bool BarisTeklifEder;
+
     public OrderData() { }
 
     public OrderData(string danisman, string emir, string stat, int basariliMiktar, int basarisizMiktar,

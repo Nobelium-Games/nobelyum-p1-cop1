@@ -92,6 +92,30 @@ public class DayResolver
 
     void ZarAtVeUygula(GameState state, OrderData emir, List<string> mesajListesi)
     {
+        if (emir.DiplomasiyiArttirir && emir.HedefKrallik != null)
+        {
+            KoyYoneticisi.Instance.DiplomasiDegistir(emir.HedefKrallik, emir.DiplomasiMiktari);
+            mesajListesi.Add("<color=green>" + emir.HedefKrallik.Isim + " ile iliskilerimiz gelisti. (+" + emir.DiplomasiMiktari + ")</color>");
+            return;
+        }
+
+        if (emir.BarisTeklifEder && emir.HedefKrallik != null)
+        {
+            float barisSansi = KoyYoneticisi.Instance.DiplomasiDegerAl(emir.HedefKrallik) / 100f;
+            bool barisBasarili = Random.Range(0f, 1f) < barisSansi;
+
+            if (barisBasarili)
+            {
+                KoyYoneticisi.Instance.BarisYap(emir.HedefKrallik);
+                mesajListesi.Add("<color=green>" + emir.HedefKrallik.Isim + " ile baris yapildi!</color>");
+            }
+            else
+            {
+                mesajListesi.Add("<color=red>" + emir.HedefKrallik.Isim + " baris teklifimizi reddetti.</color>");
+            }
+            return;
+        }
+
         if (emir.GarnizonEkler && emir.HedefKoy != null)
         {
             emir.HedefKoy.Garnizon += emir.GonderilenManpower;

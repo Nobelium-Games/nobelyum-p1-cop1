@@ -8,12 +8,6 @@ public class HaritaYoneticisi : MonoBehaviour
     public List<HexTileData> Tileler = new List<HexTileData>();
     public Vector3Int HaritaMerkezi;
 
-    [Header("Tile Deger Araligi")]
-    public int MinErzakDegeri = 1;
-    public int MaxErzakDegeri = 4;
-    public int MinAltinDegeri = 0;
-    public int MaxAltinDegeri = 2;
-
     [Header("Harita Siniri")]
     public int SinirPayi = 5;
 
@@ -51,11 +45,15 @@ public class HaritaYoneticisi : MonoBehaviour
             {
                 Vector3Int koordinat = HaritaMerkezi + new Vector3Int(q, r, 0);
 
+                TerrainTipi terrain = TerrainVerisi.RastgeleTip();
+                TerrainBilgisi terrainBilgisi = TerrainVerisi.Bilgi(terrain);
+
                 Tileler.Add(new HexTileData
                 {
                     Koordinat = koordinat,
-                    ErzakDegeri = Random.Range(MinErzakDegeri, MaxErzakDegeri + 1),
-                    AltinDegeri = Random.Range(MinAltinDegeri, MaxAltinDegeri + 1),
+                    Terrain = terrain,
+                    ErzakDegeri = Random.Range(terrainBilgisi.ErzakMin, terrainBilgisi.ErzakMax + 1),
+                    AltinDegeri = Random.Range(terrainBilgisi.AltinMin, terrainBilgisi.AltinMax + 1),
                     SahipKoy = EnYakinKoyuBul(koordinat, koyler)
                 });
             }
@@ -156,5 +154,25 @@ public class HaritaYoneticisi : MonoBehaviour
             return Color.gray;
         }
         return tile.SahipKoy.Sahip.HaritaRengi;
+    }
+
+    public Color TerrainRengi(HexTileData tile)
+    {
+        return TerrainVerisi.Bilgi(tile.Terrain).Renk;
+    }
+
+    public float KoyunTerrainSavunmaCarpani(KoyData koy)
+    {
+        float toplam = 0f;
+        int adet = 0;
+        foreach (HexTileData tile in Tileler)
+        {
+            if (tile.SahipKoy == koy)
+            {
+                toplam += TerrainVerisi.Bilgi(tile.Terrain).SavunmaCarpani;
+                adet++;
+            }
+        }
+        return adet > 0 ? toplam / adet : 1f;
     }
 }
