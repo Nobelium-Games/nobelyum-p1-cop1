@@ -8103,7 +8103,7 @@ MonoBehaviour:
   DanismanListesiPaneli: {fileID: 604496002}
   General: {fileID: 11400000, guid: 5ccb146a0ee1fdf40bc42c1446ade894, type: 2}
   Insaatci: {fileID: 11400000, guid: aef5f46c74a31be44b2cfbcf1c62d2ba, type: 2}
-  Elci: {fileID: 0}
+  Elci: {fileID: 11400000, guid: b7843dfdc5e7196459e3b4047ed2242b, type: 2}
 --- !u!4 &1651796853
 Transform:
   m_ObjectHideFlags: 0
