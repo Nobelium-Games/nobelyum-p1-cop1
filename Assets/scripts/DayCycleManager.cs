@@ -48,6 +48,7 @@ public class DayCycleManager : MonoBehaviour
         GameManager.Instance.State.BaseGeliriUygula();
         KoyYoneticisi.Instance.ErzagiGunlukArtir();
         GameManager.Instance.State.Altin += KoyYoneticisi.Instance.ToplamAltinYieldi();
+        GameManager.Instance.State.GiderleriUygula();
     }
 
     void AsamaDegistir(GunAsamasi yeniAsama)
@@ -145,6 +146,7 @@ public class DayCycleManager : MonoBehaviour
     sonGeceSonuclari = new List<string>();
 
     KoyYoneticisi.Instance.IsyanKontrolEt(sonGeceSonuclari);
+    KoyYoneticisi.Instance.DiplomasiKontrolEt(sonGeceSonuclari);
 
     devamEdenEmirler = resolver.SonucMesajlariniOlustur(
         GameManager.Instance.State,

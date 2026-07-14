@@ -13,6 +13,7 @@ public class ManpowerSeciciPaneli : MonoBehaviour
     public TMP_Text SeciliMiktarText;
 
     private Action<int> secilinceCagrilacak;
+    private int seciminMaksimumu;
 
     void Awake()
     {
@@ -21,11 +22,10 @@ public class ManpowerSeciciPaneli : MonoBehaviour
         MiktarSlider.onValueChanged.AddListener(SliderDegisti);
     }
 
-    public void Sor(Action<int> callback)
+    public void Sor(int mevcutManpower, Action<int> callback)
     {
         secilinceCagrilacak = callback;
-
-        int mevcutManpower = GameManager.Instance.State.Manpower;
+        seciminMaksimumu = mevcutManpower;
 
         MiktarSlider.wholeNumbers = true;
         MiktarSlider.minValue = 0;
@@ -45,7 +45,7 @@ public class ManpowerSeciciPaneli : MonoBehaviour
 
     public void GonderTiklandi()
     {
-        int miktar = Mathf.Clamp(Mathf.RoundToInt(MiktarSlider.value), 0, GameManager.Instance.State.Manpower);
+        int miktar = Mathf.Clamp(Mathf.RoundToInt(MiktarSlider.value), 0, seciminMaksimumu);
 
         Panel.SetActive(false);
         secilinceCagrilacak?.Invoke(miktar);

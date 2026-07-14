@@ -125,6 +125,19 @@ kalıyor; `DusmanKoyuGerekli` işaretliyse (Saldır emri) ise **sadece düşman 
 bizim köylerimiz hiç görünmüyor (İnşaatçı/İsyan Bastır'da ise tam tersi: sadece bize ait köyler
 görünüyor, düşman köyleri hiç listeye eklenmiyor) — bkz. Mimari Kararları #20.
 
+**Diyalogda "Geri" ve "Boşver" (bu oturumda eklendi, bkz. Mimari Kararları #27):** Danışman
+diyaloglarında bir alt menüye girdikten sonra (örn. General → "Bir görevim var" → İsyan Bastır)
+oyuncunun geri dönüp başka bir seçenek seçme ya da hiçbir emir vermeden çıkma yolu yoktu — kullanıcı
+bunu "her seçim illa bir emirle bitiyor" diye rahatsız edici buldu. Çözüm iki parça: **Geri butonu**
+(`DialogueManager.GeriButonu`, Chrome'daki geri tuşu gibi) her node değişiminde ziyaret edilen node'u
+bir `Stack<DialogueNode>`'a (`gecmisNodeler`) kaydediyor, tıklanınca son node'a geri dönüyor, geçmiş
+boşsa buton otomatik gizleniyor. **"Boşver" seçeneği** ise ayrı bir buton DEĞİL — danışman
+diyaloglarında (`aktifDanismanDiyalogu == true`), diğer seçeneklerle (ya da köy seçim listesiyle)
+aynı görünümde, listenin sonuna otomatik eklenen dinamik bir buton (`BosverSecenegiEkleIstenirse`),
+tıklanınca hiçbir stat/emir etkisi olmadan direkt `DiyalogBitir()` çağırıyor. Normal NPC
+diyaloglarında (Köylü/Asker/Ayyaş) "Boşver" görünmüyor — kullanıcı bilerek sadece danışman
+diyaloglarıyla sınırladı.
+
 ### Köyler
 Oyuncu ülkeyi tek bir "kingdom" olarak görse de, arka planda bunun kaynağı **köyler** (`KoyData`,
 bkz. Script Envanteri). Her köyün kendi `Sadakat`, `Erzak`, `ErzakYield` (günlük Erzak artışı),
@@ -220,10 +233,78 @@ renkleniyor (isyanda gri).
 formüle geçilince bu sorun çözüldü: erzak biriktikçe (üretim sabit kalsa bile) kişi başı stok da
 büyür, nüfus artışı durmaz.
 
-### Savaş Mekaniği (bu oturumda eklendi)
-Diğer krallıklarla savaşın **ilk temeli** kuruldu (başkent/diplomasi hâlâ sadece beyin fırtınası,
-bkz. Sıradaki Adımlar). Yeni **`Krallik`** enum'u (`Oyuncu`, `Dusman`) ve `KoyData.Sahip` alanı ile
-her köyün kime ait olduğu belirleniyor. `KoyData.Garnizon` (int, varsayılan 0) o köyde konuşlanan
+### Ekonomi Giderleri (bu oturumda eklendi)
+Kullanıcı fark etti: oyunda sadece GELİR vardı, hiçbir GİDER yoktu — oyuncu "Uyu"ya basıp beklese
+bile hiçbir zaman eksiye düşmüyordu, bu da stratejik gerilimi sıfırlıyordu. İki gider eklendi, ikisi
+de `GameState.GiderleriUygula()` (her gün `GelirleriUygula()` içinde çağrılıyor, gelirle aynı anda):
+- **Asker Maaşı:** `Manpower * ManpowerMaasiBirimMaliyeti` (varsayılan **0.05** — yani her 20
+  Manpower için günde 1 Altın) kadar Altın her gün düşülüyor. **Periyodik/haftalık ödeme YERİNE
+  bilinçli olarak GÜNLÜK** yapılıyor — kullanıcı "oyuncu ödeme gününden hemen önce tüm askeri
+  savaşa gönderip kaçamak yapabilir mi?" diye sordu, cevap: günlük hesaplama bu kaçamağı yapısal
+  olarak imkânsız kılıyor (o gün elinde olmayan asker için zaten ödeme yapılmıyor, ayrıca hesap her
+  gün o günkü Manpower'a bakıyor, geçmişi hatırlamıyor).
+- **Bina Bakım Gideri:** `KoyYoneticisi.ToplamDoluBinaSlotu() * BinaBakimBirimMaliyeti` (varsayılan
+  **1**) — kingdom'daki (sadece bize ait/isyanda olmayan köylerin) toplam dolu bina slotu sayısına
+  göre günlük Altın gideri.
+- **İlk denenen oranlar (0.5 / 2) tamamen dengesizdi** — Manpower varsayılan 50 olduğu için
+  `50*0.5=25 Altın/gün` gider çıkıyordu, ama `AltinBaseGelir` sadece 3 — 2. günden itibaren asla
+  Altın kazanılamıyordu. Kullanıcı bunu net görüp "hala para kazanamıyorum" diye bildirdi, oranlar
+  0.05/1'e düşürüldü. **Kesin doğru sayılar değil**, ölçek büyüdükçe (kullanıcının planı: Manpower
+  ileride 500k-1M gibi gerçekçi büyük sayılara çıkabilir) birlikte yeniden dengelenecek.
+- **StatsUI'nin tahmini Altın göstergesi de güncellendi** — bu iki gideri de düşüyor, yoksa
+  "Uyu'ya basmadan önce gördüğün tahminle gerçekleşen uyuşmuyor" hatasına (Mimari Kararları #17'de
+  bir kere düzeltilmişti) tekrar düşülürdü. Altın hover tooltip'i de artık "Köyler: +X / Asker
+  Maaşı: -Y / Bina Bakımı: -Z" şeklinde dökümü gösteriyor (`KoyYoneticisi.AltinYieldDagilimMetni`).
+
+### Ordu Kaynağı ve Mesafeye Bağlı Süre (bu oturumda eklendi)
+Kullanıcının sorusu: "Asker nereden yola çıkıyor? Başkentten mi (henüz yok), yoksa en yakın
+garnizonlu yerleşkeden mi?" Tartışılan iki uç seçenek yerine (hep Başkent'ten / otomatik en-yakın-
+garnizon algoritması) **üçüncü, hibrit bir yol** seçildi: **`GameState.Manpower` (genel havuz)
+konumsuz bir "seyyar yedek kuvvet" olarak kalıyor** (Başkent'e gerek yok, hiç değişmedi), buna ek
+olarak oyuncu **emir verirken kaynağı kendisi seçiyor** — otomatik "en yakını bul" algoritması
+YAZILMADI (kullanıcı haritaya bakıp kendi karar veriyor).
+
+**Akış (İsyan Bastır, Saldır, yeni "Garnizon Gönder" emirlerinin hepsinde ortak):** Hedef köy
+seçildikten sonra, emrin `KaynakSecimiGerekli` bayrağı işaretliyse `DialogueManager.KaynakSecimGoster`
+devreye giriyor — "Genel Yedek Kuvvet" (her zaman ilk seçenek, `KaynakKoy = null`) + `Garnizon > 0`
+olan her bizim yerleşke (`KoyYoneticisi.GarnizonluKoyler()`, hedef köy kendisi hariç tutuluyor)
+listeleniyor. Kaynak seçilince Manpower Slider'ı açılıyor (`ManpowerSeciciPaneli.Sor` artık
+maksimumu PARAMETRE olarak alıyor — eskiden hep `GameState.Manpower`'a sabitti, artık ya o ya da
+seçilen köyün `Garnizon`'u). Seçilen miktar, kaynağa göre doğru yerden düşülüyor (`GameState.Manpower`
+ya da `kaynakKoy.Garnizon`).
+
+**Mesafe → süre:** `OrderData.KopyalaVeKoyAta` sonrası, `kopya.ToplamSure = HaritaYoneticisi.
+Instance.SureHesapla(kaynakKoy, hedefKoy)` ile OrderData şablonundaki SABİT `ToplamSure` ARTIK
+KULLANILMIYOR, her seferinde runtime'da hesaplanıyor. `SureHesapla`: kaynak "Genel Yedek Kuvvet"
+(null) ise her zaman **1 gün** (fiziksel konumu olmadığı için anlık), kaynak bir köyse
+`HexMesafe(kaynak, hedef) / OrduHizi` (varsayılan `OrduHizi = 3`, `HaritaYoneticisi`'nde
+Inspector'dan ayarlanabilir), en az 1 gün.
+
+**Hayatta kalan asker nereye döner:** `DayResolver.AskeriGeriGonder(state, emir, miktar)` — emrin
+`KaynakKoy`'u doluysa oraya (`Garnizon`'a) döner, boşsa (Genel Yedek Kuvvet'ten gittiyse) `GameState.
+Manpower`'a döner. Hem İsyan Bastır hem Saldır'ın "kayıp/dönüş" mantığı bunu kullanacak şekilde
+güncellendi.
+
+**Yeni "Garnizon Gönder" emri (General):** İsyan Bastır ile aynı iskelet ama sonucu ŞANSA BAĞLI
+DEĞİL — süre dolunca garanti olarak `GonderilenManpower`, `HedefKoy.Garnizon`'a ekleniyor
+(`OrderData.GarnizonEkler` bayrağı, hem anlık (`ZarAtVeUygula`) hem çok-günlü (`DayResolver`'ın
+`SonucMesajlariniOlustur`'undaki `else if` zinciri) yollarında ayrı ayrı ele alınıyor gerekiyordu).
+Bunu kullanarak oyuncu köyler/şehirler/kaleler arasında garnizon TAŞIYABİLİYOR da (kaynak olarak
+başka bir garnizonlu köy seçilebildiği için).
+
+**Önemli tuzak (canlı yaşandı):** `SaldiriBaslatir`/`IsyanBastirir` gibi ZAR ATAN emirler, artık
+mesafe yüzünden çoğu zaman **çok günlü** oluyor. Çok günlü bir emrin zar atıp gerçek sonucu (kazanç/
+kayıp, sahiplik değişimi) uygulaması için `OrderData.SonucSansaBagli = true` işaretli OLMASI
+GEREKİYOR — bu alan eskiden önemsizdi çünkü emirler hep aynı gece (`ToplamSure<=1`) sonuçlanıyordu,
+mesafe sistemi gelince gizli kalan bu eksik ortaya çıktı: `Saldır`'ın `Sonuc Sansa Bagli`'sı
+işaretli değildi, 3 gün süren bir saldırı "tamamlandı" diyip hiçbir şey yapmadan geçiyordu (ne zar,
+ne sahiplik değişimi). Kullanıcıya Inspector'dan bu kutucuğu işaretlettirerek çözüldü — **yeni bir
+şansa-bağlı+köy-hedefli emir eklerken bu her zaman kontrol edilmeli.**
+
+### Savaş Mekaniği
+Diğer krallıklarla savaşın **ilk temeli** kuruldu. **Önemli:** `Krallik` artık düz bir enum değil —
+bkz. "Diplomasi Mekaniği" bölümünün başındaki güncelleme notu ve Mimari Kararları #25. `KrallikData`
+(ScriptableObject) ve `KoyData.Sahip` alanı ile her köyün kime ait olduğu belirleniyor. `KoyData.Garnizon` (int, varsayılan 0) o köyde konuşlanan
 Manpower'ı tutuyor — **kalıcı bir konsept**: kullanıcı "köyün kendi doğal savunması (köylüler) +
 bizim/düşmanın koyduğu garnizon birlikte savunuyor, garnizon savunmayı güçlendiriyor" istedi, bu
 yüzden `KoyYoneticisi.EtkinSavunmaHesapla(koy)` = `Savunma * (1 + Garnizon/GarnizonKatsayisi)`
@@ -253,6 +334,49 @@ elle her düşman köyü için renk ayarlamaya gerek yok, bkz. Mimari Kararları
 Yield'ler/Bina Slotu **tamamen gizleniyor** (bunlar düşman köyü için anlamsız, çünkü ekonomisi
 donuk), sadece İsim + Savunma + **Garnizon** (yeni eklendi) gösteriliyor — bize ait köylerde her şey
 eskisi gibi görünmeye devam ediyor.
+
+### Diplomasi Mekaniği (bu oturumda eklendi)
+**Önce bir mimari düzeltme notu:** Bu dosyanın önceki bir versiyonu `Krallik`'in düz bir
+`enum { Oyuncu, Dusman }` olduğunu söylüyordu — bu artık YANLIŞ/eski bilgi. Bir önceki oturumda
+(kullanıcı tarafından, bu özetin hazırlanmasından sonra) `Krallik` **`KrallikData`** adında bir
+ScriptableObject'e dönüştürüldü. Artık her krallık kendi asset'i: **`Vollen_Krallik.asset`**
+(oyuncunun krallığı, **mavi**) ve **`Babbar_Krallik.asset`** (düşman, **kırmızı** — bu oturumda
+Vollen beyazdan maviye, Babbar maviden kırmızıya çevrildi, haritada net ayırt edilsin diye) — `Isim`, `HaritaRengi`,
+`Bayrak` (Sprite) alanları var. `KoyYoneticisi.OyuncuKralligi` ve `KoyData.Sahip` artık bu tipte.
+Diplomasi sistemi bu çoklu-krallık veri modeli üzerine kuruldu (bkz. Mimari Kararları #25).
+
+Kullanıcının isteği basitti: "diplomasi değerimiz belli bir eşiğin altına düşünce, tıpkı isyan
+mekaniğindeki gibi, düşman bize savaş açabilsin." Popüler stratejı oyunlarındaki (HOI4, EU4, Total
+War) "ilişki değeri + eşik altına düşünce çatışma riski" deseni, projenin zaten var olan isyan
+mekaniğiyle (durum bayrağı + gece zarı + eşik) hibritlenerek kuruldu — aynı zar formülü, aynı
+"kendi kendine düzelmeyen durum bayrağı" mantığı kullanıldı, kullanıcı zaten bu deseni tanıyıp
+güvendiği için.
+
+**Veri modeli:** Yeni **`DiplomasiVerisi`** (düz `[Serializable]` C# class, ScriptableObject DEĞİL —
+`KoyData`/`GameState` ile aynı gerekçe, runtime'da değişen değer Play modundan çıkınca sıfırlanmasın):
+`KrallikData Krallik`, `int Diplomasi` (varsayılan 60, 0-100 aralığı), `bool SavastaMi`. `KoyYoneticisi`
+artık `public List<DiplomasiVerisi> Diplomasiler` (Inspector'dan elle, her düşman krallık için bir
+eleman eklenir — `Koyler` listesiyle birebir aynı desen) ve `public int DiplomasiEsikDegeri`
+(varsayılan 40) tutuyor.
+
+**Gece kontrolü (`KoyYoneticisi.DiplomasiKontrolEt`):** `IsyanKontrolEt` ile birebir aynı formül —
+her `DiplomasiVerisi` için, `SavastaMi` false VE `Diplomasi < DiplomasiEsikDegeri` ise 1-50 arası bir
+zar atılıyor; zar `Diplomasi`'dan yüksekse `SavastaMi = true` olup elçi mesajına kırmızı "X Krallığı
+bize savaş açtı!" satırı ekleniyor. `DayCycleManager.UyuyaBas()`'ta `IsyanKontrolEt`'in hemen
+ardından çağrılıyor. **Not:** Şu an sadece bayrağı açıyor ve haber veriyor — isyan bastırma emrine
+benzer bir "barış yap" karşı-adımı ya da düşmanın gerçekten asker gönderip köy alması gibi bir sonuç
+YOK, bilerek minimal tutuldu ("sonradan elle düzeltiriz" dendi, bkz. Sıradaki Adımlar).
+
+**Görüntüleme (`DiplomasiBilgiPaneli`, sağ tık):** Kullanıcının isteği: "HOI4'te bir ülkenin köyüne
+sağ tıklayınca o ülkeyle ilişkimizi görürüz, biz de böyle yapalım." `KoyEtiketiTiklama.OnPointerClick`
+artık `eventData.button`'a bakıyor: **sol tık** eskisi gibi `KoyBilgiPaneli.Goster(koy)`; **sağ tık**
+ise (sadece köy bize ait değilse) `DiplomasiBilgiPaneli.Instance.Goster(koy.Sahip)` çağırıp o
+krallığın adını, bayrağını, Diplomasi değerini ve "SAVASTA"/"BARISTA" durumunu gösteriyor. Kendi
+köylerimize sağ tıklayınca hiçbir şey açılmıyor (kendimizle diplomasi kavramı yok).
+
+**Diplomasi değeri şu an nasıl değişiyor?** Henüz hiçbir diyalog seçeneği Diplomasi'yi etkilemiyor —
+`KoyYoneticisi.DiplomasiDegistir(krallik, miktar)` fonksiyonu hazır (ileride bir "Elçi" danışmanının
+diyalog seçenekleri buna bağlanabilir) ama şu an sadece Inspector'dan elle test amaçlı değiştiriliyor.
 
 ### Hover Bilgi (Tooltip) Sistemi — genişletildi (bu oturumda, kısmen yarım kaldı)
 Sol üstteki stat panelinin üzerine gelince (örn. Erzak) fareyi takip eden bir bilgi kutusu açılıyor
@@ -290,15 +414,89 @@ metin rengi değişiyor (görsel geri bildirim, "buraya tıklanabilir" hissi ver
 bir panel. Gönder butonuna basılınca seçilen miktar callback ile geri döner, o miktar doğrudan
 `GameManager.Instance.State`'ten düşülür.
 
-### Harita
+### Harita (eski, çoğu artık geçersiz — bkz. "Hex Harita Sistemi")
 Şahsi Oda'daki Harita objesine tıklayınca, ekranı kaplayan bir harita sekmesi açılıyor (sol üstteki
 X'e basana kadar kapanmıyor). Fare tekerleğiyle zoom, sol tıkla sürükleyerek pan yapılabiliyor
-(bkz. `HaritaKontrol.cs`). Zoom'un minimum seviyesi haritanın tam ekranı kapladığı nokta (daha fazla
-uzaklaşılamıyor), sürükleme haritanın kenarları ekran dışına çıkmayacak şekilde sınırlı. Köylerin
-isimleri şu an **elle/statik olarak** haritanın üzerine TextMeshPro etiketleriyle yerleştirildi —
-**pozisyonları** hâlâ `KoyData`'ya bağlı değil (köy sayısı değişirse elle yeni etiket eklenmesi
-gerekir), ama **tıklama/hover/isyan renklendirmesi artık isim eşleştirmesiyle gerçek veriye bağlı**
-(bkz. "Köy Bilgi Paneli").
+(bkz. `HaritaKontrol.cs`, hâlâ değişmedi). **Bu oturumda köylerin elle/statik TextMeshPro etiketleri
+kaldırıldı** (`KoyEtiketiTiklama.cs` ve o objeler artık kullanılmıyor, muhtemelen ölü kod) — yerine
+tamamen kod üretimli bir **hex (altıgen) harita sistemi** geldi, aşağıdaki "Hex Harita Sistemi"
+bölümüne bakın. `PixelArtFantasyMap_TheSilentMage` görseli de artık KULLANILMIYOR — arka plan artık
+düz renkli, bizim oluşturduğumuz basit bir panel (`HaritaArkaplanGorseli`, Source Image: None, sadece
+Color).
+
+### Hex Harita Sistemi (bu oturumda baştan sona kuruldu)
+Kullanıcının isteği: Civ 6 tarzı, her köyün/şehrin/kalenin kendi altıgen tile'lardan oluşan bir
+"toprağı" (kapsama alanı) olsun, her tile'ın kendi Erzak/Altın değeri olsun, köy bu alandaki
+tile'ların TOPLAMI kadar üretsin. Yerleşke KONUMLARI her zaman **sabit/elle** (Inspector'dan), sadece
+tile DEĞERLERİ her yeni oyunda rastgele — hem iş azalıyor (yer belirleme otomatik değil ama zaten
+elle yapılıyor) hem her oyunda ekonomik çeşitlilik oluyor.
+
+**Veri modeli:**
+- **`HexTileData`** (yeni, düz `[Serializable]` class) — `Vector3Int Koordinat` (axial q,r, z=0 hep
+  0), `int ErzakDegeri`, `int AltinDegeri`, `KoyData SahipKoy` (nullable).
+- **`KoyData`**'ya iki yeni alan: `Vector3Int MerkezTileKoordinati` (köyün elle atanan sabit
+  konumu) ve `int TileMenzili` (varsayılan 1 — köy tipine göre büyütülebilir, örn. ileride bir
+  "Şehir" daha büyük menzil alabilir; **ŞU AN Köy/Şehir/Kale ayrı tipler DEĞİL**, kullanıcı bilinçli
+  olarak bunu ertelemeyi seçti, sadece bu tek sayı köy başına ayarlanabilir).
+- **`HaritaYoneticisi`** (yeni, MonoBehaviour, Singleton, `KoyYoneticisi`nin kardeşi) —
+  `List<HexTileData> Tileler`, `Vector3Int HaritaMerkezi` (köylerin ortalama konumu, otomatik
+  hesaplanır). `KoyYoneticisi.Harita` alanına Inspector'dan bağlanıyor.
+
+**Tile üretimi (`HaritaYoneticisi.TileleriOlustur`, `KoyYoneticisi.Awake()`'te çağrılıyor):**
+Rastgele "çiçek" (her köy + 6 komşusu) yöntemi TERK EDİLDİ çünkü köyler arasında sahipsiz/boş
+tile'lar bırakıyordu (oyunda tile tek tek fethedilmiyor, sadece yerleşke fethediliyor — bu yüzden
+HİÇBİR tile boş kalmamalı). Yerine **ağırlıklı en-yakın-yerleşke (weighted Voronoi)** yöntemi
+geldi: haritanın (köylerin ortalama merkezine göre, `SinirPayi` kadar geniş) TAMAMI için, her
+koordinata `EtkinMesafe = HexMesafe(tile, koy.Merkez) - koy.TileMenzili` değeri en küçük olan köy
+sahip oluyor. Bu hem "hiç boşluk kalmasın" hem "menzili büyük olan (örn. ileride Şehir) daha çok
+toprak kazansın" isteklerini AYNI ANDA karşılıyor. Harita şekli **gerçek bir altıgen (petek)** —
+ilk denemede dikdörtgen bir X/Y taraması yapılmıştı, bu axial koordinat sisteminde PARALELKENAR
+şekli veriyordu (bilinen bir hex-grid özelliği), düzeltmek için köylerin ortalama merkezinden
+`yarıçap` bazlı gerçek hex-range taraması yapıldı (cube coordinate range formülü).
+
+**Erzak/Altın'ın kaynağı değişti:** `KoyYoneticisi.Awake()`, eskiden `ErzakYield`'i doğrudan
+1-4 rastgele atıyordu — artık (Harita bağlıysa) `HaritaYoneticisi.KoyunErzakToplami(koy)`/
+`KoyunAltinToplami(koy)` çağırıp o köyün SAHİP OLDUĞU tüm tile'ların toplamını kullanıyor. Harita
+bağlı DEĞİLSE eski rastgele davranış hâlâ çalışır (geriye dönük güvenli geçiş için bilinçli
+bırakıldı). Değirmen'in "ErzakYield'i 2 katına çıkarma" mantığı DEĞİŞMEDİ, sadece artık çarptığı
+sayı tile toplamından geliyor.
+
+**Görsel çizim (`HexHaritaCizici`, `SekilUretici`):** Hiçbir dış görsel/asset indirilmedi —
+hexagon/kare/üçgen/daire şekilleri **kod içinde `Texture2D` üzerine nokta-içinde-mi testiyle
+(ray casting) çizilip `Sprite.Create` ile üretiliyor** (`SekilUretici.cs`, static yardımcı sınıf).
+`HexHaritaCizici` (mevcut `HaritaArkaplanGorseli` objesine eklendi), oyun başında (`Start()`):
+- Her tile için yarı saydam (varsayılan %35), krallık rengine göre boyalı bir hexagon `Image`
+  oluşturuyor (`TileleriCiz`).
+- Her köy için bir işaret (`Yerlesim_<isim>`, varsayılan kare, ama `YerlesimIkonu` alanına bir
+  sprite atanırsa onu kullanıyor — kullanıcı `MedievalFantasyUIPack_Kibyra`'daki `icon40.png`
+  kale ikonunu seçti) + üstünde köyün ismi (`TextMeshProUGUI`) oluşturuyor (`YerlesimleriCiz`).
+- Tıklama: `YerlesimIsaretiTiklama` (yeni script, ESKİ isim-eşleştirme yöntemi YERİNE doğrudan
+  `KoyData` referansı taşıyor) — sol tık `KoyBilgiPaneli`, sağ tık (düşmansa) `DiplomasiBilgiPaneli`.
+- **Hover'da toprak sınırı:** Her tile için (görünmez, `SetActive(false)`) bir de çerçeve-hexagon
+  (`hexagonCerceveSprite`, içi boş, sadece kenar) oluşturuluyor, `Dictionary<KoyData,
+  List<GameObject>>` ile hangi köyün hangi sınır objelerine sahip olduğu tutuluyor.
+  `YerlesimIsaretiTiklama`'nın `OnPointerEnter`/`OnPointerExit`'i `HexHaritaCizici.SinirGoster`/
+  `SinirGizle`'yi çağırıp o köyün TÜM tile sınırlarını aynı anda açıp kapatıyor.
+- **Renk güncelleme:** Bir köy el değiştirdiğinde (`Saldır` başarılı olunca), tile'ların rengi
+  OTOMATİK güncellenmiyordu (ilk çizimde bir kere hesaplanıp sabitleniyordu) — bunu çözmek için
+  her tile/yerleşim görselinin `Image` referansı bir `Dictionary`'de saklanıyor,
+  `HexHaritaCizici.RenkleriGuncelle()` (public) bunları TileRengi'ne göre yeniden boyuyor.
+  `DayResolver`, saldırı başarılı olup `HedefKoy.Sahip` değiştiğinde bunu çağırıyor.
+- **Ortalanma:** `HexHaritaCizici.EksenselKonum`, koordinatı doğrudan pikselleştirmek yerine
+  `HaritaYoneticisi.HaritaMerkezi`'ne göre GÖRELİ pozisyon hesaplıyor — böylece harita (köylerin
+  konumu ne olursa olsun) ilk açıldığında ekranın ortasında duruyor.
+
+**Mesafe hesaplama altyapısı (AI'sız, sadece araç):** `HaritaYoneticisi.HexMesafe(a, b)` (cube
+coordinate mesafe formülü) ve `KoyMesafesi(koyA, koyB)` — düşman AI'ı ("en yakın köyümüze saldırır")
+HENÜZ yazılmadı, kullanıcı bilerek bunu ertelemeyi seçti, ama fonksiyon hazır, ileride kullanılacak
+(bkz. Sıradaki Adımlar).
+
+**Şu anki Inspector kurulumu (Unity tarafı, hatırlatma):** `HaritaYoneticisi` objesi sahnede,
+`KoyYoneticisi.Harita` alanına bağlı. `HexHaritaCizici` `HaritaArkaplanGorseli` objesinde, `Icerik`
+alanı `HaritaIcerik`'e bağlı (aynı obje `HaritaKontrol.Icerik` ile de aynı olmalı — pan/zoom'un
+tile'ları da etkilemesi için). `HaritaMaskeleyici`/`HaritaIcerik`/`HaritaArkaplanGorseli` üçü de
+1300x1300 (ya da benzeri) sabit boyuta, stretch olmayan anchor'a ayarlandı — bu oturumda ÇOK uzun
+bir debug sürecinden sonra bulundu (bkz. Bilinen Tuzaklar, birkaç yeni madde eklendi).
 
 ### Uyu Tuşu (Gece / Resolve)
 Oyuncu "Uyu" tuşuna basınca döngü sona eriyor ve şunlar oluyor:
@@ -345,6 +543,33 @@ Oyuncu "Uyu" tuşuna basınca döngü sona eriyor ve şunlar oluyor:
   **Wrapping + Content Size Fitter + Layout Group'un Control Child Size'ı** kombinasyonu "satır
   kaydırsın, kutu büyüsün" isteniyorsa kullanılıyor — ikisini birbirine karıştırmamak lazım,
   bkz. Bilinen Tuzaklar.
+
+### Görsel Asset Pipeline (bu oturumda başlandı)
+Kullanıcı, oyunun **gerçeğe yakın/detaylı pixel art** bir görünüme kavuşmasını istedi (Undertale
+kadar basit değil). Ücretsiz/pay-what-you-want itch.io paketleri araştırılıp indirildi, hepsi
+**`Assets/ExternalAssets/`** altında paket başına ayrı klasörde duruyor (karışmasın diye):
+- **`CastleInteriorBackgrounds/`** — Taht Odası ve Şahsi Oda arka planları (PNG, düşük çözünürlüklü
+  576x324 kaynak, ekrana gerilince bulanıklaşıyordu — **Filter Mode: Point (no filter)** + Import
+  ayarlarında **Compression: None** yapılınca netleşti, bkz. Bilinen Tuzaklar). `TahtOdasiPanel` ve
+  `SahsiOdaPanel`'e birer `Image` component'i eklenip Anchor **stretch-stretch** yapılarak tam ekran
+  kaplatıldı.
+- **`PixelArtIconPack_Cainos/`** — Erzak/Altın/Manpower/Nüfus gibi stat'lar için ikonlar (Food,
+  Material, Misc/Coin, Equipment kategorili), henüz UI'a uygulanmadı.
+- **`MedievalFantasyUIPack_Kibyra/`** — beklenenden farklı çıktı: sadece küçük kare ikonlar +
+  İngilizce metin gömülü hazır butonlar (bizim Türkçe dinamik metnimize uygun değil), buton gövdesi
+  için KULLANILMIYOR, sadece küçük ikon süslemeleri için kullanılabilir.
+- **`PixelButtonsPack_BDragon1727/`** ve **`PixelFramesButtonsPanels_BDragon1727/`** — asıl buton
+  ihtiyacını karşılayan paketler: geniş dikdörtgen, **boş/yazısız** (metnimizi üstüne koyabileceğimiz)
+  9-slice uyumlu butonlar + kare/yuvarlak süslü çerçeveler (portre/danışman ikonu için). **Henüz
+  Sprite Editor'da dilimlenmedi** (Grid By Cell Size 64x32), bkz. Sıradaki Adımlar.
+- **`PixelArtFantasyMap_TheSilentMage/`** — Harita sekmesi için yer tutucu görsel. **Dikkat:**
+  ücretsiz sürümü sadece ticari-olmayan kullanım + kredi şartlı, şimdilik placeholder olarak kullanmak
+  sorun değil ama final oyunda kalıcı kullanmadan önce ücretli sürümü alınmalı ya da değiştirilmeli.
+
+**Not:** İndirme işlemi itch.io'nun "name your own price → $0" akışı taklit edilerek (tarayıcı
+otomasyonu ile "Download" butonuna tıklanıp ağ isteklerinden 60 saniyelik süreli imzalı indirme
+linki yakalanıp hemen `curl` ile çekilerek) yapıldı — bu linkler kısa süre geçerli, tekrar
+indirilmesi gerekirse itch.io sayfasından yeniden "download" akışı başlatılmalı.
 
 ---
 
@@ -598,6 +823,35 @@ Bilinen Tuzaklar, bu tam olarak yaşandı). Çözüm: kod, panelin `anchorMin`'i
 kendi `rect`i içindeki karşılık gelen noktayı (`Mathf.Lerp` ile) hesaplayıp farkı alıyor — hangi
 köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
 
+**25. `Krallik` neden enum'dan ScriptableObject'e (`KrallikData`) dönüştürüldü?**
+Bu geçiş bu dosyanın hazırlanmasından SONRA, ayrı bir oturumda yapıldı (bu özet o zaman güncellenmedi,
+bu oturumda düzeltildi). `KrallikData`: `Isim`, `HaritaRengi` (Color), `Bayrak` (Sprite). İki asset:
+`Vollen_Krallik.asset` (oyuncu) ve `Babbar_Krallik.asset` (düşman). Avantajı: yeni bir krallık eklemek
+artık enum'a değer ekleyip HER YERDE o değeri kontrol eden kodu güncellemek değil, sadece yeni bir
+asset oluşturup ilgili köylere/`Diplomasiler` listesine eklemek. `KoyYoneticisi.OyuncuKralligi` ve
+`KoyData.Sahip` bu tipte, karşılaştırmalar (`==`/`!=`) referans eşitliğiyle çalışıyor.
+
+**26. Diplomasi verisi neden `KrallikData` (ScriptableObject) içine değil ayrı bir listeye kondu?**
+`KrallikData` bir ScriptableObject/asset — Bilinen Tuzaklar'da zaten not edildiği gibi, ScriptableObject
+alanlarına runtime'da yazılan bir değer (örn. `Diplomasi`) Play modunda değişse bile Editor'da Play'den
+çıkınca YENİDEN BAŞLAMIYOR/sıfırlanmıyor güvenilir şekilde (asset kalıcı, sahne verisi değil) — bu
+`KoyData`/`GameState`'in neden düz C# class olduğuyla birebir aynı gerekçe (bkz. #11). Çözüm: yeni bir
+düz `[Serializable]` class **`DiplomasiVerisi`** (`KrallikData Krallik` referansı + `int Diplomasi` +
+`bool SavastaMi`), `KoyYoneticisi.Diplomasiler` listesinde tutuluyor — `Koyler` listesiyle birebir aynı
+desen (Inspector'dan elle, her düşman krallık için bir eleman).
+
+**27. Diyalogda "Geri" ve "Boşver" nasıl kuruldu, neden "Boşver" her node'a elle eklenmedi?**
+İlk yaklaşım her `DialogueChoice` listesine elle bir "Boşver" seçeneği eklemekti, ama bu her danışman
+diyaloğundaki HER menüde tekrar tekrar aynı işi yapmak (ve unutma riski) demekti. Bunun yerine
+`DialogueManager.NodeGoster()`/`KoySecimGoster()`, seçenek butonlarını oluşturduktan SONRA
+`aktifDanismanDiyalogu` true ise otomatik olarak bir "Bosver" butonu ekliyor (`BosverSecenegiEkleIstenirse`)
+— diğer seçeneklerle aynı `SecenekButonSablonu`'ndan üretiliyor, tıklanınca direkt `DiyalogBitir()`.
+"Geri" ise bir `Stack<DialogueNode> gecmisNodeler` ile çalışıyor: `SecenekUygula` bir sonraki node'a
+geçerken (`SonrakiNodeID` ile) VEYA köy seçim ekranına girerken (`KoySecimGoster` çağrılmadan önce)
+mevcut node'u stack'e `Push` ediyor; "Geri" tıklanınca `Pop` edip o node'u yeniden gösteriyor. Köy
+seçimine girerken de push edilmesi önemli — aksi halde köy seçiminden "Geri" ile çıkmak, bir önceki
+emir menüsünü atlayıp direkt en baştaki karşılamaya dönerdi.
+
 ---
 
 ## 4) SCRIPT ENVANTERİ
@@ -609,9 +863,16 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   `NufusDegistir()`'e gidiyor. Sadakat için genel+köy ortalamasını topluyor ve `Mathf.Clamp`
   ile 0-100 arasına sıkıştırıyor. `BaseGeliriUygula()`: her yeni günde `KoyYoneticisi.ErzakDegistir(ErzakBaseGelir)`
   + `KoyYoneticisi.NufusuGunlukArtir()` (Nüfus'un kendi dinamik formülü, sabit bir "NufusBaseGelir"
-  YOK) + `Altin += AltinBaseGelir`.
-- **`Krallik.cs`** *(yeni, bu oturumda eklendi)* — Düz `enum { Oyuncu, Dusman }`. `KoyData.Sahip`'in
-  tipi, bkz. Mimari Kararları #21.
+  YOK) + `Altin += AltinBaseGelir`. **`GiderleriUygula()`** *(bu oturumda eklendi)*:
+  `Altin -= Manpower*ManpowerMaasiBirimMaliyeti` + `Altin -= ToplamDoluBinaSlotu()*
+  BinaBakimBirimMaliyeti` (bkz. "Ekonomi Giderleri"), `DayCycleManager.GelirleriUygula()` içinde
+  gelirle aynı anda çağrılıyor.
+- **`KrallikData.cs`** — **ScriptableObject** (eskiden düz enum'du, önceki bir oturumda dönüştürüldü,
+  bkz. Mimari Kararları #25). `Isim`, `HaritaRengi` (Color), `Bayrak` (Sprite). Asset'ler:
+  `Vollen_Krallik.asset` (oyuncu), `Babbar_Krallik.asset` (düşman). `KoyData.Sahip`'in tipi.
+- **`DiplomasiVerisi.cs`** *(bu oturumda eklendi)* — Düz `[Serializable]` class, ScriptableObject
+  DEĞİL (bkz. Mimari Kararları #26). `KrallikData Krallik`, `int Diplomasi` (varsayılan 60),
+  `bool SavastaMi`. `KoyYoneticisi.Diplomasiler` listesinde tutuluyor.
 - **`KoyData.cs`** — Bir köyün "kimlik kartı": `Isim`, `Sadakat` (varsayılan 50), `Erzak`
   (varsayılan 20), **`Nufus`** (varsayılan 30, bkz. Mimari Kararları #18 — sabit bir `NufusYield`
   alanı YOK, büyüme dinamik hesaplanıyor), `ErzakYield` (varsayılan 1, ama oyun başında
@@ -620,17 +881,26 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   üzerinden kullanılıyor, bkz. Mimari Kararları #21), `MaxBinaSlotu` (varsayılan 3),
   `DoluBinaSlotu` (varsayılan 0), `IsyanHalinde` (bool, varsayılan false), **`Sahip`** (`Krallik`,
   varsayılan `Oyuncu`, bu oturumda eklendi) ve **`Garnizon`** (int, varsayılan 0, bu oturumda
-  eklendi — o köyde konuşlanan Manpower). ScriptableObject DEĞİL.
+  eklendi — o köyde konuşlanan Manpower). **`MerkezTileKoordinati`** (`Vector3Int`) ve
+  **`TileMenzili`** (int, varsayılan 1) — bu oturumda eklendi, hex harita sistemi için (bkz. "Hex
+  Harita Sistemi"). ScriptableObject DEĞİL.
+- **`HexTileData.cs`** *(bu oturumda eklendi)* — Düz `[Serializable]` class. `Vector3Int Koordinat`,
+  `int ErzakDegeri`, `int AltinDegeri`, `KoyData SahipKoy` (nullable). `HaritaYoneticisi.Tileler`
+  listesinde tutuluyor.
 - **`OrderData.cs`** — Ana constructor aynı (`DanismanTipi, EmirTuru, EtkilenenStat, ...`). Alanlar:
   `KoySecimiGerekli` (bool), `HedefKoy` (nullable `KoyData`), `BinaSlotuKullanir` (bool),
   `IsyanliKoyGerekli` (bool — köy seçim filtresi, sadece isyandaki köyler), `ManpowerMiktariSorulsun`
   (bool — köy seçilince Manpower Slider paneli açılsın mı), `IsyanBastirir` (bool — bu emrin
   başarılı sonucu bir köyün isyanını kapatsın mı), `GonderilenManpower` (int — seçilen Manpower
   miktarı, `MaliyetMiktar` sıfırlandığı için ayrı tutuluyor, bkz. Mimari Kararları #17),
-  **`DusmanKoyuGerekli`** (bool — köy seçim filtresi, sadece düşman köyleri; bu oturumda eklendi,
-  bkz. Mimari Kararları #21), **`SaldiriBaslatir`** (bool — bu emrin sonucu bir Saldırı işlemi mi;
-  bu oturumda eklendi). `KopyalaVeKoyAta(KoyData koy)` — tüm alanları
-  (yenileri dahil) kopyalayıp `HedefKoy`'u dolduran bir kopya döndürür (şablonu bozmamak için).
+  `DusmanKoyuGerekli` (bool — köy seçim filtresi, sadece düşman köyleri), `SaldiriBaslatir` (bool).
+  **`KaynakSecimiGerekli`**, **`KaynakKoy`** (nullable `KoyData`), **`GarnizonEkler`** (bool) — bu
+  oturumda eklendi, ordu kaynağı/garnizon aktarma için (bkz. "Ordu Kaynağı ve Mesafeye Bağlı Süre").
+  `KopyalaVeKoyAta(KoyData koy)` — tüm alanları
+  (yenileri dahil) kopyalayıp `HedefKoy`'u dolduran bir kopya döndürür (şablonu bozmamak için;
+  `KaynakKoy` kopyaya dahil edilmiyor, `DialogueManager` sonradan elle atıyor). **Not:** `ToplamSure`
+  artık İsyan Bastır/Saldır/Garnizon Gönder için şablondaki sabit değer değil, `DialogueManager`
+  tarafından `HaritaYoneticisi.SureHesapla` ile RUNTIME'DA ÜZERİNE YAZILIYOR (bkz. mesafe bölümü).
 - **`SiraGirisi.cs`** — `NPCData Npc` + `KoyData IlgiliKoy` (nullable). `DaySequencer`'ın
   ürettiği sıradaki bir "ziyaretin" hangi NPC ve (varsa) hangi köyle ilgili olduğunu taşıyan basit
   bir zarf sınıfı.
@@ -639,16 +909,22 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   `List<SiraGirisi>` döndürüyor. Köylü "her köy kendi zarını atar" mantığıyla ekleniyor
   (bkz. Mimari Kararları #10). `Gun == 10` kuralı (Ayyaş Adam) değişmedi.
 - **`DayResolver.cs`** — Tek günlük emirler anında, çok günlüler `devamEdenler`'e. `ZarAtVeUygula`
-  içinde **`emir.IsyanBastirir` kontrolü en başta** — işaretliyse genel stat mantığını atlayıp,
+  içinde **`emir.GarnizonEkler` kontrolü EN BAŞTA** *(bu oturumda eklendi)* — garanti (şansa bağlı
+  DEĞİL) olarak `GonderilenManpower`'ı `HedefKoy.Garnizon`'a ekliyor; **çok-günlü tamamlanma yolunda
+  da** (`SonucMesajlariniOlustur`'daki `else if` zinciri) AYRICA ele alınması gerekiyor çünkü o yol
+  `ZarAtVeUygula`'yı çağırmıyor (sadece `SonucSansaBagli` ise çağırıyor). Ardından
+  **`emir.IsyanBastirir` kontrolü** — işaretliyse genel stat mantığını atlayıp,
   başarı şansını `GonderilenManpower/(GonderilenManpower+HedefKoy.Nufus)` formülüyle hesaplayıp
   (bkz. Mimari Kararları #17, #19) `emir.HedefKoy.IsyanHalinde`'yi ayarlayıp kendi mesajını yazıyor
-  (bkz. Mimari Kararları #14). **Manpower kayıp/dönüş** (bkz. #19): kazanırsa %15, kaybederse
-  %80 kayıp, geri kalanı `state.StatDegistir("Manpower", ...)` ile kingdom'a iade ediliyor, elçi
-  mesajına kaç asker kaybedildiği/döndüğü de ekleniyor. **`emir.SaldiriBaslatir` kontrolü** (bu
-  oturumda eklendi, bkz. Mimari Kararları #21) — `KoyYoneticisi.EtkinSavunmaHesapla(HedefKoy)`'a
+  (bkz. Mimari Kararları #14). **Manpower kayıp/dönüş** artık **`AskeriGeriGonder(state, emir,
+  miktar)`** yardımcı fonksiyonunu kullanıyor *(bu oturumda eklendi)* — `emir.KaynakKoy` doluysa
+  oraya (`Garnizon`'a), boşsa `GameState.Manpower`'a geri dönüyor (bkz. "Ordu Kaynağı ve Mesafeye
+  Bağlı Süre"). **`emir.SaldiriBaslatir` kontrolü** — `KoyYoneticisi.EtkinSavunmaHesapla(HedefKoy)`'a
   karşı `GonderilenManpower` ile oran/Tullock formülü, kazanırsa `HedefKoy.Sahip = Oyuncu` +
-  hayatta kalan Manpower `HedefKoy.Garnizon`'a yazılıyor (kingdom'a DÖNMÜYOR), kaybederse hayatta
-  kalan Manpower kingdom'a geri dönüyor (aynı %15/%80 yüzdeleri).
+  hayatta kalan Manpower `HedefKoy.Garnizon`'a yazılıyor (kingdom'a DÖNMÜYOR) + **`HexHaritaCizici.
+  Instance.RenkleriGuncelle()` çağrılıyor** *(bu oturumda eklendi)* ki köyün hex tile'ları/işareti
+  haritada anında yeni sahibinin rengine dönsün, kaybedersen `AskeriGeriGonder` ile hayatta kalan
+  Manpower geri dönüyor (aynı %15/%80 yüzdeleri).
   `BaseGeliriEtkiler` dalı `HedefKoy` doluysa (ve `Isim`'i boş değilse) o köyün `ErzakYield`'ini
   **2 katına çıkarıyor** (eski davranış: sabit +miktar ekliyordu). Her stat değişiminde
   `BildirimYoneticisi.Bildirim(...)` çağrılıyor. Sonuç mesajları renkli: şansa bağlı başarı yeşil,
@@ -657,6 +933,11 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   Danışmanlar için de kullanılıyor (`General_NPC.asset`, `Insaatci_NPC.asset`).
 - **`DialogueData.cs`** — ScriptableObject. `DialogueChoice`: `SecenekMetni`, `SonrakiNodeID`,
   `List<StatEtkisi> StatEtkileri` (her biri `StatAdi`+`Miktar`), `OrderData VerilecekEmir`.
+- **`SekilUretici.cs`** *(bu oturumda eklendi)* — MonoBehaviour DEĞİL, static yardımcı sınıf, hiç
+  sahne objesi yok. `HexagonSprite()`, `HexagonCerceveSprite()` (içi boş, sadece kenar), `KareSprite()`,
+  `UcgenSprite()`, `DaireSprite()` — hepsi `Texture2D` üzerine nokta-çokgen-içinde-mi testiyle
+  (ray casting algoritması) piksel piksel çizip `Sprite.Create` ile dönüyor. Hiçbir dış görsel/asset
+  gerektirmiyor, tamamen kod üretimli (bkz. "Hex Harita Sistemi").
 
 ### MonoBehaviour'lar (sahnede bir GameObject'e eklenmiş script'ler)
 - **`GameManager.cs`** — Singleton, `public GameState State`. Sadece veri kutusu tutucu.
@@ -670,21 +951,30 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   `IsyanKontrolEt(mesajListesi)` (gece isyan zarı, bkz. Mimari Kararları #14 — artık `Sahip !=
   Oyuncu` olan köyleri de atlıyor). `NufusYieldHesapla(koy)` — Nüfus büyüme formülü, bkz. Mimari
   Kararları #18. `NufusEsik` (varsayılan 1) ve `NufusKatsayi` (varsayılan 10), Inspector'dan
-  ayarlanabilir. **`EtkinSavunmaHesapla(koy)`** *(bu oturumda eklendi)* = `Savunma * (1 +
-  Garnizon/GarnizonKatsayisi)`, `GarnizonKatsayisi` (varsayılan 10) Inspector'dan ayarlanabilir,
-  bkz. Mimari Kararları #21. **`ErzakDagilimMetni()`** *(bu oturumda eklendi)* — bize ait her
-  köyün Erzak'ını "Köy: X" formatında satır satır döken bir string döndürüyor, Erzak hover
-  tooltip'i tarafından kullanılıyor (bkz. "Hover Bilgi Sistemi").
+  ayarlanabilir. `EtkinSavunmaHesapla(koy)` = `Savunma * (1 + Garnizon/GarnizonKatsayisi)`,
+  `GarnizonKatsayisi` (varsayılan 10) Inspector'dan ayarlanabilir, bkz. Mimari Kararları #21.
+  `ErzakDagilimMetni()` — bize ait her köyün Erzak'ını "Köy: X" formatında satır satır döken bir
+  string döndürüyor, Erzak hover tooltip'i tarafından kullanılıyor. **`Diplomasiler`** (bu oturumda
+  eklendi, `List<DiplomasiVerisi>`) ve **`DiplomasiEsikDegeri`** (varsayılan 40, Inspector'dan
+  ayarlanabilir): `DiplomasiVerisiBul(krallik)` (private, referansla arıyor), `DiplomasiDegerAl(krallik)`,
+  `SavastaMi(krallik)`, `DiplomasiDegistir(krallik, miktar)` (0-100 clamp), `DiplomasiKontrolEt(mesajListesi)`
+  (gece zarı, `IsyanKontrolEt` ile birebir aynı formül/desen, bkz. Mimari Kararları #26).
+  **`Harita`** (bu oturumda eklendi, `public HaritaYoneticisi`) — Inspector'dan bağlanıyor, `Awake()`
+  bağlıysa `Harita.TileleriOlustur(Koyler)` çağırıp `ErzakYield`/`AltinYield`'i tile toplamından
+  alıyor (bağlı değilse eski rastgele davranış çalışmaya devam ediyor, bkz. "Hex Harita Sistemi").
+  **`GarnizonluKoyler()`** (bu oturumda eklendi) — `Sahip == Oyuncu && Garnizon > 0` filtreli liste,
+  ordu kaynağı seçim ekranında kullanılıyor. **`ToplamDoluBinaSlotu()`** (bu oturumda eklendi) —
+  bina bakım giderini hesaplamak için (bkz. "Ekonomi Giderleri").
 - **`OrderManager.cs`** — `EmirEkle`, `DanismanKullanildiMi`, `YeniDongueBasla`. Mantık değişmedi
   ama **dikkat:** `EmirEkle` kendi `MaliyetStat`/`MaliyetMiktar` kontrolünü de yapıyor — dinamik
   maliyetli emirlerde bu alanların boşaltılması gerekiyor (bkz. Mimari Kararları #15).
-- **`DialogueManager.cs`** — Bu oturumda büyük bir revizyon geçirdi (bkz. Mimari Kararları #20).
+- **`DialogueManager.cs`** — Büyük bir revizyon geçirdi (bkz. Mimari Kararları #20, #27).
   `NpcIsimText`, `NpcSozuText`, `PortreImage`, `Orders`, `DiyalogKutusuKok`. Sabit `SecenekButon1/2`
   alanları **kaldırıldı**, yerine `SecenekButonSablonu` (GameObject, şablon) + `SecenekIcerik`
   (Transform, Scroll Rect'in Content'i) geldi. `NodeGoster()`: `{KOY}` yer tutucusunu değiştirdikten
   sonra, önceki seçenek butonlarını `Destroy` edip `aktifNode.Secenekler`'deki HER seçenek için
   `SecenekButonSablonu`'nu `Instantiate` ediyor, metin/tıklanabilirlik/tooltip'i kod içinde
-  dolduruyor. `KoySecimGoster(sablon, callback)` *(yeni)* — aynı dinamik buton altyapısını
+  dolduruyor. `KoySecimGoster(sablon, callback)` — aynı dinamik buton altyapısını
   kullanarak köyleri listeliyor, `sablon`'un `BinaSlotuKullanir`/`IsyanliKoyGerekli` bayraklarına
   göre ilgili köyleri "(Dolu)"/"(Isyan Yok)" etiketiyle DEVRE DIŞI (ama listede) gösteriyor,
   `DusmanKoyuGerekli` bayrağına göre ise düşman-olmayan/düşman köyleri LİSTEDEN TAMAMEN ÇIKARIYOR
@@ -695,6 +985,21 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   çağırıyor. Callback içinde: `BinaSlotuKullanir` ise slot +1; `ManpowerMiktariSorulsun` ise
   `ManpowerSeciciPaneli.Sor(...)` açıp seçilen miktarı elle Manpower'dan düşüyor, kopyanın
   `MaliyetStat`/`MaliyetMiktar`'ını sıfırlayıp öyle `EmirEkle` çağırıyor (bkz. Mimari Kararları #15).
+  **`GeriButonu`** (bu oturumda eklendi, `public Button`) + **`gecmisNodeler`** (`Stack<DialogueNode>`,
+  private): her node geçişinde/köy seçimine girerken mevcut node stack'e push ediliyor, "Geri"
+  tıklanınca pop edilip o node yeniden gösteriliyor, `GeriButonunuGuncelle()` stack boşsa butonu
+  gizliyor. **`BosverSecenegiEkleIstenirse()`** (bu oturumda eklendi): `aktifDanismanDiyalogu` true
+  ise seçenek listesinin sonuna otomatik bir "Bosver" butonu ekliyor (diğer seçeneklerle aynı
+  şablondan), tıklanınca hiçbir etki olmadan `DiyalogBitir()` çağırıyor — hem `NodeGoster()` hem
+  `KoySecimGoster()` sonunda çağrılıyor (bkz. Mimari Kararları #27).
+  **`KaynakSecimGoster(sablon, hedefKoy, callback)`** *(bu oturumda eklendi)* — köy seçiminden SONRA,
+  `sablon.KaynakSecimiGerekli` ise devreye giriyor: "Genel Yedek Kuvvet" (`KaynakKoy=null`) + hedef
+  köy hariç `KoyYoneticisi.GarnizonluKoyler()` listeleniyor, aynı dinamik buton altyapısını kullanıyor.
+  **`ManpowerAdimi(sablon, hedefKoy, kaynakKoy)`** *(bu oturumda eklendi, eski inline kod buraya
+  çıkarıldı)* — `ManpowerSeciciPaneli.Sor(mevcutManpower, callback)` artık maksimumu parametre
+  olarak alıyor (kaynak null ise `GameState.Manpower`, değilse `kaynakKoy.Garnizon`), seçilen miktar
+  doğru yerden düşülüyor, `kopya.ToplamSure = HaritaYoneticisi.SureHesapla(kaynakKoy, hedefKoy)` ile
+  mesafeye göre süre atanıyor (bkz. "Ordu Kaynağı ve Mesafeye Bağlı Süre").
 - **`SecenekTooltip.cs`** — Diyalog seçenek butonlarına eklenen hover script'i. Artık sabit
   `SecenekIndex` (0/1) yerine doğrudan **`DialogueChoice Secenek`** referansı alıyor (bu oturumda
   değiştirildi, butonlar dinamik olduğu için index anlamsızlaştı), `Dialog.MaliyetMetniAl(Secenek)`
@@ -702,10 +1007,12 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
 - **`KoySecimPaneli.cs`** — **Bu oturumda tamamen silindi** (script + sahne objesi). Görevini artık
   `DialogueManager.KoySecimGoster()` üstleniyor, bkz. Mimari Kararları #20.
 - **`ManpowerSeciciPaneli.cs`** — Singleton. `Panel`, `Slider MiktarSlider`, `TMP_Text
-  MevcutManpowerText`, `TMP_Text SeciliMiktarText`. `Sor(Action<int> callback)`: slider'ın min/max'ını
-  (0 / mevcut Manpower) ayarlayıp paneli açıyor, `Slider.onValueChanged` ile seçili miktar metnini
-  canlı güncelliyor. `GonderTiklandi()`: slider değerini `Mathf.RoundToInt` ile tam sayıya çevirip
-  callback'i çağırıyor.
+  MevcutManpowerText`, `TMP_Text SeciliMiktarText`. **`Sor(int mevcutManpower, Action<int> callback)`**
+  *(bu oturumda değişti — eskiden parametresizdi, hep `GameState.Manpower` okurdu)*: artık maksimum
+  DIŞARIDAN veriliyor (Genel Yedek Kuvvet ya da bir köyün Garnizonu olabilir, bkz. "Ordu Kaynağı"),
+  slider'ın min/max'ını buna göre ayarlayıp paneli açıyor, `Slider.onValueChanged` ile seçili miktar
+  metnini canlı güncelliyor. `GonderTiklandi()`: slider değerini `Mathf.RoundToInt` ile tam sayıya
+  çevirip (verilen maksimuma clamp'leyerek) callback'i çağırıyor.
 - **`KoyBilgiPaneli.cs`** — Singleton. `Panel`, `IsimText`, `DurumText` (isyan varsa kırmızı
   "ISYAN HALINDE"), `SadakatText`, `ErzakText`, `ErzakYieldText`, `AltinYieldText` (ikisi de
   `YieldMetni` yardımcı fonksiyonuyla renkleniyor: +yeşil/-kırmızı/0-beyaz, isyanda gri), `SlotText`
@@ -714,13 +1021,43 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   eklendi)*. `Goster(koy)` artık `koy.Sahip == Oyuncu` mu diye bakıyor (bkz. Mimari Kararları #21):
   değilse Sadakat/Erzak/Nüfus/Yield/Slot satırlarının GameObject'lerini `SetActive(false)` ile
   gizleyip sadece İsim + Savunma + Garnizon gösteriyor; bize aitse eskisi gibi her şey görünüyor.
-- **`KoyEtiketiTiklama.cs`** — Harita üzerindeki her köy isim etiketine eklenen script.
-  `IPointerClickHandler`/`IPointerEnterHandler`/`IPointerExitHandler`. `BulKoy()`: kendi TMP_Text'inin
-  yazdığı ismi `KoyYoneticisi.Koyler`'daki `Isim`lerle case-insensitive+trim karşılaştırıyor (bkz.
-  Mimari Kararları #16). Tıklanınca `KoyBilgiPaneli.Goster`. `GuncelleRenk()` (bu oturumda
-  genişletildi, bkz. Mimari Kararları #21): isyanda `IsyanRengi` (kırmızı), `Sahip == Dusman` ise
-  **`DusmanRengi`** (mavi, yeni eklendi), aksi halde etiketin kendi normal rengi — artık düşman
-  köyünü elle mavi yapmaya gerek yok, otomatik. Hover'da `HoverRengi` gösteriyor.
+- **`KoyEtiketiTiklama.cs`** — **Bu oturumda ARTIK KULLANILMIYOR** (muhtemelen ölü kod, silinip
+  silinmeyeceği doğrulanmadı) — elle yerleştirilmiş statik metin etiketleri kaldırıldı, görevini
+  `YerlesimIsaretiTiklama.cs` + `HexHaritaCizici.cs` (kod üretimli hex harita) üstlendi. Eski
+  davranışı (artık geçersiz): isim eşleştirmesiyle `KoyData` bulup sol/sağ tıkta
+  `KoyBilgiPaneli`/`DiplomasiBilgiPaneli` açıyordu.
+- **`HaritaYoneticisi.cs`** *(bu oturumda eklendi)* — Singleton, `KoyYoneticisi`'nin kardeşi.
+  `List<HexTileData> Tileler`, `Vector3Int HaritaMerkezi` (köylerin ortalama konumu).
+  `TileleriOlustur(koyler)`: haritanın (köylerin ortalamasına göre `SinirPayi` kadar geniş) TAMAMINI
+  gerçek hex-range (petek) taramasıyla dolduruyor, her tile'ı `EtkinMesafe = HexMesafe(tile,
+  koy.Merkez) - koy.TileMenzili` en küçük olan köye atıyor (ağırlıklı Voronoi, bkz. "Hex Harita
+  Sistemi"). `KoyunErzakToplami`/`KoyunAltinToplami(koy)` — bir köyün sahip olduğu tile'ların
+  toplamı. `TileRengi(tile)` — `tile.SahipKoy.Sahip.HaritaRengi` (sahipsizse gri). `HexMesafe(a,b)`
+  (cube coordinate formülü) + `KoyMesafesi(koyA,koyB)` — mesafe hesaplama altyapısı, düşman AI'ı
+  HENÜZ bunu kullanmıyor (kasıtlı olarak ertelendi). `SureHesapla(kaynakKoy,hedefKoy)` — kaynak null
+  ise 1 gün (Genel Yedek Kuvvet, konumsuz), değilse `mesafe/OrduHizi` (varsayılan 3), en az 1 gün.
+- **`HexHaritaCizici.cs`** *(bu oturumda eklendi)* — Haritayı TAMAMEN KOD İÇİNDE çizen script,
+  `HaritaArkaplanGorseli` objesinde duruyor. `Icerik` (aynı `HaritaKontrol.Icerik`'e bağlı olmalı ki
+  pan/zoom tile'ları da etkilesin). `Start()`'ta `EskiCizimleriTemizle()` (Play modunda script
+  yeniden çalışırsa eskiler birikmesin diye, isimleri `Tile_`/`Yerlesim_` ile başlayanları siliyor)
+  + `TileleriCiz()` + `YerlesimleriCiz()`. Her oluşturulan obje **`SabitCapaliRectOlustur`** ile
+  açıkça sabit/merkez anchor'a ayarlanıyor (bkz. Bilinen Tuzaklar — `AddComponent` ile taze
+  RectTransform'un varsayılan anchor'ı güvenilmez çıktı). `TileleriCiz`: her `HexTileData` için
+  yarı saydam (varsayılan `TileSaydamligi=0.35`) hexagon `Image` + (sahipliyse) gizli bir çerçeve-
+  hexagon (`Sinir_...`, hover'da açılacak) oluşturuyor, ikisinin de `Image` referansı
+  `Dictionary`'lerde saklanıyor (`tileGorselleri`, `koyTileSinirlari`) ki sonradan güncellenebilsin.
+  `YerlesimleriCiz`: her köy için `YerlesimIkonu` (Inspector'dan atanan bir sprite, örn. bir kale
+  ikonu) varsa onu, yoksa düz kare kullanıp bir işaret + üstünde isim (`TextMeshProUGUI`) oluşturuyor,
+  `YerlesimIsaretiTiklama` component'i ekliyor. **`SinirGoster(koy)`/`SinirGizle(koy)`** (public) —
+  bir köyün TÜM tile sınır objelerini aynı anda açıp kapatıyor. **`RenkleriGuncelle()`** (public) —
+  bir köy el değiştirdiğinde (`DayResolver` çağırıyor) tüm tile/yerleşim renklerini
+  `HaritaYoneticisi.TileRengi`'ye göre yeniden hesaplayıp uyguluyor (ilk çizimde bir kere hesaplanıp
+  SABİTLENDİĞİ için, elle güncellenmezse köy fethedilince renk değişmiyordu).
+- **`YerlesimIsaretiTiklama.cs`** *(bu oturumda eklendi)* — `KoyEtiketiTiklama`'nın YERİNİ ALDI,
+  ama isim eşleştirmesi YOK — doğrudan `public KoyData Koy` referansı taşıyor (çok daha sağlam).
+  `IPointerClickHandler`: sol tık `KoyBilgiPaneli.Goster(Koy)`, sağ tık (düşmansa) `DiplomasiBilgiPaneli.
+  Goster(Koy.Sahip)`. `IPointerEnterHandler`/`IPointerExitHandler`: `HexHaritaCizici.Instance.
+  SinirGoster`/`SinirGizle(Koy)` çağırıp o köyün toprak sınırını gösterip gizliyor.
 - **`HaritaKontrol.cs`** — Harita içeriğinin (`Icerik`, RectTransform) sürüklenmesini/
   yakınlaştırılmasını yönetir. `IBeginDragHandler`/`IDragHandler`: `RectTransformUtility.
   ScreenPointToLocalPointInRectangle` ile Canvas modundan/ölçeğinden bağımsız, imlecin gerçek yerel
@@ -737,7 +1074,8 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   göstermekle ilgileniyor (gelir uygulamıyor). `SiradakiNpcyiGoster()`: `Dialog.DiyalogBaslat(...)`
   ilgili köyü de iletiyor. **`UyuyaBas()`**: en başta `ManpowerSeciciPaneli`'ni açıksa kapatıyor
   (`KoySecimPaneli` referansı bu oturumda kaldırıldı, silindiği için — bkz. Mimari Kararları #20),
-  `Gun`'ı +1 artırıp Resolve'a geçiyor, `GelirleriUygula()` çağırıyor, sonra **`KoyYoneticisi.
+  `Gun`'ı +1 artırıp Resolve'a geçiyor, `GelirleriUygula()` çağırıyor (bu artık `GameState.
+  GiderleriUygula()`'yı da çağırıyor, bkz. "Ekonomi Giderleri"), sonra **`KoyYoneticisi.
   IsyanKontrolEt(...)` emirlerden ÖNCE çağrılıyor**, sonra `DayResolver` çalışıyor.
 - **`DanismanCagir.cs`** — Kapıdan açılan danışman listesindeki butonlara bağlı. `GeneralCagir()`,
   `InsaatciCagir()`: ilgili danışmanın diyaloğunu `danismanDiyalogu=true` ile başlatıyor.
@@ -754,7 +1092,10 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
   (isyandaki VE düşman köyleri otomatik 0/hariç sayılıyor), Sadakat genel+köy ortalaması, Nüfus
   `ToplamNufus()`'tan. Üst indis gelir göstergeleri (`GelirMetni`) +yeşil/-kırmızı/0-beyaz renkli.
   **`Start()`** *(bu oturumda eklendi)*: `ErzakText`'in üzerindeki `StatTooltip` component'ine
-  `KoyYoneticisi.Instance.ErzakDagilimMetni`'i `MetinFonksiyonu` olarak atıyor.
+  `KoyYoneticisi.Instance.ErzakDagilimMetni`'i `MetinFonksiyonu` olarak atıyor. **Altın tahmini
+  geliri artık giderleri de düşüyor** *(bu oturumda eklendi)* — `AltinBaseGelir + ToplamAltinYieldi()
+  - askerMaasi - binaBakimGideri`, yoksa Uyu'ya basmadan önceki tahminle gerçekleşen uyuşmazdı
+  (Mimari Kararları #17'deki aynı prensip, yeni giderlere de uygulandı).
 - **`StatTooltip.cs`** *(yeni, bu oturumda eklendi)* — Genel/ölçeklenebilir hover bilgi script'i
   (bkz. Mimari Kararları #23). Sabit bir stat listesi/switch YOK, sadece koddan atanan bir
   **`Func<string> MetinFonksiyonu`** taşıyor. `OnPointerEnter`'da bu fonksiyonu çağırıp sonucu
@@ -773,6 +1114,13 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
 - **`EkranGecisi.cs`** — Singleton, siyah ekran geçişi. Değişmedi.
 - **`OdaEtkilesimTest.cs`** — `KapiTiklandi()`, `AnsiklopediTiklandi()` (hâlâ placeholder),
   `HaritaTiklandi()`: `HaritaEkrani.SetActive(true)` çağırıyor.
+- **`DiplomasiBilgiPaneli.cs`** *(bu oturumda eklendi)* — Singleton, `KoyBilgiPaneli.cs` ile birebir
+  aynı desen: script her zaman aktif bir "dış" objede duruyor, `Panel` (görünür kutu) onun ÇOCUĞU —
+  `Awake()`'te `Panel.SetActive(false)` yapıyor (bkz. Bilinen Tuzaklar, script'in kendi objesini
+  değil bir çocuğunu kapatması gerektiği kuralı, bu oturumda tam olarak bunun ihlaliyle bir bug
+  yaşandı). `Goster(KrallikData krallik)`: `IsimText`, `BayrakImage` (varsa `krallik.Bayrak`),
+  `DiplomasiText` (`KoyYoneticisi.DiplomasiDegerAl`), `DurumText` ("SAVASTA" kırmızı / "BARISTA"
+  yeşil, `KoyYoneticisi.SavastaMi`'ye göre). `Kapat()` paneli gizliyor.
 
 ### Muhtemelen ölü kod (doğrulanmadı, bir sonraki oturum kontrol etsin)
 - **`DanismanPaneli.cs`** — Eski 4 sabit buton (İnşaatçı/Askerbaşı/Asker Topla) sistemine aitti,
@@ -786,117 +1134,88 @@ köşeye anchor'lanırsa anchor'lansın doğru çalışıyor.
 ## 5) ŞU ANKİ DURUM
 
 ✅ Çalışıyor (test edildi, onaylandı):
-- Temel döngü uçtan uca, siyah ekran geçişi, ScriptableObject tabanlı çoklu-stat diyalog sistemi,
-  karşılanabilirlik kontrolü (Sadakat hariç), renkli gece sonuç mesajları, elçi/Ulak anlatımı.
-- Danışman diyalog akışı (kapı sistemi): General (**İsyan Bastır** + Asker Topla) ve İnşaatçı
-  (Değirmen İnşa Et) uçtan uca test edildi, danışman başına döngüde 1 kullanım kısıtlaması ortak
-  `DanismanButon.cs` ile çalışıyor (bu oturumda bir isim uyuşmazlığı bugı bulunup düzeltildi).
-- Anlık bildirim (toast) sistemi, hover tooltip sistemi.
-- **Harita sistemi**: tam ekran, sürüklenebilir, zoom sınırlı, pozisyon kenarlara kilitleniyor.
-  Köy isimleri elle yerleştirildi (pozisyon veri-bağlı değil) ama **tıklama/hover/isyan
-  renklendirmesi artık gerçek `KoyData`'ya bağlı**.
-- **Köy sistemi**: `KoyData`/`KoyYoneticisi` kuruldu, kingdom Erzak = köylerin toplamı, Sadakat =
-  genel + köy ortalaması. Oyun başında her köyün Erzak Yield'i 1-4 arası rastgele.
-- **Köylü NPC'si gerçek bir köyü temsil ediyor**, İnşaatçı/Değirmen hangi köyde yapılacağını soruyor
-  ve tamamlanınca o köyün Erzak Yield'ini 2'ye katlıyor.
-- **Building slot sistemi**: her köyün Inspector'dan ayarlanabilir slot sınırı var, dolan köyler
-  İnşaatçı panelinde tıklanamıyor.
-- **Köy Bilgi Paneli**: haritadaki köy ismine tıklayınca Sadakat/Erzak/Yield'ler/slot/isyan durumu
-  gösteren bir popup açılıyor, Yield'ler renkli (yeşil/kırmızı/beyaz/isyan grisi).
-- **İsyan mekaniği**: Sadakat<50 olan köyler gece zar atıp isyan edebiliyor, isyandaki köylerin
-  Yield'leri debuff'lanıyor (0 sayılıyor) VE **stokları (Erzak/Nüfus) da kingdom toplamından
-  tamamen dışlanıyor** (bu oturumda eklendi, bkz. Mimari Kararları #19), harita/panelde görsel
-  olarak belli oluyor, General'ın "İsyan Bastır" emriyle (köy seçimi → Manpower miktarı Slider'la
-  seçimi → gece dinamik başarı şansıyla — `Manpower/(Manpower+HedefKoy.Nufus)`, bu oturumda
-  `Savunma` yerine `Nufus`'a çevrildi — bastırma) uçtan uca test edildi. **Manpower kayıp/dönüş**
-  sistemi eklendi: kazanırsa %15, kaybederse %80 Manpower kaybediliyor, geri kalanı kingdom'a
-  geri dönüyor (bkz. Mimari Kararları #19).
-- **Gelir zamanlaması düzeltildi**: Uyu'ya basmadan önce ekranda görünen tahmini günlük gelir,
-  artık o gece bir köy isyan etse bile ertesi sabah birebir gerçekleşiyor (bkz. Mimari Kararları #17).
-- **Nüfus sistemi**: kingdom Nüfus'u = köylerin toplamı (Erzak ile aynı desen), sol üstte ve Köy
-  Bilgi Paneli'nde gösteriliyor, günlük büyüme her köyün kendi Erzak stokuna bağlı dinamik bir
-  formülle hesaplanıyor (`Erzak/Nufus` eşiğe göre büyür/küçülür, Inspector'dan ayarlanabilir),
-  test edildi (bkz. Mimari Kararları #18).
-- **Stat panelindeki üst indis gelir göstergeleri renklendirildi** (StatsUI, +yeşil/-kırmızı/0-beyaz).
-- **Diyalog seçenekleri artık dinamik/sınırsız** (Scroll View, 2 buton sınırı kalktı), `KoySecimPaneli`
-  tamamen silindi, köy seçimi diyalog kutusunun içinde gösteriliyor (bkz. Mimari Kararları #20).
-- **Savaş mekaniğinin temeli**: `Krallik`/`Sahip`/`Garnizon`, `EtkinSavunmaHesapla`, General'ın
-  "Saldır" emri (köy seç → Manpower Slider → gece `Manpower/(Manpower+EtkinSavunma)` formülü) uçtan
-  uca test edildi. Kazanınca köy `Oyuncu`'ya geçiyor, Manpower orada garnizon kalıyor. Bir düşman
-  köyü ("Dusman Koyu") sahneye eklendi, haritada otomatik mavi görünüyor. Düşman köylerinin
-  Erzak/Nüfus/Yield'leri kingdom toplamından tamamen dışlanıyor, ekonomisi bilinçli olarak donuk
-  (AI yok). Köy Bilgi Paneli düşman köyünde sadece İsim/Savunma/Garnizon gösteriyor (bkz. Mimari
-  Kararları #21-22).
+- Temel döngü uçtan uca, ScriptableObject tabanlı çoklu-stat diyalog sistemi, danışman kapı sistemi
+  (General, İnşaatçı), Diyalogda "Geri"/"Boşver" (bkz. Mimari Kararları #27).
+- Köy sistemi, isyan mekaniği (durum+zar+debuff+bastırma emri), Nüfus sistemi, building slot
+  sistemi, Köy Bilgi Paneli, Diplomasi mekaniğinin temeli (`DiplomasiVerisi`, gece zar kontrolü,
+  sağ-tık paneli) — hepsi önceki oturumlarda kurulup test edildi, değişmedi.
+- Savaş mekaniğinin temeli: `KrallikData`/`Sahip`/`Garnizon`, `EtkinSavunmaHesapla`, "Saldır" emri.
+- **Ekonomi giderleri** (bu oturumda eklendi, bkz. "Ekonomi Giderleri"): günlük asker maaşı +
+  bina bakım gideri, ilk denenen oranlar (0.5/2) dengesiz çıkıp 0.05/1'e düşürüldü, uçtan uca test
+  edildi (artık oyuncu sadece bekleyerek sonsuza kadar zenginleşemiyor).
+- **Hex Harita Sistemi TAMAMEN KURULDU** (bu oturumun en büyük işi, bkz. "Hex Harita Sistemi") —
+  gerçek görünür, kod-üretimli (hiç dış asset yok) altıgen harita: her köyün kendi tile'ları
+  (ağırlıklı Voronoi ile boşluksuz dağıtım), krallık rengine göre boyalı tile'lar, hover'da toprak
+  sınırı çizgisi, köy fethedilince renklerin otomatik güncellenmesi, tıklanabilir yerleşke işaretleri
+  (özel bir ikonla, `icon40.png`). Uçtan uca test edildi, birkaç ciddi debug turu sonunda (yanlış
+  RectTransform anchor'ları, `HaritaMaskeleyici`'de unutulmuş 19x scale, paralelkenar şekli) düzeldi.
+- **Ordu kaynağı ve mesafeye bağlı süre** (bu oturumda eklendi, bkz. "Ordu Kaynağı ve Mesafeye Bağlı
+  Süre") — İsyan Bastır/Saldır/yeni "Garnizon Gönder" emirlerinde artık "Genel Yedek Kuvvet mi yoksa
+  hangi köyün garnizonundan mı gönderiyorsun" seçimi var, süre gerçek hex mesafesine göre hesaplanıyor,
+  hayatta kalanlar nereden gittiyse oraya dönüyor. Uçtan uca test edildi.
+- Görsel asset pipeline (Taht Odası/Şahsi Oda arka planları) önceki oturumdan, değişmedi.
 
 ⚠️ Yarım kaldı / doğrulanmadı / bilinçli ertelendi:
-- **Hover tooltip kutusunun görsel tasarımı bitmedi** — fareyi takip etme ve içerik (Erzak dökümü)
-  çalışıyor, ama kutunun arka planı (Image + padding) henüz eklenmedi, yarın devam edilecek
-  (bkz. "Hover Bilgi Sistemi").
-- `DanismanPaneli.cs` ve `TahtOdasiTest.cs` muhtemelen artık ölü kod, kontrol edilip silinebilir.
-- Ansiklopedi hâlâ tamamen boş placeholder, hiç tasarlanmadı.
-- Harita'daki köy etiketlerinin **pozisyonu** hâlâ `KoyData`'ya bağlı değil (elle yerleştirildi) —
-  yeni köy eklenirse elle yeni etiket eklenmesi gerekiyor (ama artık en azından tıklama/renklendirme
-  isim eşleştirmesiyle veriye bağlı).
-- Şu an sadece **General** ve **İnşaatçı** var, başka danışman yok.
-- Mektuplar/görev sistemi silindiği için, "oyuncuya görev/istek gelen" bir mekanik yok — istenirse
-  sıfırdan, farklı bir tasarımla ele alınabilir.
-- Başkent fikri ve diplomasi (Barış/İttifak) hâlâ sadece beyin fırtınası, kod yazılmadı.
+- **Hover tooltip kutusunun görsel tasarımı** hâlâ bitmedi (arka plan/padding eksik).
+- **Buton/ikon sprite'ları** (`PixelButtonsPack_BDragon1727` vb.) hâlâ dilimlenip uygulanmadı.
+- **Şahsi Oda'daki eski placeholder'lar** (`OdaGorseli` altındaki mor/bej kutular) hâlâ düzeltilmedi.
+- `KoyEtiketiTiklama.cs`, `DanismanPaneli.cs`, `TahtOdasiTest.cs` artık (neredeyse kesin) ölü kod.
+- Ansiklopedi hâlâ boş placeholder. Başkent hâlâ sadece fikir, kod yok — Köy/Şehir/Kale tipleri de
+  henüz ayrı değil (bilinçli olarak ertelendi, sadece `TileMenzili` sayısı eklendi).
+- **Düşman AI'ı yok** — `HaritaYoneticisi.HexMesafe`/`KoyMesafesi` hazır ("en yakın köyümüze
+  saldırır" için altyapı) ama gerçek bir "düşman ne zaman/nereye saldırır" mantığı henüz yazılmadı,
+  Diplomasi'nin "barış yap" karşı-adımı da yok.
+- Diplomasi değerini hiçbir diyalog seçeneği henüz etkilemiyor (fonksiyon hazır, bağlı değil).
 
 ---
 
 ## 6) SIRADAKİ ADIMLAR
 
-Bu oturumda tamamlananlar:
-1. ✅ **Diyalog seçenekleri dinamikleştirildi** (Scroll View, 2 buton sınırı kalktı), `KoySecimPaneli`
-   tamamen silinip yerine `DialogueManager.KoySecimGoster()` geçti (bkz. Mimari Kararları #20).
-2. ✅ **Savaş mekaniğinin temeli kuruldu**: `Krallik` enum, `KoyData.Sahip`/`Garnizon`,
-   `EtkinSavunmaHesapla` (çarpımsal sinerji), General'a "Saldır" emri (isyan bastırmayla aynı akış,
-   `EtkinSavunma`'ya karşı savaşıyor), kazanınca köy+garnizon bize geçiyor (bkz. Mimari Kararları #21).
-   Garnizon sorusu netleşti: **kalıcı** bir konsept, köylülerin doğal savunması + garnizon birlikte
-   savunuyor (çarpımsal), tek seferlik değil.
-3. ✅ Bir düşman köyü sahneye eklendi (`Sahip: Dusman`), haritada otomatik mavi görünüyor (elle renk
-   ayarına gerek yok, bkz. Mimari Kararları #21).
-4. ✅ Kingdom toplamlarından (Erzak/Nüfus/Yield'ler/Sadakat ortalaması) düşman köyleri de tamamen
-   dışlandı (`BizeAitDegil` yardımcı fonksiyonu, bkz. Mimari Kararları #22). Düşman köyünün
-   ekonomisi bilinçli olarak donuk (AI yok, kullanıcı onayladı).
-5. ✅ İsyan Bastır/Değirmen köy listelerinde artık sadece bize ait köyler görünüyor, Saldır'da
-   sadece düşman köyleri (bkz. Mimari Kararları #20-21).
-6. ✅ Köy Bilgi Paneli, düşman köyünde farklı alanlar gösteriyor (sadece İsim/Savunma/Garnizon).
-7. ⚠️ **Hover tooltip sistemi genişletildi ama YARIM KALDI** (bkz. Mimari Kararları #23-24,
-   "Hover Bilgi Sistemi"): `StatTooltip` artık `Func<string>` tabanlı (genel/ölçeklenebilir),
-   `TooltipUI` fareyi takip ediyor (yeni Input System + anchor/pivot referans noktası debug'ı uzun
-   sürdü ama çözüldü). **Yarın devam:** kutunun arka planı (Image) + padding (Content Size Fitter +
-   Vertical Layout Group) henüz eklenmedi, kutu hâlâ çirkin/okunaksız görünüyor.
+Bu oturumda tamamlananlar (büyük, yoğun bir oturumdu):
+1. ✅ **Ekonomi giderleri eklendi** — günlük asker maaşı + bina bakım gideri, dengelendi.
+2. ✅ **Hex Harita Sistemi baştan sona kuruldu** — veri modeli, ağırlıklı-Voronoi tile dağıtımı,
+   kod-üretimli görsel çizim (hexagon/kare/üçgen/daire, hiç dış asset yok), hover'da toprak sınırı,
+   fetih sonrası renk güncelleme, gerçek altıgen (petek) harita şekli. Bu, tek bir mesajda istenip
+   birkaç saatlik yoğun bir debug/iterasyon sürecinden geçti (bkz. Bilinen Tuzaklar'daki yeni
+   maddeler) — ama sonunda tam istenen görünüme ulaşıldı.
+3. ✅ **Ordu kaynağı + mesafeye bağlı süre sistemi kuruldu** — "Genel Yedek Kuvvet mi, hangi
+   garnizonlu köy mü" seçimi, yeni "Garnizon Gönder" emri, mesafeye göre otomatik süre hesabı,
+   askerlerin doğru yere geri dönmesi.
 
-Önceki oturumda tamamlananlar (özet): İsyandaki köylerin stokları toplamdan dışlandı, isyan bastırma
-formülü Nüfus'a çevrildi, Manpower kayıp/dönüş sistemi.
+⚠️ Bu oturumda ortaya çıkan, netleşmemiş/yarım kalan noktalar:
+1. **Köy/Şehir/Kale ayrımı henüz yok** — sadece `KoyData.TileMenzili` (menzil sayısı) eklendi,
+   gerçek farklı yerleşke tipleri (farklı inşa seçenekleri, farklı savunma vs.) bilinçli olarak
+   ertelendi. İleride gerekirse bu, `KoyData`'ya dokunan HER sistemi etkileyecek büyük bir refactor.
+2. **Düşman AI'ı hâlâ yok** — mesafe altyapısı hazır ama "düşman ne zaman/kime/ne kadar asker ile
+   saldırır" mantığı yazılmadı. Kullanıcı bunu bilerek erteliyor.
+3. Buton/ikon sprite dilimleme + Şahsi Oda placeholder'ları hâlâ bekliyor (birkaç oturumdur erteleniyor).
 
-Daha önceki oturumlarda tamamlananlar (özet): Building slot sistemi, isyan mekaniği (durum+zar+
-debuff+görsel+bastırma emri), Köy Bilgi Paneli, gelir uygulama zamanlaması, Nüfus sistemi, StatsUI
-renklendirme.
+Önceki oturumlarda tamamlananlar (özet): Savaş mekaniğinin temeli, Diplomasi mekaniğinin temeli,
+Diyalogda Geri/Boşver, görsel asset pipeline (Taht Odası/Şahsi Oda arka planları), isyan mekaniği,
+building slot sistemi, Nüfus sistemi, Köy Bilgi Paneli, StatsUI renklendirme, hover tooltip sistemi
+(fareyi takip ediyor ama arka planı/padding'i hâlâ eksik).
 
 Henüz gündeme gelmemiş ama olası konular (öncelik sırası belirlenmedi):
-- **Hover tooltip kutusunun görsel tasarımını bitirmek** (Image arka plan + padding) — en güncel
-  yarım kalan iş, muhtemelen bir sonraki oturumun ilk maddesi.
-- **Başkent fikri:** Kullanıcının önerisi — ileride bir "Başkent" (aslında normal bir `KoyData`,
-  `bool Baskent` gibi bir bayrakla işaretli) olacak, "hangi köye gideceği belirsiz" kazanımlar
-  (örn. genel `ErzakBaseGelir`) oraya birikip sonra oyuncu tarafından diğer köylere dağıtılacak.
-  Kullanıcının planında 3 farklı harita elementi olacak: **köy, şehir, kale** (başkent bir şehir).
-  **Henüz hiçbir kod yazılmadı**, sadece kabul edilen bir yön var.
-- **Diplomasi:** Barış/İttifak, "Elçi" danışmanı, "Husumet" gibi bir stat — kullanıcı tarafından
-  "savaş sistemi netleşmeden ele alınmayacak" diye işaretlenmişti, savaşın temeli artık kuruldu,
-  istenirse bir sonraki adım bu olabilir.
-- Diğer krallıkların da (savaş dışında) kendi köylerini büyütmesi/asker toplaması gibi gerçek bir
-  AI — kullanıcı şimdilik istemiyor, ekonomisi donuk kalmaya devam edecek.
-- `DanismanPaneli.cs`/`TahtOdasiTest.cs`'in gerçekten ölü kod olduğunu doğrulayıp temizlemek.
-- Başka danışmanlar eklemek (artık tanıdık bir desen: NPCData + DialogueData + buton bağlama).
-- Ansiklopedi'nin ne göstereceğine karar vermek.
-- Harita köy etiketlerinin pozisyonunu da gerçek veriye bağlamak (şu an sadece tıklama/renk bağlı).
-- Mektuplar/görev sistemini (istenirse) sıfırdan, farklı bir tasarımla ele almak.
-- Kaydet/yükle (save/load) sistemi.
+- **Buton/ikon sprite dilimleme + uygulama** ve **hover tooltip kutusunun görsel tasarımı** — en
+  eski yarım kalan işler, birkaç oturumdur erteleniyor.
+- **Düşman AI'ı:** "En yakın köyümüze saldırır" (mesafe altyapısı hazır), asker toplama, ekonomi
+  yönetme — kullanıcı şimdilik istemiyor ama hex harita + mesafe sistemi kurulduğu için artık
+  teknik olarak çok daha yakın.
+- **Diplomasi'nin devamı:** Diplomasi değerini etkileyen bir mekanizma (örn. bir "Elçi" danışmanı)
+  ve isyan bastırma emrinin dengi olacak bir "Barış Yap" karşı-adımı henüz yok.
+- **Köy/Şehir/Kale ayrımı ve Başkent fikri** — hex harita sistemi bunun için zemin hazırladı
+  (`TileMenzili` zaten var), ama gerçek tip ayrımı ve Başkent'in özel rolü henüz tasarlanmadı.
+- `KoyEtiketiTiklama.cs`/`DanismanPaneli.cs`/`TahtOdasiTest.cs`'in gerçekten ölü kod olduğunu
+  doğrulayıp temizlemek.
+- Başka danışmanlar eklemek, Ansiklopedi'nin ne göstereceğine karar vermek.
+- Mektuplar/görev sistemini (istenirse) sıfırdan ele almak. Kaydet/yükle (save/load) sistemi.
 
 **Genel çalışma tarzı hâlâ geçerli:** her adımı küçük parçalara böl, kullanıcı test edip onaylamadan
-bir sonrakine geçme.
+bir sonrakine geçme. **Bu oturumda bir istisna oldu:** hex harita, kullanıcının netleştirici sorular
+sonrası onayladığı büyük bir kapsamla tek seferde kuruldu (küçük parçalara bölünmedi, çünkü mimari
+olarak parçalara ayrılması zordu) — bu, uzun bir debug sürecine yol açtı ama sonunda başarılı oldu.
+Mümkünse yine küçük adımlara bölmeyi tercih et, ama bazı özellikler (özellikle görsel/geometrik
+sistemler) doğaları gereği "hepsi bir arada çalışmalı" tipinde olabilir.
 
 ---
 
@@ -1012,3 +1331,60 @@ bir sonrakine geçme.
   `Image` hem `TMP_Text`) **Raycast Target** kapatılmalı — sadece birini kapatmak yetmez, ikisi de
   ayrı ayrı kontrol edilmeli (bu oturumda tam olarak bu yaşandı, önce Text kapatıldı yetmedi, sonra
   Image de kapatılınca düzeldi).
+- **Bir açılıp-kapanan popup/panel kurarken (`KoyBilgiPaneli` deseni), script'i barındıran obje ile
+  `SetActive(false)` yapılan "görünür kutu" objesi AYNI obje OLMAMALI, biri diğerinin ÇOCUĞU
+  olmalı.** Script kendi objesini kapatırsa (`Awake()`'te kendi kendini `SetActive(false)` yaparsa)
+  o obje bir daha hiç açılamaz (kapalı objenin script'i çalışmaz, bkz. yukarıdaki "Kapalı
+  GameObject" tuzağı) — doğru yapı: dış obje (her zaman aktif, script burada) → onun ÇOCUĞU olan
+  "Panel" (görünür kutu, bu açılıp kapanıyor) → Panel'in çocukları (metin/görsel/buton). Bu
+  oturumda `DiplomasiBilgiPaneli` kurulurken bunun tersi yaşandı: görünür içerik (metinler, arka
+  plan kutusu) yanlışlıkla "Panel" objesinin KARDEŞİ olarak eklendi, "Panel"in dışında kaldı —
+  sonuç: `Panel.SetActive(false)` hiçbir şeyi gizlemedi, panel her sahnede sürekli açık görünmeye
+  devam etti VE bu görünmez-ama-var kocaman kutu altındaki haritaya gelen tıklamaları (raycast)
+  yakalayıp bloke etti (sağ tık haritaya hiç ulaşmadı). Yeni bir panel kurarken Hierarchy'de her
+  elemanın **doğru objenin ÇOCUĞU** olarak (doğrudan o objeye sağ tıklanarak) eklendiğini, kardeşi
+  olarak değil, girinti (indent) seviyesinden teyit et.
+- **Zaten bir Canvas'ın altında olmayan düz bir `GameObject`'e (örn. `GameObject > Create Empty`
+  ile oluşturulmuş, `RectTransform` içermeyen bir obje) `UI > Panel/Button/Text` eklemeye çalışmak,
+  Unity'nin farkında olmadan yepyeni, gereksiz bir `Canvas` oluşturmasına yol açabiliyor** (UI
+  elemanları bir Canvas/RectTransform zincirine ihtiyaç duyduğu için). Bu, Hierarchy'de beklenmedik
+  bir "Canvas" objesinin belirmesiyle ve world-space (örn. `X: 867` gibi büyük) bir `Position`
+  görünmesiyle fark edilir (normal bir UI elemanının `anchoredPosition`'ı böyle büyük değerler
+  almaz). Çözüm: yeni bir UI panel/container kurarken dış objeyi düz `Create Empty` ile değil,
+  zaten sahnedeki ana `Canvas`'a sağ tıklayıp `UI > Panel` ile oluştur (RectTransform garanti
+  gelir), gerekirse üzerindeki `Image` component'ini `Remove Component` ile kaldır.
+- **Kod içinde `new GameObject(...)` ile taze bir UI objesi oluşturup `AddComponent<RectTransform>()`
+  yaptığında, çapa (anchor/pivot) ayarlarını AÇIKÇA belirtmezsen güvenme.** Bu oturumda hex harita
+  çizilirken (`HexHaritaCizici`), `sizeDelta`'ya küçük bir boyut verilmesine rağmen objeler (özellikle
+  isim yazıları) ekranı kaplayacak kadar devasa çıktı — sebep, RectTransform'un varsayılan çapa
+  davranışının güvenilmez olması. Çözüm: her yeni obje için `anchorMin`/`anchorMax`/`pivot`'u
+  `(0.5, 0.5)` (sabit, merkez nokta) olarak KODDA elle ayarlayan ortak bir yardımcı fonksiyon
+  yazmak (`SabitCapaliRectOlustur`), varsayılana asla güvenmemek. Ayrıca TMP_Text için: `.text`'i
+  RectTransform boyutunu ayarlamadan ÖNCE atarsan, TMP ilk hesaplamayı yanlış (büyük) boyuta göre
+  yapıp "kilitleyebiliyor" — güvenli sıra: önce `sizeDelta`/`anchoredPosition`'ı ayarla, TMP
+  component'ini SONRA ekleyip `.text`'i EN SON ata.
+- **Axial (eksenel) hex koordinat sisteminde DİKDÖRTGEN bir X/Y aralığı taramak, ekranda PARALELKENAR
+  şeklinde bir harita üretir** (hex-grid'lerin bilinen bir özelliği, hata değil). Gerçek altıgen
+  (petek) şeklinde bir harita istiyorsan, bir merkez noktasından `yarıçap` bazlı "cube coordinate
+  range" taraması yapman gerekiyor (`for q in -r..r, for r2 in max(-r,-q-r)..min(r,-q+r)`).
+- **Bir UI objesinin (örn. bir harita maskesi/viewport'u) `Scale`'i beklenmedik şekilde 1'den farklı
+  çıkabilir** — özellikle bir script'in eskiden (yanlışlıkla) BAŞKA bir objeyi `Icerik` sanıp
+  `localScale`'ini değiştirdiği bir geçmişi varsa, bu değer Play modu DIŞINDA yapılan bir
+  değişiklikse kalıcı olarak sahne dosyasına yazılıp kalır. Tuhaf/devasa/taşan bir UI görünce ilk
+  kontrol edilecek yerlerden biri: ilgili objenin (ve TÜM ata objelerinin) Rect Transform → **Scale**
+  alanı gerçekten `1,1,1` mi? Bu oturumda `HaritaMaskeleyici`'nin Scale'i `19.16 / 10.73` çıktı ve
+  bütün çocukları (harita içeriği, tüm hex tile'lar) bunu miras aldığı için kocaman/taşkın
+  görünüyordu — kaynağı bulmak saatler sürdü, `Scale` alanına önce bakmak çok daha hızlı olurdu.
+- **Unity, Play modundayken script'ler yeniden derlenince ("domain reload") bazen singleton
+  referanslarını (`Instance` alanları) güvenilmez şekilde sıfırlıyor/geç kuruyor** — bu projede
+  canlı olarak `GameManager.Instance` null çıkıp `NullReferenceException` spam'ine yol açtı. Kesin
+  çözüm: kod değişikliğinden sonra **Stop'a basıp tam durdurmak, sonra tekrar Play'e basmak**
+  (sadece Pause/Resume yetmiyor). Play açıkken uzun bir kod-değiştirme oturumu varsa, test etmeden
+  önce her seferinde temiz bir Stop→Play yapmak alışkanlık hâline getirilmeli.
+- **Çok günlü (mesafeye/inşaat süresine bağlı) hale gelebilen, ZAR ATAN bir emir varsa,
+  `OrderData.SonucSansaBagli = true` işaretli OLMAK ZORUNDA** — aksi halde `DayResolver`'ın çok-
+  günlü tamamlanma yolu zar atan özel mantığı (`ZarAtVeUygula`) hiç çağırmadan sadece "tamamlandı"
+  deyip geçiyor (sessizce, hata vermeden). Bu alan emir hep aynı gece (`ToplamSure<=1`) sonuçlanırken
+  önemsizdi, mesafeye bağlı süre sistemi gelince (bu oturumda) gizli kalmış bir eksiklik ortaya
+  çıkardı: `Saldır` emri 3 gün sürünce hiçbir zar atmadan/sahiplik değiştirmeden "tamamlandı" dedi.
+  Yeni bir şansa-bağlı+çok-günlü-olabilecek emir eklerken bu kutucuk HER ZAMAN kontrol edilmeli.

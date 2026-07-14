@@ -34,6 +34,15 @@ public class DayResolver
                 {
                     ZarAtVeUygula(state, devam.Emir, mesajListesi);
                 }
+                else if (devam.Emir.GarnizonEkler)
+                {
+                    if (devam.Emir.HedefKoy != null)
+                    {
+                        devam.Emir.HedefKoy.Garnizon += devam.Emir.GonderilenManpower;
+                        BildirimYoneticisi.Instance.Bildirim("Garnizon (" + devam.Emir.HedefKoy.Isim + ")", devam.Emir.GonderilenManpower);
+                        mesajListesi.Add("<color=yellow>" + devam.Emir.GonderilenManpower + " asker " + devam.Emir.HedefKoy.Isim + " koyune ulasti, garnizona katildi.</color>");
+                    }
+                }
                 else if (devam.Emir.BaseGeliriEtkiler)
                 {
                     if (devam.Emir.HedefKoy != null && !string.IsNullOrEmpty(devam.Emir.HedefKoy.Isim) && devam.Emir.BaseGeliriStat == "Erzak")
@@ -67,8 +76,30 @@ public class DayResolver
         return halaDevamEdenler;
     }
 
+    void AskeriGeriGonder(GameState state, OrderData emir, int miktar)
+    {
+        if (emir.KaynakKoy != null)
+        {
+            emir.KaynakKoy.Garnizon += miktar;
+            BildirimYoneticisi.Instance.Bildirim("Garnizon (" + emir.KaynakKoy.Isim + ")", miktar);
+        }
+        else
+        {
+            state.StatDegistir("Manpower", miktar);
+            BildirimYoneticisi.Instance.Bildirim("Manpower", miktar);
+        }
+    }
+
     void ZarAtVeUygula(GameState state, OrderData emir, List<string> mesajListesi)
     {
+        if (emir.GarnizonEkler && emir.HedefKoy != null)
+        {
+            emir.HedefKoy.Garnizon += emir.GonderilenManpower;
+            BildirimYoneticisi.Instance.Bildirim("Garnizon (" + emir.HedefKoy.Isim + ")", emir.GonderilenManpower);
+            mesajListesi.Add("<color=yellow>" + emir.GonderilenManpower + " asker " + emir.HedefKoy.Isim + " koyune ulasti, garnizona katildi.</color>");
+            return;
+        }
+
         if (emir.IsyanBastirir && emir.HedefKoy != null)
         {
             int toplamGuc = emir.GonderilenManpower + emir.HedefKoy.Nufus;
@@ -81,8 +112,7 @@ public class DayResolver
 
             if (geriDonenManpower > 0)
             {
-                state.StatDegistir("Manpower", geriDonenManpower);
-                BildirimYoneticisi.Instance.Bildirim("Manpower", geriDonenManpower);
+                AskeriGeriGonder(state, emir, geriDonenManpower);
             }
 
             if (bastirmaBasarili)
@@ -114,14 +144,19 @@ public class DayResolver
             {
                 emir.HedefKoy.Sahip = KoyYoneticisi.Instance.OyuncuKralligi;
                 emir.HedefKoy.Garnizon = hayattaKalanManpower;
+
+                if (HexHaritaCizici.Instance != null)
+                {
+                    HexHaritaCizici.Instance.RenkleriGuncelle();
+                }
+
                 mesajListesi.Add("<color=green>" + emir.HedefKoy.Isim + " koyu ele gecirildi! (" + kaybedilenManpower + " asker kaybettik, " + hayattaKalanManpower + " asker koyde garnizon olarak kaldi)</color>");
             }
             else
             {
                 if (hayattaKalanManpower > 0)
                 {
-                    state.StatDegistir("Manpower", hayattaKalanManpower);
-                    BildirimYoneticisi.Instance.Bildirim("Manpower", hayattaKalanManpower);
+                    AskeriGeriGonder(state, emir, hayattaKalanManpower);
                 }
                 mesajListesi.Add("<color=red>" + emir.HedefKoy.Isim + " koyune saldiri basarisiz oldu. (" + kaybedilenManpower + " asker kaybettik, " + hayattaKalanManpower + " asker geri dondu)</color>");
             }

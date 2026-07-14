@@ -12,11 +12,20 @@ public class GameState
     public int ErzakBaseGelir = 5;
     public int AltinBaseGelir = 3;
 
+    public float ManpowerMaasiBirimMaliyeti = 0.05f;
+    public float BinaBakimBirimMaliyeti = 1f;
+
     public void BaseGeliriUygula()
     {
         KoyYoneticisi.Instance.ErzakDegistir(ErzakBaseGelir);
         KoyYoneticisi.Instance.NufusuGunlukArtir();
         Altin += AltinBaseGelir;
+    }
+
+    public void GiderleriUygula()
+    {
+        Altin -= UnityEngine.Mathf.RoundToInt(Manpower * ManpowerMaasiBirimMaliyeti);
+        Altin -= UnityEngine.Mathf.RoundToInt(KoyYoneticisi.Instance.ToplamDoluBinaSlotu() * BinaBakimBirimMaliyeti);
     }
 
     public void BaseGeliriArtir(string statAdi, int miktar)

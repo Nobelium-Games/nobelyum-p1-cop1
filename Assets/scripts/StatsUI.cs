@@ -38,7 +38,9 @@ public class StatsUI : MonoBehaviour
 
         int toplamErzak = KoyYoneticisi.Instance.ToplamErzak();
         int toplamErzakGelir = state.ErzakBaseGelir + KoyYoneticisi.Instance.ToplamErzakYieldi();
-        int toplamAltinGelir = state.AltinBaseGelir + KoyYoneticisi.Instance.ToplamAltinYieldi();
+        int askerMaasi = Mathf.RoundToInt(state.Manpower * state.ManpowerMaasiBirimMaliyeti);
+        int binaBakimGideri = Mathf.RoundToInt(KoyYoneticisi.Instance.ToplamDoluBinaSlotu() * state.BinaBakimBirimMaliyeti);
+        int toplamAltinGelir = state.AltinBaseGelir + KoyYoneticisi.Instance.ToplamAltinYieldi() - askerMaasi - binaBakimGideri;
         int toplamSadakat = state.Sadakat + KoyYoneticisi.Instance.OrtalamaSadakat();
         int toplamNufus = KoyYoneticisi.Instance.ToplamNufus();
         int nufusGelir = KoyYoneticisi.Instance.ToplamNufusYieldi();

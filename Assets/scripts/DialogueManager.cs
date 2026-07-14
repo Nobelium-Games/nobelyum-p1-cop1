@@ -16,11 +16,21 @@ public class DialogueManager : MonoBehaviour
     public Transform SecenekIcerik;
     public OrderManager Orders;
     public GameObject DiyalogKutusuKok;
+    public Button GeriButonu;
 
     private List<GameObject> olusturulanSecenekButonlari = new List<GameObject>();
 
     private bool aktifDanismanDiyalogu = false;
     private KoyData aktifKoy;
+    private Stack<DialogueNode> gecmisNodeler = new Stack<DialogueNode>();
+
+    void Start()
+    {
+        if (GeriButonu != null)
+        {
+            GeriButonu.onClick.AddListener(GeriTiklandi);
+        }
+    }
 
     public void DiyalogBaslat(DialogueData diyalog, Sprite portre, string isim, bool danismanDiyalogu = false, KoyData ilgiliKoy = null)
     {
@@ -28,6 +38,7 @@ public class DialogueManager : MonoBehaviour
         aktifNode = aktifDiyalog.Nodler[0];
         aktifDanismanDiyalogu = danismanDiyalogu;
         aktifKoy = ilgiliKoy;
+        gecmisNodeler.Clear();
         PortreImage.sprite = portre;
         NpcIsimText.text = isim;
         DiyalogKutusuKok.SetActive(true);
@@ -70,7 +81,53 @@ public class DialogueManager : MonoBehaviour
 
         olusturulanSecenekButonlari.Add(yeniButon);
     }
+
+    BosverSecenegiEkleIstenirse();
+    GeriButonunuGuncelle();
 }
+
+    void BosverSecenegiEkleIstenirse()
+    {
+        if (!aktifDanismanDiyalogu)
+        {
+            return;
+        }
+
+        GameObject yeniButon = Instantiate(SecenekButonSablonu, SecenekIcerik);
+        yeniButon.SetActive(true);
+        yeniButon.GetComponentInChildren<TMP_Text>().text = "Bosver";
+
+        Button buton = yeniButon.GetComponent<Button>();
+        buton.interactable = true;
+        buton.onClick.AddListener(() => DiyalogBitir());
+
+        SecenekTooltip tooltip = yeniButon.GetComponent<SecenekTooltip>();
+        if (tooltip != null)
+        {
+            tooltip.Dialog = this;
+            tooltip.Secenek = null;
+        }
+
+        olusturulanSecenekButonlari.Add(yeniButon);
+    }
+
+    void GeriButonunuGuncelle()
+    {
+        if (GeriButonu != null)
+        {
+            GeriButonu.gameObject.SetActive(gecmisNodeler.Count > 0);
+        }
+    }
+
+    void GeriTiklandi()
+    {
+        if (gecmisNodeler.Count == 0)
+        {
+            return;
+        }
+        aktifNode = gecmisNodeler.Pop();
+        NodeGoster();
+    }
 
     void KoySecimGoster(OrderData sablon, Action<KoyData> callback)
     {
@@ -133,6 +190,86 @@ public class DialogueManager : MonoBehaviour
 
             olusturulanSecenekButonlari.Add(yeniButon);
         }
+
+        BosverSecenegiEkleIstenirse();
+        GeriButonunuGuncelle();
+    }
+
+    void KaynakSecimGoster(OrderData sablon, KoyData hedefKoy, Action<KoyData> callback)
+    {
+        NpcSozuText.text = "Nereden gonderiyorsun?";
+
+        foreach (GameObject eskiButon in olusturulanSecenekButonlari)
+        {
+            Destroy(eskiButon);
+        }
+        olusturulanSecenekButonlari.Clear();
+
+        GameObject yedekButon = Instantiate(SecenekButonSablonu, SecenekIcerik);
+        yedekButon.SetActive(true);
+        yedekButon.GetComponentInChildren<TMP_Text>().text = "Genel Yedek Kuvvet (" + GameManager.Instance.State.Manpower + ")";
+        yedekButon.GetComponent<Button>().onClick.AddListener(() => callback(null));
+        olusturulanSecenekButonlari.Add(yedekButon);
+
+        foreach (KoyData koy in KoyYoneticisi.Instance.GarnizonluKoyler())
+        {
+            if (koy == hedefKoy)
+            {
+                continue;
+            }
+
+            GameObject yeniButon = Instantiate(SecenekButonSablonu, SecenekIcerik);
+            yeniButon.SetActive(true);
+            yeniButon.GetComponentInChildren<TMP_Text>().text = koy.Isim + " (Garnizon: " + koy.Garnizon + ")";
+
+            KoyData secilenKaynak = koy;
+            yeniButon.GetComponent<Button>().onClick.AddListener(() => callback(secilenKaynak));
+
+            olusturulanSecenekButonlari.Add(yeniButon);
+        }
+
+        BosverSecenegiEkleIstenirse();
+        GeriButonunuGuncelle();
+    }
+
+    void ManpowerAdimi(OrderData sablon, KoyData hedefKoy, KoyData kaynakKoy)
+    {
+        if (sablon.BinaSlotuKullanir)
+        {
+            hedefKoy.DoluBinaSlotu++;
+        }
+
+        if (sablon.ManpowerMiktariSorulsun)
+        {
+            int mevcutManpower = kaynakKoy == null ? GameManager.Instance.State.Manpower : kaynakKoy.Garnizon;
+
+            ManpowerSeciciPaneli.Instance.Sor(mevcutManpower, (int miktar) =>
+            {
+                if (kaynakKoy == null)
+                {
+                    GameManager.Instance.State.StatDegistir("Manpower", -miktar);
+                    BildirimYoneticisi.Instance.Bildirim("Manpower", -miktar);
+                }
+                else
+                {
+                    kaynakKoy.Garnizon -= miktar;
+                    BildirimYoneticisi.Instance.Bildirim("Garnizon (" + kaynakKoy.Isim + ")", -miktar);
+                }
+
+                OrderData kopya = sablon.KopyalaVeKoyAta(hedefKoy);
+                kopya.MaliyetStat = "";
+                kopya.MaliyetMiktar = 0;
+                kopya.GonderilenManpower = miktar;
+                kopya.KaynakKoy = kaynakKoy;
+                kopya.ToplamSure = HaritaYoneticisi.Instance.SureHesapla(kaynakKoy, hedefKoy);
+                Orders.EmirEkle(kopya);
+                DiyalogBitir();
+            });
+            return;
+        }
+
+        Orders.EmirEkle(sablon.KopyalaVeKoyAta(hedefKoy));
+        DiyalogBitir();
     }
 
     public string MaliyetMetniAl(DialogueChoice secenek)
@@ -230,32 +367,16 @@ public class DialogueManager : MonoBehaviour
         {
             // Koy secilene kadar diyalog kutusu acik kalir, secim yapilinca kapanir
             OrderData sablon = secenek.VerilecekEmir;
+            gecmisNodeler.Push(aktifNode);
             KoySecimGoster(sablon, (KoyData secilenKoy) =>
             {
-                if (sablon.BinaSlotuKullanir)
+                if (sablon.KaynakSecimiGerekli)
                 {
-                    secilenKoy.DoluBinaSlotu++;
-                }
-
-                if (sablon.ManpowerMiktariSorulsun)
-                {
-                    ManpowerSeciciPaneli.Instance.Sor((int miktar) =>
-                    {
-                        GameManager.Instance.State.StatDegistir("Manpower", -miktar);
-                        BildirimYoneticisi.Instance.Bildirim("Manpower", -miktar);
-
-                        OrderData kopya = sablon.KopyalaVeKoyAta(secilenKoy);
-                        kopya.MaliyetStat = "";
-                        kopya.MaliyetMiktar = 0;
-                        kopya.GonderilenManpower = miktar;
-                        Orders.EmirEkle(kopya);
-                        DiyalogBitir();
-                    });
+                    KaynakSecimGoster(sablon, secilenKoy, (KoyData secilenKaynak) => ManpowerAdimi(sablon, secilenKoy, secilenKaynak));
                     return;
                 }
 
-                Orders.EmirEkle(sablon.KopyalaVeKoyAta(secilenKoy));
-                DiyalogBitir();
+                ManpowerAdimi(sablon, secilenKoy, null);
             });
             return;
         }
@@ -274,6 +395,7 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
+            gecmisNodeler.Push(aktifNode);
             aktifNode = aktifDiyalog.Nodler.Find(n => n.NodeID == secenek.SonrakiNodeID);
             NodeGoster();
         }
@@ -288,6 +410,7 @@ public class DialogueManager : MonoBehaviour
             Destroy(eskiButon);
         }
         olusturulanSecenekButonlari.Clear();
+        gecmisNodeler.Clear();
         DiyalogKutusuKok.SetActive(false);
         TooltipUI.Instance.Gizle();
         aktifKoy = null;

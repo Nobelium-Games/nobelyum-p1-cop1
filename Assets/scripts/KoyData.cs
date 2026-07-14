@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 [Serializable]
 public class KoyData
@@ -11,6 +12,9 @@ public class KoyData
     public int BaseErzakYield = 1;
     public int AltinYield = 0;
     public int Savunma = 20;
+
+    public Vector3Int MerkezTileKoordinati;
+    public int TileMenzili = 1;
 
     public int MaxBinaSlotu = 3;
     public int DoluBinaSlotu = 0;

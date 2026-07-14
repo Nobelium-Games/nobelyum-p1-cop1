@@ -39,23 +39,167 @@ MonoBehaviour:
           Isim: 
           Sadakat: 50
           Erzak: 20
+          Nufus: 30
           ErzakYield: 1
+          BaseErzakYield: 1
           AltinYield: 0
           Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
           IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
         BinaSlotuKullanir: 0
         IsyanliKoyGerekli: 0
         ManpowerMiktariSorulsun: 0
         IsyanBastirir: 0
         GonderilenManpower: 0
+        DusmanKoyuGerekli: 0
+        SaldiriBaslatir: 0
+        KaynakSecimiGerekli: 0
+        KaynakKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        GarnizonEkler: 0
     - SecenekMetni: "\u0130syan Bast\u0131r"
       SonrakiNodeID: 
       StatEtkileri: []
       VerilecekEmir:
         DanismanTipi: General
         EmirTuru: "Isyan Bast\u0131r"
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 1
+        ToplamSure: 0
+        SonucSansaBagli: 1
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 1
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        BinaSlotuKullanir: 0
+        IsyanliKoyGerekli: 1
+        ManpowerMiktariSorulsun: 1
+        IsyanBastirir: 1
+        GonderilenManpower: 0
+        DusmanKoyuGerekli: 0
+        SaldiriBaslatir: 0
+        KaynakSecimiGerekli: 1
+        KaynakKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        GarnizonEkler: 0
+    - SecenekMetni: Saldir
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: General
+        EmirTuru: Saldiri
+        EtkilenenStat: 
+        BasariliDegisim: 0
+        BasarisizDegisim: 0
+        BasariSansi: 1
+        ToplamSure: 0
+        SonucSansaBagli: 1
+        MaliyetStat: 
+        MaliyetMiktar: 0
+        BaseGeliriEtkiler: 0
+        BaseGeliriStat: 
+        BaseGeliriMiktar: 0
+        KoySecimiGerekli: 1
+        HedefKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        BinaSlotuKullanir: 0
+        IsyanliKoyGerekli: 0
+        ManpowerMiktariSorulsun: 1
+        IsyanBastirir: 0
+        GonderilenManpower: 0
+        DusmanKoyuGerekli: 1
+        SaldiriBaslatir: 1
+        KaynakSecimiGerekli: 1
+        KaynakKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        GarnizonEkler: 0
+    - SecenekMetni: "Garnizon G\xF6nder"
+      SonrakiNodeID: 
+      StatEtkileri: []
+      VerilecekEmir:
+        DanismanTipi: General
+        EmirTuru: "Garnizon G\xF6nder"
         EtkilenenStat: 
         BasariliDegisim: 0
         BasarisizDegisim: 0
@@ -72,54 +216,43 @@ MonoBehaviour:
           Isim: 
           Sadakat: 50
           Erzak: 20
+          Nufus: 30
           ErzakYield: 1
+          BaseErzakYield: 1
           AltinYield: 0
           Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
           IsyanHalinde: 0
-        BinaSlotuKullanir: 0
-        IsyanliKoyGerekli: 1
-        ManpowerMiktariSorulsun: 1
-        IsyanBastirir: 1
-        GonderilenManpower: 0
-        DusmanKoyuGerekli: 0
-        SaldiriBaslatir: 0
-    - SecenekMetni: Saldir
-      SonrakiNodeID:
-      StatEtkileri: []
-      VerilecekEmir:
-        DanismanTipi: General
-        EmirTuru: Saldiri
-        EtkilenenStat:
-        BasariliDegisim: 0
-        BasarisizDegisim: 0
-        BasariSansi: 1
-        ToplamSure: 0
-        SonucSansaBagli: 0
-        MaliyetStat:
-        MaliyetMiktar: 0
-        BaseGeliriEtkiler: 0
-        BaseGeliriStat:
-        BaseGeliriMiktar: 0
-        KoySecimiGerekli: 1
-        HedefKoy:
-          Isim:
-          Sadakat: 50
-          Erzak: 20
-          ErzakYield: 1
-          AltinYield: 0
-          Savunma: 20
-          MaxBinaSlotu: 3
-          DoluBinaSlotu: 0
-          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
         BinaSlotuKullanir: 0
         IsyanliKoyGerekli: 0
         ManpowerMiktariSorulsun: 1
         IsyanBastirir: 0
         GonderilenManpower: 0
-        DusmanKoyuGerekli: 1
-        SaldiriBaslatir: 1
+        DusmanKoyuGerekli: 0
+        SaldiriBaslatir: 0
+        KaynakSecimiGerekli: 1
+        KaynakKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        GarnizonEkler: 1
   - NodeID: 2
     NPCSozu: "Hangi K\xF6y\xFC?"
     Secenekler:
@@ -145,14 +278,40 @@ MonoBehaviour:
           Isim: 
           Sadakat: 50
           Erzak: 20
+          Nufus: 30
           ErzakYield: 1
+          BaseErzakYield: 1
           AltinYield: 0
           Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
           IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
         BinaSlotuKullanir: 0
         IsyanliKoyGerekli: 0
         ManpowerMiktariSorulsun: 0
         IsyanBastirir: 0
         GonderilenManpower: 0
+        DusmanKoyuGerekli: 0
+        SaldiriBaslatir: 0
+        KaynakSecimiGerekli: 0
+        KaynakKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+        GarnizonEkler: 0

@@ -17,14 +17,35 @@ public class KoyYoneticisi : MonoBehaviour
     [Header("Savas Ayarlari")]
     public float GarnizonKatsayisi = 10f;
 
+    [Header("Diplomasi Ayarlari")]
+    public List<DiplomasiVerisi> Diplomasiler = new List<DiplomasiVerisi>();
+    public int DiplomasiEsikDegeri = 40;
+
+    [Header("Harita Baglantisi")]
+    public HaritaYoneticisi Harita;
+
     void Awake()
     {
         Instance = this;
 
-        // Yeni oyuna baslarken her koyun Erzak Yield'i 1-4 arasi rastgele belirlensin
+        if (Harita != null)
+        {
+            Harita.TileleriOlustur(Koyler);
+        }
+
+        // Yeni oyuna baslarken her koyun Erzak/Altin Yield'i belirlensin.
+        // Harita baglanmadiysa eski davranis (1-4 arasi rastgele) korunuyor.
         foreach (KoyData koy in Koyler)
         {
-            koy.ErzakYield = Random.Range(1, 5);
+            if (Harita != null)
+            {
+                koy.ErzakYield = Harita.KoyunErzakToplami(koy);
+                koy.AltinYield = Harita.KoyunAltinToplami(koy);
+            }
+            else
+            {
+                koy.ErzakYield = Random.Range(1, 5);
+            }
             koy.BaseErzakYield = koy.ErzakYield;
         }
     }
@@ -64,6 +85,20 @@ public class KoyYoneticisi : MonoBehaviour
             int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
             bizimKoylerimiz[i].Erzak = Mathf.Max(0, bizimKoylerimiz[i].Erzak + buKoyeUygulanacak);
         }
+    }
+
+    public int ToplamDoluBinaSlotu()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            if (BizeAitDegil(koy))
+            {
+                continue;
+            }
+            toplam += koy.DoluBinaSlotu;
+        }
+        return toplam;
     }
 
     public int ToplamNufus()
@@ -203,6 +238,55 @@ public class KoyYoneticisi : MonoBehaviour
         return koy.Savunma * (1f + koy.Garnizon / GarnizonKatsayisi);
     }
 
+    public List<KoyData> GarnizonluKoyler()
+    {
+        return Koyler.FindAll(koy => koy.Sahip == OyuncuKralligi && koy.Garnizon > 0);
+    }
+
+    DiplomasiVerisi DiplomasiVerisiBul(KrallikData krallik)
+    {
+        return Diplomasiler.Find(veri => veri.Krallik == krallik);
+    }
+
+    public int DiplomasiDegerAl(KrallikData krallik)
+    {
+        DiplomasiVerisi veri = DiplomasiVerisiBul(krallik);
+        return veri != null ? veri.Diplomasi : 0;
+    }
+
+    public bool SavastaMi(KrallikData krallik)
+    {
+        DiplomasiVerisi veri = DiplomasiVerisiBul(krallik);
+        return veri != null && veri.SavastaMi;
+    }
+
+    public void DiplomasiDegistir(KrallikData krallik, int miktar)
+    {
+        DiplomasiVerisi veri = DiplomasiVerisiBul(krallik);
+        if (veri != null)
+        {
+            veri.Diplomasi = Mathf.Clamp(veri.Diplomasi + miktar, 0, 100);
+        }
+    }
+
+    public void DiplomasiKontrolEt(List<string> mesajListesi)
+    {
+        foreach (DiplomasiVerisi veri in Diplomasiler)
+        {
+            if (veri.SavastaMi || veri.Diplomasi >= DiplomasiEsikDegeri)
+            {
+                continue;
+            }
+
+            int zar = Random.Range(1, 51);
+            if (zar > veri.Diplomasi)
+            {
+                veri.SavastaMi = true;
+                mesajListesi.Add("<color=red>" + veri.Krallik.Isim + " bize savas actı!</color>");
+            }
+        }
+    }
+
     public string ErzakDagilimMetni()
     {
         return "Koyler: " + ToplamErzak();
@@ -243,7 +327,13 @@ public class KoyYoneticisi : MonoBehaviour
 
     public string AltinYieldDagilimMetni()
     {
-        return "Koyler: " + IsaretliMetin(ToplamAltinYieldi());
+        GameState state = GameManager.Instance.State;
+        int askerMaasi = Mathf.RoundToInt(state.Manpower * state.ManpowerMaasiBirimMaliyeti);
+        int binaBakimGideri = Mathf.RoundToInt(ToplamDoluBinaSlotu() * state.BinaBakimBirimMaliyeti);
+
+        return "Koyler: " + IsaretliMetin(ToplamAltinYieldi())
+            + "\nAsker Maasi: -" + askerMaasi
+            + "\nBina Bakimi: -" + binaBakimGideri;
     }
 
     string IsaretliMetin(int miktar)

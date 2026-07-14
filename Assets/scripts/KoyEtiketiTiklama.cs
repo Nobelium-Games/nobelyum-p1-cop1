@@ -75,13 +75,21 @@ public class KoyEtiketiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEn
     {
         KoyData koy = BulKoy();
 
-        if (koy != null)
-        {
-            KoyBilgiPaneli.Instance.Goster(koy);
-        }
-        else
+        if (koy == null)
         {
             Debug.LogWarning("Eslesen koy bulunamadi: '" + metin.text.Trim() + "'");
+            return;
         }
+
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            if (koy.Sahip != null && koy.Sahip != KoyYoneticisi.Instance.OyuncuKralligi)
+            {
+                DiplomasiBilgiPaneli.Instance.Goster(koy.Sahip);
+            }
+            return;
+        }
+
+        KoyBilgiPaneli.Instance.Goster(koy);
     }
 }

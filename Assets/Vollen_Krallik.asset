@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Vollen_Krallik
   m_EditorClassIdentifier: Assembly-CSharp::KrallikData
   Isim: "Vollen Krall\u0131\u011F\u0131"
-  HaritaRengi: {r: 1, g: 1, b: 1, a: 1}
+  HaritaRengi: {r: 0.2, g: 0.4, b: 1, a: 1}
   Bayrak: {fileID: 8313789865098708228, guid: 999e13e2941d1a7478a23311f7613491, type: 3}

@@ -26,6 +26,9 @@ public class OrderData
     public int GonderilenManpower;
     public bool DusmanKoyuGerekli;
     public bool SaldiriBaslatir;
+    public bool KaynakSecimiGerekli;
+    public KoyData KaynakKoy;
+    public bool GarnizonEkler;
 
     public OrderData() { }
 
@@ -62,6 +65,8 @@ public class OrderData
         kopya.GonderilenManpower = GonderilenManpower;
         kopya.DusmanKoyuGerekli = DusmanKoyuGerekli;
         kopya.SaldiriBaslatir = SaldiriBaslatir;
+        kopya.KaynakSecimiGerekli = KaynakSecimiGerekli;
+        kopya.GarnizonEkler = GarnizonEkler;
         return kopya;
     }
 }
