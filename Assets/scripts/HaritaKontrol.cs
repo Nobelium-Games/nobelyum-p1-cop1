@@ -16,15 +16,23 @@ public class HaritaKontrol : MonoBehaviour, IBeginDragHandler, IDragHandler, ISc
     {
         anaCanvas = GetComponentInParent<Canvas>().rootCanvas;
         ustRect = Icerik.parent as RectTransform;
-
-        float genislikOrani = ustRect.rect.width / Icerik.rect.width;
-        float yukseklikOrani = ustRect.rect.height / Icerik.rect.height;
-        minZoom = Mathf.Max(genislikOrani, yukseklikOrani);
     }
 
     void Start()
     {
+        YenidenHesaplaVeSinirla();
+    }
+
+    public void YenidenHesaplaVeSinirla()
+    {
+        float genislikOrani = ustRect.rect.width / Icerik.rect.width;
+        float yukseklikOrani = ustRect.rect.height / Icerik.rect.height;
+        // Mathf.Min: haritanin TAMAMI ekrana sigsin (contain) - Mathf.Max kullanilsaydi ekran
+        // tamamen kaplanirdi ama uzun kenarda harita tasip goze gorunmezdi (cover davranisi).
+        minZoom = Mathf.Min(genislikOrani, yukseklikOrani);
+
         float olcek = Mathf.Max(Icerik.localScale.x, minZoom);
+        olcek = Mathf.Clamp(olcek, minZoom, MaxZoom);
         Icerik.localScale = new Vector3(olcek, olcek, 1f);
         SinirlaKonum();
     }

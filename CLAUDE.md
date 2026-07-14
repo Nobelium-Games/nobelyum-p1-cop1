@@ -69,10 +69,12 @@ Diyalog ve karar temalı bir **"kral simülasyonu"** oyunu (Unity, C#, **2D**). 
 ### Stat'lar
 - **Erzak**: Ayrı bir "genel/kingdom" deposu YOK. Tek gerçek kaynak, köylerin kendi Erzak
   stoklarının toplamı (bkz. "Köyler" bölümü ve Mimari Kararları #7).
-- **Sadakat**: 0-100 arası, hem "genel" bir bileşeni var hem köylerin kendi Sadakat'ları — ekranda
-  gösterilen "Sadakat", genel + köylerin ortalaması. **Sadakat asla bir seçeneği kilitlemiyor**
-  (harcanan bir kaynak değil, sadece 0-100 arasına kelepçeleniyor). **Bir köyün Sadakat'ı 50'nin
-  altına düşerse o köy isyan riski taşımaya başlar** (bkz. "İsyan Mekaniği").
+- **Sadakat**: 0-100 arası. **Bu oturumda "genel Sadakat" kavramı tamamen kaldırıldı** — artık Erzak/
+  Nüfus ile birebir aynı mimari: tek gerçek kaynak köylerin kendi Sadakat'ları, ekranda gösterilen
+  kingdom Sadakat'ı sadece bunların ortalaması (bkz. "Sadakat Mekaniğinin Yeniden Tasarımı").
+  **Sadakat asla bir seçeneği kilitlemiyor** (harcanan bir kaynak değil, sadece 0-100 arasına
+  kelepçeleniyor). **Bir köyün Sadakat'ı 50'nin altına düşerse o köy isyan riski taşımaya başlar**
+  (bkz. "İsyan Mekaniği").
 - **Altın, Manpower**: Hâlâ tamamen "genel/kingdom-wide" — köylere bölünmüyor, harcanabilir kaynaklar
   (yetersizse ilgili seçenek/emir kilitleniyor). Manpower, isyan bastırma emrinde oyuncunun
   kendi seçtiği bir miktar olarak köye "gönderiliyor" (bkz. "İsyan Mekaniği").
@@ -215,6 +217,41 @@ döner. **Not:** Bastırma sadece `IsyanHalinde` bayrağını kapatıyor, köyü
 Sadakat'ını düzeltmiyor — yani Sadakat hâlâ 50'nin altındaysa, köy ilerideki bir gece tekrar isyan
 riskiyle karşılaşabilir (bu, bilinçli/beklenen bir durum, henüz bir "sonrası" tasarlanmadı).
 
+### Sadakat Mekaniğinin Yeniden Tasarımı (bu oturumda eklendi)
+Kullanıcının şikayeti: Sadakat "liquid" (akışkan, olaylara tepki veren) hissi vermiyordu — genel bir
+Sadakat alanı + köy ortalamasının toplanması garip bir yapıydı. Q&A ile netleştirilen yeni tasarım:
+
+- **"Genel Sadakat" tamamen kaldırıldı.** Artık Erzak/Nüfus ile birebir aynı mimari: tek kaynak
+  köylerin kendi `Sadakat`'ı, kingdom Sadakat'ı = `KoyYoneticisi.OrtalamaSadakat()` (sadece bunların
+  ortalaması). `GameState.Sadakat` alanı silindi.
+- **`KoyYoneticisi.SadakatDegistir(miktar)`** eklendi — köy-özel olmayan (aktif köy yokken verilen)
+  diyalog/olay etkileri artık `ErzakDegistir` ile birebir aynı desen: tüm bize ait köylere eşit
+  dağıtılıyor. Köy-özel diyalog etkileri (aktif köy varken) değişmedi, doğrudan o köyün Sadakat'ına işliyor.
+- **Pasif "liquid" sürüklenme:** `KoyYoneticisi.SadakatYieldHesapla(koy)` — Nüfus büyüme formülüyle
+  birebir aynı desen (`KisiBasiStok = Erzak/Nufus`, bir eşiğin üstü/altına göre artış/azalış), ama
+  kendi ayrı `SadakatEsik`/`SadakatKatsayi` ayarlarıyla (Nüfus'unkiyle karıştırılmadı, bağımsız
+  ayarlanabilsin diye). Yani Erzak yardımı/Değirmen gibi eylemlerin Sadakat'a etkisi artık sadece
+  diyalogdaki sabit sayılar değil, sonucu (bollaşan Erzak) üzerinden DOLAYLI da işliyor.
+- **Sınır baskısı (savaş yorgunluğu):** `SinirBaskisiHesapla(koy)` — sadece SAVAŞTA olduğumuz bir
+  krallığın köylerine mesafesi `SinirBaskisiMenzili` (Inspector'dan ayarlanabilir, varsayılan 5,
+  ama harita büyüklüğüne göre elle artırılması gerekebilir — bkz. Bilinen Tuzaklar) içinde olan
+  köyler etkileniyor; ne kadar yakınsa o kadar fazla (`SinirBaskisiMax`'a kadar) günlük Sadakat
+  düşüşü yaşıyor, menzil dışındakiler hiç etkilenmiyor. Kullanıcının bilinçli tercihi: savaş baskısı
+  TÜM köylere değil, sadece sınıra yakın olanlara işlesin (daha gerçekçi).
+- **`SadakatiGunlukGuncelle()`** her gece (`DayCycleManager.GelirleriUygula()` içinde, Erzak/Nüfus
+  artışıyla aynı anda) drift + sınır baskısını uyguluyor.
+- **Vergi/asker toplama gibi Sadakat düşüren yeni emir türleri bilinçli olarak KAPSAM DIŞI
+  bırakıldı** — bu, henüz tasarlanmamış ayrı bir emir sistemi işi, kullanıcı "ayrı bir sonraki adım
+  olsun" dedi.
+- **Köy Bilgi Paneli'nde hover döküm:** `SadakatText` artık `ErzakYieldText` ile aynı desende —
+  `<link="gelir">` etiketiyle sarılı, üzerine `StatTooltip` component'i eklenip
+  `KoyYoneticisi.SadakatDagilimKoyBilgisiMetni(koy)` fonksiyonuna bağlandı ("Erzak/Nufus: +X" /
+  "Sinir Baskisi: -Y" satırları, sıfır olan satır gösterilmiyor).
+- **Bilinen sorun (kullanıcı bilerek erteledi):** Hex harita sisteminden gelen Erzak değerleri
+  bazı köylerde çok yüksek çıkabiliyor (tile toplamları "tavan yapmış" durumda), bu da Sadakat'ın
+  hızla 100'e vurmasına yol açabiliyor — bu bir dengeleme (balancing) sorunu, mimari bir hata değil,
+  ayrı bir oturumda sayılarla birlikte ele alınacak.
+
 ### Nüfus Mekaniği (bu oturumda eklendi)
 Her köyün `Nufus`'u var (varsayılan 30), kingdom Nüfus'u = tüm köylerin toplamı (tıpkı Erzak gibi,
 bkz. Mimari Kararları #7). Günlük artış **sabit bir sayı değil**, her gece köyün kendi
@@ -345,6 +382,16 @@ elle her düşman köyü için renk ayarlamaya gerek yok, bkz. Mimari Kararları
 Yield'ler/Bina Slotu **tamamen gizleniyor** (bunlar düşman köyü için anlamsız, çünkü ekonomisi
 donuk), sadece İsim + Savunma + **Garnizon** (yeni eklendi) gösteriliyor — bize ait köylerde her şey
 eskisi gibi görünmeye devam ediyor.
+
+**Bug düzeltmesi (bu oturumda): 0 Garnizonlu köy hâlâ "savunuluyordu".** Kullanıcı test ederken,
+Garnizonu 0 olan kendi köyüne yapılan düşman saldırısının **püskürtüldüğünü** gördü — bu, mantıksız
+görünüyordu ("savunmasız bir köy nasıl kazanıyor?"). Sebep: `EtkinSavunmaHesapla`, Garnizon 0 olsa
+bile köyün ham `Savunma` stat'ını (köylülerin pasif direnci, varsayılan 20) hâlâ hesaba katıyordu,
+bu yüzden saldıran taraf küçük de olsa gerçek bir kayıp riskiyle karşılaşıyordu. Kullanıcının kararı:
+**hedef köyün Garnizonu 0 ise, zar atılmadan DİREKT ele geçirilsin** (0 Garnizon = tamamen savunmasız
+sayılsın). Hem `DayResolver`'ın `SaldiriBaslatir` dalına hem `KoyYoneticisi.DusmanSaldirilariniKontrolEt`'e
+aynı kontrol eklendi: `if (hedefKoy.Garnizon <= 0) { basarili = true; }` — Garnizon 0'dan büyükse
+eskisi gibi Tullock formülüyle zar atılmaya devam ediyor.
 
 ### Diplomasi Mekaniği (bu oturumda eklendi)
 **Önce bir mimari düzeltme notu:** Bu dosyanın önceki bir versiyonu `Krallik`'in düz bir
@@ -576,6 +623,75 @@ Doğru çözüm: yeni **`HaritaEkraniKontrol.cs`** (yeni, `HaritaEkrani` objesin
 `GameObject.SetActive(false)` bağlantısı dahil) `StatTooltip` component'lerini (Erzak/Altın/Nüfus,
 `Inspector`'dan elle 3'ü de sürüklenmesi gerekiyor) doğrudan `enabled = false/true` yapıp
 devre dışı bırakıyor/açıyor, kapanışta da açık kalmış olabilecek `TooltipUI`'yi gizliyor.
+
+### Yerleşke Tipleri: Köy/Şehir/Kale Ayrımı (bu oturumda eklendi)
+Uzun süredir "Sıradaki Adımlar"da bekleyen en kritik mimari karardı — roadmap tartışmasında ilk
+sıraya alındı çünkü kart/focus-tree/teknoloji gibi ileriki sistemlerin çoğu "hangi yerleşke türü ne
+yapabilir" sorusuna dayanacak.
+
+**Veri modeli:** `YerlesimTipi` (yeni, düz enum: `Koy, Sehir, Kale` — Terrain gibi basit, ScriptableObject
+DEĞİL). `KoyData.Tip` (varsayılan Koy) ve `KoyData.MaxGarnizon` (varsayılan 50) eklendi.
+
+**Tipler nasıl ayrışıyor:**
+- **Şehir = daha büyük `TileMenzili` + yüksek üretim.** Kullanıcı "yüksek Erzak/Altın üretimi" de
+  istedi ama **ayrı bir çarpan EKLENMEDİ** — çünkü zaten `HaritaYoneticisi`'nin ağırlıklı-Voronoi
+  tile dağıtımı, büyük menzilli bir yerleşkeye otomatik olarak daha fazla tile (= daha fazla Erzak/
+  Altın) veriyor. Yani Şehir'in üretim avantajı, menzil büyütülünce KENDİLİĞİNDEN geliyor, gereksiz
+  bir ikinci çarpan eklenmedi (bkz. Mimari Kararları #32).
+- **Kale = yüksek `Savunma` (elle Inspector'dan girilir) + yüksek `MaxGarnizon`.** `MaxGarnizon`,
+  kullanıcının net isteğiyle **gerçek bir üst sınır** (Kale örn. 150, Köy örn. 50) — Garnizon'un
+  artırıldığı HER yerde (`OrderData.GarnizonEkler` hem anlık hem çok-günlü yolu, `AskeriGeriGonder`,
+  `SaldiriBaslatir` başarı sonrası, düşman AI'ının fethi) artık bu tavana `Mathf.Min` ile
+  kelepçeleniyor.
+- **Tipe özel inşa seçenekleri (örn. Kale'ye "Sur İnşa Et") bilinçli olarak bu adıma DAHİL
+  EDİLMEDİ** — kullanıcı "önce sadece stat/tip farkı, binalar sonraki bir adım" dedi, kapsamı
+  şişirmemek için.
+- **Tip nasıl atanıyor?** Tamamen elle, Inspector'dan, oyunun başından sabit (kullanıcının tercihi —
+  köy büyüyüp Şehir'e dönüşmesi gibi dinamik bir sistem İSTENMEDİ, basit tutuldu).
+
+**UI:** Köy Bilgi Paneli artık `"Garnizon: X/Y"` (Y = MaxGarnizon) gösteriyor. **İlk denemede**
+isim yanına `"(Şehir)"`/`"(Kale)"` gibi bir etiket de eklenmişti ama kullanıcı bunu istemedi (köy
+isimlerini zaten tipe göre kendisi seçmişti, örn. "...Kalesi", "...Şehri") — bu etiket kaldırıldı.
+
+**Harita ikonları:** `HexHaritaCizici`'deki tek `YerlesimIkonu` alanı **üç ayrı alana** bölündü:
+`KoyIkonu`/`SehirIkonu`/`KaleIkonu`, `YerlesimIkonuSec(tip)` fonksiyonu köyün `Tip`'ine göre doğru
+sprite'ı seçiyor (boşsa eskisi gibi düz renkli kareye düşüyor). **Dikkat:** bu, eski tek alanın
+YENİDEN ADLANDIRILMASI değil, üç YENİ alan — eski Inspector ataması (örn. `icon40.png`) otomatik
+taşınmadı, kullanıcı elle yeniden atadı.
+
+**Büyük harita (12 yerleşke):** Köyler 4'ten 12'ye çıkarıldı (Babanya/Panpi/Gigi/Tartara zaten
+vardı, 8 yeni: Vensa Şehri, Kirmiz Kalesi, Dolen Köyü, Harmis Köyü, Astir Kalesi, Rekaz Şehri,
+Vulgar Kallesi, Sombra Köyü). Yerleşke KONUMLARI birkaç iterasyon geçti:
+1. İlk öneri çok dağınık/geniş (yarıçap ~20+ tile) çıktı, harita ekrana sığmadı.
+2. İkinci öneri çok sıkışık/dengesiz çıktı (bazı köyler koca bir alan kaplarken bazıları küçük
+   kalıyordu, sağ/sol kenarlarda boş alan vardı).
+3. Son haliyle, cephe hattında (düşmana yakın) Kale'ler, arkada Şehir/Köy'ler olacak şekilde,
+   eşit aralıklı bir düzene (Voronoi'nin eşit aralıklı noktalarda daha dengeli bölgeler ürettiği
+   ilkesine dayanarak) geçildi — tam matematiksel eşitlik garanti edilemez ama önceki durumdan
+   çok daha dengeli. `HaritaYoneticisi.SinirPayi` de (harita kenar boşluğu) küçültüldü.
+
+### Harita Zoom/Boyut Düzeltmeleri (bu oturumda eklendi)
+Harita 4 köyden 12 köye büyüyünce iki yeni bug ortaya çıktı:
+
+**1. Harita ekrana sığmıyordu (taşıyordu).** Sebep: `HaritaKontrol.cs`, zoom/pan sınırlarını
+`Icerik`'in Inspector'dan **sabit** girilmiş eski boyutuna (örn. 1300x1300) göre hesaplıyordu —
+harita büyüyünce bu sayı artık gerçek tile alanını temsil etmiyordu. Çözüm: `HexHaritaCizici`'ye
+**`IcerikBoyutunuGuncelle()`** eklendi — `Icerik`'in boyutunu, TÜM tile'ların `EksenselKonum`'una
+bakarak (en uzak tile + `IcerikKenarPayi` kenar payı) RUNTIME'DA otomatik hesaplıyor. Bu yüzden
+`Icerik`'in Inspector'daki sabit boyutu artık ÖNEMSİZ, kod her `Start()`'ta üzerine yazıyor.
+
+**2. Tam zoom-out'ta bile haritanın tamamı görünmüyordu.** Sebep: `HaritaKontrol.YenidenHesaplaVeSinirla()`
+`minZoom`'u `Mathf.Max(genislikOrani, yukseklikOrani)` ile hesaplıyordu — bu "cover" davranışı
+(ekranı TAMAMEN kapla, ama uzun kenarda içerik taşabilir/kırpılabilir). Kullanıcı haritanın TAMAMINI
+görmek istedi, yani "contain" davranışı gerekiyordu: **`Mathf.Min`**'e çevrildi (bkz. Mimari
+Kararları #35).
+
+**3. `Mathf.Min`'e geçince, kısa kenarda ekranda BOŞLUK oluştu, bu boşlukta arkadaki StatlarPaneli/
+oda görünüyordu.** Çünkü `Icerik`'in kendi arka plan rengi (`HaritaArkaplanGorseli`) da `Icerik` ile
+birlikte küçülüp büyüyordu, boşluğu kapatmıyordu. Çözüm: `HexHaritaCizici.SabitArkaplaniOlusturVeyaGuncelle()`
+— `Icerik`'in ebeveynine (görüntü alanına), zoom/pan'dan TAMAMEN BAĞIMSIZ, anchor-stretch ile her
+zaman tam görüntü alanını kaplayan sabit bir arka plan (`HaritaSabitArkaplan`, aynı koyu kahverengi)
+ekliyor — kod otomatik oluşturuyor, Unity'de elle bir şey eklemeye gerek yok.
 
 ### Uyu Tuşu (Gece / Resolve)
 Oyuncu "Uyu" tuşuna basınca döngü sona eriyor ve şunlar oluyor:
@@ -963,16 +1079,57 @@ yazılmış tüm döngülerin gözden geçirilmesi gerekebileceği" konusunda ge
 mekaniği geldiğinde `KoyYoneticisi`'nin toplama fonksiyonları güncellendi (#22) ama `DaySequencer`
 gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
 
+**32. Sadakat de neden Erzak/Nüfus mimarisine (köy-bazlı + genel yok) geçirildi?**
+Kullanıcının şikayeti "Sadakat liquid/akışkan hissi vermiyor" idi — genel+ortalama toplamı hem
+kafa karıştırıcıydı hem gerçekçi değildi. Erzak/Nüfus zaten bu sorunu çözmüş bir desendi
+(`BizeAitDegil` filtreli toplama/dağıtma fonksiyonları), aynı deseni Sadakat'a da uygulamak hem
+tutarlılık kattı hem yeni bir mimari icat etmeye gerek kalmadı (bkz. "Sadakat Mekaniğinin Yeniden
+Tasarımı"). Şehir'in üretim avantajı için de benzer bir prensip uygulandı: Mimari Kararları #33'e bak.
+
+**33. Şehir'in "yüksek üretim" özelliği için neden ayrı bir çarpan eklenmedi?**
+`HaritaYoneticisi`'nin ağırlıklı-Voronoi tile dağıtımı zaten `EtkinMesafe = HexMesafe - TileMenzili`
+formülüyle büyük menzilli bir yerleşkeye orantısız daha fazla tile veriyor — bu da otomatik olarak
+daha fazla Erzak/Altın demek (her tile kendi değerini üretiyor, toplam köyün üretimi oluyor). Şehir'e
+büyük `TileMenzili` vermek zaten "yüksek üretim" isteğini karşılıyor, üstüne bir de sabit çarpan
+eklemek fazlalık/çifte-sayım olurdu.
+
+**34. `MaxGarnizon` neden gerçek bir üst sınır (cap) olarak eklendi, çarpan/etkinlik olarak değil?**
+Kullanıcıya iki seçenek sunuldu: (a) Kale'de Garnizon daha ETKİLİ savaşsın (çarpan), (b) Kale gerçekten
+daha FAZLA asker barındırabilsin (üst sınır). Kullanıcı (b)'yi seçti — "askerini nereye yığarsan yığ"
+diyememek stratejik bir kısıt yaratıyor. Bu yüzden `KoyData.MaxGarnizon` eklendi, Garnizon'un
+arttığı HER kod yolunda (`OrderData.GarnizonEkler`'in hem anlık hem çok-günlü dalı, `AskeriGeriGonder`,
+`SaldiriBaslatir` başarı sonrası hayatta kalanlar, düşman AI'ının fethi) `Mathf.Min(..., MaxGarnizon)`
+ile kelepçelendi — tek bir yerde unutulsaydı Kale'nin bütün amacı boşa çıkardı, bu yüzden hepsi
+tek tek gözden geçirildi.
+
+**35. Harita zoom'unda `Mathf.Max` yerine `Mathf.Min` kullanmanın "cover vs. contain" farkı nedir?**
+`Mathf.Max(genislikOrani, yukseklikOrani)` = **cover**: viewport'u TAMAMEN kapla, gerekirse uzun
+kenarda içerik taşsın/kırpılsın (küçük haritalarda fark edilmez çünkü zaten viewport'tan büyüktü).
+`Mathf.Min(...)` = **contain**: İÇERİĞİN TAMAMI viewport'a sığsın, kısa kenarda boşluk kalsın ama
+hiçbir şey kırpılmasın. Harita küçükken bu ayrım önemsizdi (minZoom zaten viewport'u dolduracak
+kadar büyüktü), harita 12 köye büyüyüp viewport'tan çok daha büyük hale gelince fark ortaya çıktı:
+kullanıcı haritanın TAMAMINI görmek istedi, bu da `Min`'i (contain) gerektirdi (bkz. "Harita Zoom/
+Boyut Düzeltmeleri").
+
+**36. 0 Garnizonlu köye saldırı neden artık zar atmadan direkt kazanılıyor?**
+Kullanıcı playtest'te fark etti: Garnizonu 0 olan bir köyün savunması yine de bazen "kazanabiliyordu"
+çünkü `EtkinSavunmaHesapla` köyün ham `Savunma` stat'ını (köylülerin pasif direnci) Garnizon'dan
+bağımsız her zaman hesaba katıyordu. Kullanıcının kararı: 0 Garnizon = tamamen savunmasız, zar
+atmaya bile gerek yok, direkt el değiştirsin — hem oyuncunun Saldır emrine hem düşman AI'ına aynı
+`if (hedefKoy.Garnizon <= 0) { basarili = true; }` kısayolu eklendi (bkz. "Savaş Mekaniği").
+
 ---
 
 ## 4) SCRIPT ENVANTERİ
 
 ### Veri sınıfları (düz C#, MonoBehaviour DEĞİL)
-- **`GameState.cs`** — `Gun`, `Sadakat`, `Altin`, `Manpower`, `ErzakBaseGelir`, `AltinBaseGelir`.
-  `Erzak` ve `Nufus` alanları yok (bkz. Mimari Kararları #7, #18) — ikisi de `KoyYoneticisi`'ye
+- **`GameState.cs`** — `Gun`, `Altin`, `Manpower`, `ErzakBaseGelir`, `AltinBaseGelir`. **`Sadakat`
+  alanı bu oturumda tamamen kaldırıldı** (bkz. Mimari Kararları #32) — Erzak/Nüfus gibi artık
+  `KoyYoneticisi`'ye yönlendiriliyor: `StatDegerAl("Sadakat")` → `OrtalamaSadakat()`,
+  `StatDegistir("Sadakat", miktar)` → `SadakatDegistir(miktar)`.
+  `Erzak` ve `Nufus` alanları da yok (bkz. Mimari Kararları #7, #18) — ikisi de `KoyYoneticisi`'ye
   yönlendiriliyor. `StatDegerAl`/`StatDegistir`'in `"Nufus"` case'i `KoyYoneticisi.ToplamNufus()`/
-  `NufusDegistir()`'e gidiyor. Sadakat için genel+köy ortalamasını topluyor ve `Mathf.Clamp`
-  ile 0-100 arasına sıkıştırıyor. `BaseGeliriUygula()`: her yeni günde `KoyYoneticisi.ErzakDegistir(ErzakBaseGelir)`
+  `NufusDegistir()`'e gidiyor. `BaseGeliriUygula()`: her yeni günde `KoyYoneticisi.ErzakDegistir(ErzakBaseGelir)`
   + `KoyYoneticisi.NufusuGunlukArtir()` (Nüfus'un kendi dinamik formülü, sabit bir "NufusBaseGelir"
   YOK) + `Altin += AltinBaseGelir`. **`GiderleriUygula()`** *(bu oturumda eklendi)*:
   `Altin -= Manpower*ManpowerMaasiBirimMaliyeti` + `Altin -= ToplamDoluBinaSlotu()*
@@ -992,9 +1149,11 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
   üzerinden kullanılıyor, bkz. Mimari Kararları #21), `MaxBinaSlotu` (varsayılan 3),
   `DoluBinaSlotu` (varsayılan 0), `IsyanHalinde` (bool, varsayılan false), **`Sahip`** (`Krallik`,
   varsayılan `Oyuncu`, bu oturumda eklendi) ve **`Garnizon`** (int, varsayılan 0, bu oturumda
-  eklendi — o köyde konuşlanan Manpower). **`MerkezTileKoordinati`** (`Vector3Int`) ve
-  **`TileMenzili`** (int, varsayılan 1) — bu oturumda eklendi, hex harita sistemi için (bkz. "Hex
-  Harita Sistemi"). ScriptableObject DEĞİL.
+  eklendi — o köyde konuşlanan Manpower). **`MaxGarnizon`** (int, varsayılan 50, bu oturumda
+  eklendi — Garnizon'un gerçek üst sınırı, bkz. Mimari Kararları #34). **`Tip`** (`YerlesimTipi`,
+  varsayılan `Koy`, bu oturumda eklendi — bkz. "Yerleşke Tipleri: Köy/Şehir/Kale Ayrımı").
+  **`MerkezTileKoordinati`** (`Vector3Int`) ve **`TileMenzili`** (int, varsayılan 1) — bu oturumda
+  eklendi, hex harita sistemi için (bkz. "Hex Harita Sistemi"). ScriptableObject DEĞİL.
 - **`HexTileData.cs`** *(bu oturumda eklendi)* — Düz `[Serializable]` class. `Vector3Int Koordinat`,
   `int ErzakDegeri`, `int AltinDegeri`, `KoyData SahipKoy` (nullable). `HaritaYoneticisi.Tileler`
   listesinde tutuluyor.
@@ -1037,12 +1196,16 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
   (bkz. Mimari Kararları #14). **Manpower kayıp/dönüş** artık **`AskeriGeriGonder(state, emir,
   miktar)`** yardımcı fonksiyonunu kullanıyor *(bu oturumda eklendi)* — `emir.KaynakKoy` doluysa
   oraya (`Garnizon`'a), boşsa `GameState.Manpower`'a geri dönüyor (bkz. "Ordu Kaynağı ve Mesafeye
-  Bağlı Süre"). **`emir.SaldiriBaslatir` kontrolü** — `KoyYoneticisi.EtkinSavunmaHesapla(HedefKoy)`'a
-  karşı `GonderilenManpower` ile oran/Tullock formülü, kazanırsa `HedefKoy.Sahip = Oyuncu` +
-  hayatta kalan Manpower `HedefKoy.Garnizon`'a yazılıyor (kingdom'a DÖNMÜYOR) + **`HexHaritaCizici.
+  Bağlı Süre"). **`emir.SaldiriBaslatir` kontrolü** — **artık en başta `emir.HedefKoy.Garnizon <= 0`
+  mu diye bakıyor** *(bu oturumda eklendi, bkz. Mimari Kararları #36)*: öyleyse zar atmadan direkt
+  `saldiriBasarili = true`; değilse eskisi gibi `KoyYoneticisi.EtkinSavunmaHesapla(HedefKoy)`'a
+  karşı `GonderilenManpower` ile oran/Tullock formülü işliyor. Kazanırsa `HedefKoy.Sahip = Oyuncu` +
+  hayatta kalan Manpower **`Mathf.Min(..., HedefKoy.MaxGarnizon)`** ile kelepçelenerek
+  `HedefKoy.Garnizon`'a yazılıyor (kingdom'a DÖNMÜYOR, bkz. Mimari Kararları #34) + **`HexHaritaCizici.
   Instance.RenkleriGuncelle()` çağrılıyor** *(bu oturumda eklendi)* ki köyün hex tile'ları/işareti
   haritada anında yeni sahibinin rengine dönsün, kaybedersen `AskeriGeriGonder` ile hayatta kalan
-  Manpower geri dönüyor (aynı %15/%80 yüzdeleri).
+  Manpower geri dönüyor (aynı %15/%80 yüzdeleri). **`GarnizonEkler`/`AskeriGeriGonder` yollarının
+  hepsi de** artık hedef/kaynak köyün `MaxGarnizon`'una `Mathf.Min` ile kelepçeleniyor.
   `BaseGeliriEtkiler` dalı `HedefKoy` doluysa (ve `Isim`'i boş değilse) o köyün `ErzakYield`'ini
   **2 katına çıkarıyor** (eski davranış: sabit +miktar ekliyordu). Her stat değişiminde
   `BildirimYoneticisi.Bildirim(...)` çağrılıyor. Sonuç mesajları renkli: şansa bağlı başarı yeşil,
@@ -1065,6 +1228,10 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
 - **`TerrainVerisi.cs`** *(bu oturumda eklendi)* — MonoBehaviour DEĞİL, static class (bkz. Mimari
   Kararları #28). `TerrainBilgisi` (struct: `Renk`, `ErzakMin/Max`, `AltinMin/Max`, `SavunmaCarpani`),
   `Bilgi(TerrainTipi)` ve `RastgeleTip()`.
+- **`YerlesimTipi.cs`** *(bu oturumda eklendi)* — Düz enum: `Koy, Sehir, Kale`. Terrain'in aksine
+  bir "veri tablosu" (Bilgi/RastgeleTip fonksiyonu) YOK — tipe göre sayısal farklar (Savunma,
+  MaxGarnizon, TileMenzili) doğrudan `KoyData` alanlarına elle, Inspector'dan giriliyor, otomatik
+  türetilmiyor (bkz. "Yerleşke Tipleri: Köy/Şehir/Kale Ayrımı").
 
 ### MonoBehaviour'lar (sahnede bir GameObject'e eklenmiş script'ler)
 - **`GameManager.cs`** — Singleton, `public GameState State`. Sadece veri kutusu tutucu.
@@ -1096,6 +1263,14 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
   **`BarisYap(krallik)`** *(bu oturumda eklendi)* — sırasıyla Terrain sistemi ve Diplomasi/Düşman
   AI'ı için, bkz. "Terrain Sistemi", "Savaş Mekaniği" (Düşman AI'ı) ve "Diplomasi Mekaniği".
   `EtkinSavunmaHesapla` artık terrain çarpanını da içeriyor (bkz. Mimari Kararları #28).
+  **`DusmanSaldirilariniKontrolEt`** artık `hedefKoy.Garnizon <= 0` ise zar atmadan direkt
+  el değiştiriyor (bkz. Mimari Kararları #36). **Bu oturumda eklenen Sadakat fonksiyonları:**
+  `SadakatDegistir(miktar)` (Erzak'ın `ErzakDegistir`'iyle birebir aynı desen, tüm bize ait köylere
+  dağıtıyor), `SadakatYieldHesapla(koy)` (Nüfus büyüme formülüyle aynı desen ama kendi `SadakatEsik`/
+  `SadakatKatsayi` ile), `SinirBaskisiHesapla(koy)` (private, savaştaki en yakın düşman köyüne
+  mesafeye göre `SinirBaskisiMenzili`/`SinirBaskisiMax` kullanarak günlük düşüş hesaplıyor),
+  `SadakatiGunlukGuncelle()` (ikisini birden her gece uyguluyor), `SadakatDagilimKoyBilgisiMetni(koy)`
+  (Köy Bilgi Paneli hover dökümü) — hepsi bkz. "Sadakat Mekaniğinin Yeniden Tasarımı".
 - **`OrderManager.cs`** — `EmirEkle`, `DanismanKullanildiMi`, `YeniDongueBasla`. Mantık değişmedi
   ama **dikkat:** `EmirEkle` kendi `MaliyetStat`/`MaliyetMiktar` kontrolünü de yapıyor — dinamik
   maliyetli emirlerde bu alanların boşaltılması gerekiyor (bkz. Mimari Kararları #15).
@@ -1151,12 +1326,18 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
   "ISYAN HALINDE"), `SadakatText`, `ErzakText`, `ErzakYieldText`, `AltinYieldText` (ikisi de
   `YieldMetni` yardımcı fonksiyonuyla renkleniyor: +yeşil/-kırmızı/0-beyaz, isyanda gri), `SlotText`
   ("1/3" formatı), `SavunmaText`, `NufusText` ("Nufus: X <sup>+Y</sup>" formatında, Y
-  `KoyYoneticisi.NufusYieldHesapla(koy)` ile canlı hesaplanıyor). **`GarnizonText`** *(bu oturumda
-  eklendi)*. **`SavunmaText` artık "Savunma: X (baz: Y)" formatında** *(bu oturumda değişti)* — X,
+  `KoyYoneticisi.NufusYieldHesapla(koy)` ile canlı hesaplanıyor). **`GarnizonText`** artık
+  **"Garnizon: X/Y"** formatında (Y = `koy.MaxGarnizon`, bu oturumda eklendi, bkz. Mimari
+  Kararları #34). **`SavunmaText` artık "Savunma: X (baz: Y)" formatında** *(bu oturumda değişti)* — X,
   `KoyYoneticisi.EtkinSavunmaHesapla(koy)` (terrain çarpanı + Garnizon dahil gerçek/etkin değer), Y
-  ham `koy.Savunma`. `Goster(koy)` artık `koy.Sahip == Oyuncu` mu diye bakıyor (bkz. Mimari Kararları #21):
+  ham `koy.Savunma`. **`SadakatText` artık `ErzakYieldText` ile aynı desende** *(bu oturumda
+  eklendi)* — `<link="gelir">` etiketiyle sarılı, `StatTooltip` component'i eklenince
+  `KoyYoneticisi.SadakatDagilimKoyBilgisiMetni(koy)`'a bağlanıyor (bkz. "Sadakat Mekaniğinin
+  Yeniden Tasarımı"). `Goster(koy)` artık `koy.Sahip == Oyuncu` mu diye bakıyor (bkz. Mimari Kararları #21):
   değilse Sadakat/Erzak/Nüfus/Yield/Slot satırlarının GameObject'lerini `SetActive(false)` ile
   gizleyip sadece İsim + Savunma + Garnizon gösteriyor; bize aitse eskisi gibi her şey görünüyor.
+  **Not:** `IsimText`'e köyün `Tip`'ini (Şehir/Kale) gösteren bir ek denendi ("İsim (Tip)") ama
+  kullanıcı istemedi (isimlerini zaten tipe göre kendisi seçmişti, örn. "...Kalesi") — kaldırıldı.
 - **`KoyEtiketiTiklama.cs`** — **Bu oturumda ARTIK KULLANILMIYOR** (muhtemelen ölü kod, silinip
   silinmeyeceği doğrulanmadı) — elle yerleştirilmiş statik metin etiketleri kaldırıldı, görevini
   `YerlesimIsaretiTiklama.cs` + `HexHaritaCizici.cs` (kod üretimli hex harita) üstlendi. Eski
@@ -1182,18 +1363,29 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
   yarı saydam (varsayılan `TileSaydamligi=0.35`) hexagon `Image` + (sahipliyse) gizli bir çerçeve-
   hexagon (`Sinir_...`, hover'da açılacak) oluşturuyor, ikisinin de `Image` referansı
   `Dictionary`'lerde saklanıyor (`tileGorselleri`, `koyTileSinirlari`) ki sonradan güncellenebilsin.
-  `YerlesimleriCiz`: her köy için `YerlesimIkonu` (Inspector'dan atanan bir sprite, örn. bir kale
-  ikonu) varsa onu, yoksa düz kare kullanıp bir işaret + üstünde isim (`TextMeshProUGUI`) oluşturuyor,
+  `YerlesimleriCiz`: her köy için **`YerlesimIkonuSec(koy.Tip)`** *(bu oturumda değişti — eskiden
+  tek bir `YerlesimIkonu` alanı vardı, artık `KoyIkonu`/`SehirIkonu`/`KaleIkonu` diye ÜÇ ayrı alan,
+  köyün `Tip`'ine göre doğru sprite seçiliyor, bkz. "Yerleşke Tipleri: Köy/Şehir/Kale Ayrımı")
+  varsa onu, yoksa düz kare kullanıp bir işaret + üstünde isim (`TextMeshProUGUI`) oluşturuyor,
   `YerlesimIsaretiTiklama` component'i ekliyor. **`SinirGoster(koy)`/`SinirGizle(koy)`** (public) —
   bir köyün TÜM tile sınır objelerini aynı anda açıp kapatıyor. **`RenkleriGuncelle()`** (public) —
   bir köy el değiştirdiğinde (`DayResolver` çağırıyor) tüm tile/yerleşim renklerini
   `HaritaYoneticisi.TileRengi`'ye göre yeniden hesaplayıp uyguluyor (ilk çizimde bir kere hesaplanıp
-  SABİTLENDİĞİ için, elle güncellenmezse köy fethedilince renk değişmiyordu). **Bu oturumda eklendi:**
-  `HaritaGorunumu` enum'u (`Siyasi/Terrain/Kaynak`) + `Update()`'te F1/F2/F3 dinleme,
+  SABİTLENDİĞİ için, elle güncellenmezse köy fethedilince renk değişmiyordu). `HaritaGorunumu` enum'u
+  (`Siyasi/Terrain/Kaynak`) + `Update()`'te F1/F2/F3 dinleme,
   `GorunumMetni` (opsiyonel TMP_Text, F1/F2/F3 metnini gösterir), F3'te tile başına ikon+sayı
   (`kaynakGorselleri`), köy isim etiketlerinin F3'te gizlenmesi (`yerlesimIsimGorselleri`) ve
   köyün oturduğu tek tile için F3'te her zaman görünen ayrı bir çerçeve (`merkezSinirGorselleri`,
   hover-sınır sisteminden bağımsız) — detaylar için "Terrain (Arazi Türü) Sistemi" bölümüne bak.
+  **Bu oturumda eklenen harita büyüklüğü/zoom düzeltmeleri** (bkz. "Harita Zoom/Boyut Düzeltmeleri"):
+  **`IcerikBoyutunuGuncelle()`** — `Icerik`'in boyutunu tüm tile'ların gerçek yayılımına göre
+  (+ `IcerikKenarPayi` kenar payı) otomatik hesaplayıp hem `Icerik`'e hem bu script'in kendi
+  objesine (`HaritaArkaplanGorseli`) uyguluyor. **`SabitArkaplaniOlusturVeyaGuncelle()`** —
+  `Icerik`'in ebeveynine, zoom/pan'dan BAĞIMSIZ, anchor-stretch ile her zaman tam görüntü alanını
+  kaplayan sabit bir arka plan (`HaritaSabitArkaplan`) oluşturuyor (contain-fit zoom'da kısa kenarda
+  kalan boşluğun arkadaki UI'yi göstermesini engellemek için). **`Kontrol`** (public
+  `HaritaKontrol` referansı) — `Icerik` yeniden boyutlandırıldıktan sonra `Kontrol.
+  YenidenHesaplaVeSinirla()` çağırılıp zoom/pan sınırları güncelleniyor.
 - **`YerlesimIsaretiTiklama.cs`** *(bu oturumda eklendi)* — `KoyEtiketiTiklama`'nın YERİNİ ALDI,
   ama isim eşleştirmesi YOK — doğrudan `public KoyData Koy` referansı taşıyor (çok daha sağlam).
   `IPointerClickHandler`: sol tık `KoyBilgiPaneli.Goster(Koy)`, sağ tık (düşmansa) `DiplomasiBilgiPaneli.
@@ -1202,14 +1394,19 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
 - **`HaritaKontrol.cs`** — Harita içeriğinin (`Icerik`, RectTransform) sürüklenmesini/
   yakınlaştırılmasını yönetir. `IBeginDragHandler`/`IDragHandler`: `RectTransformUtility.
   ScreenPointToLocalPointInRectangle` ile Canvas modundan/ölçeğinden bağımsız, imlecin gerçek yerel
-  konumunu hesaplayıp fark alır. `IScrollHandler`: zoom (fare tekerleği). `minZoom`, `Awake`'te
-  viewport/içerik oranından otomatik hesaplanıyor. `SinirlaKonum()`: sürükleme sonrası haritanın
-  kenarları ekran dışına taşmayacak şekilde `anchoredPosition`'ı kelepçeliyor.
+  konumunu hesaplayıp fark alır. `IScrollHandler`: zoom (fare tekerleği). **`minZoom` hesabı artık
+  `YenidenHesaplaVeSinirla()` adında ayrı, PUBLIC bir fonksiyonda** *(bu oturumda değişti — eskiden
+  sadece `Awake()`/`Start()` içindeydi)*, `HexHaritaCizici` harita boyutunu her güncellediğinde
+  bunu dışarıdan çağırabiliyor. **`Mathf.Max` yerine `Mathf.Min` kullanıyor** (bkz. Mimari
+  Kararları #35 — "cover" değil "contain" davranışı, haritanın TAMAMI ekrana sığsın diye).
+  `SinirlaKonum()`: sürükleme sonrası haritanın kenarları ekran dışına taşmayacak şekilde
+  `anchoredPosition`'ı kelepçeliyor.
 - **`GunUI.cs`** — Ekranın üstünde "Gun X" gösteriyor. Değişmedi.
 - **`BildirimYoneticisi.cs`** — Singleton. `Bildirim(statAdi, miktar)`: şablonu çoğaltıp fade in
   (`CanvasGroup`) → bekle → fade out → `Destroy`. Değişmedi.
 - **`DayCycleManager.cs`** — Singleton, state machine'in kalbi. `gunlukSira` `List<SiraGirisi>`.
-  `GelirleriUygula()`: `BaseGeliriUygula()` + `KoyYoneticisi.ErzagiGunlukArtir()` + Altın base
+  `GelirleriUygula()`: `BaseGeliriUygula()` + `KoyYoneticisi.ErzagiGunlukArtir()` +
+  **`KoyYoneticisi.SadakatiGunlukGuncelle()`** *(bu oturumda eklendi)* + Altın base
   geliri — hem `Start()`'ta (ilk gün) hem `UyuyaBas()`'ta (isyan kontrolünden ÖNCE) çağrılıyor
   (bkz. Mimari Kararları #17). `YeniGuneBasla()`: artık sadece `DaySequencer` ile sıra oluşturup
   göstermekle ilgileniyor (gelir uygulamıyor). `SiradakiNpcyiGoster()`: `Dialog.DiyalogBaslat(...)`
@@ -1287,106 +1484,105 @@ gibi ondan bağımsız çalışan başka bir sistem gözden kaçmıştı.
 
 ✅ Çalışıyor (test edildi, onaylandı):
 - Temel döngü uçtan uca, ScriptableObject tabanlı çoklu-stat diyalog sistemi, danışman kapı sistemi
-  (General, İnşaatçı), Diyalogda "Geri"/"Boşver" (bkz. Mimari Kararları #27).
+  (General, İnşaatçı, Elçi), Diyalogda "Geri"/"Boşver" (bkz. Mimari Kararları #27).
 - Köy sistemi, isyan mekaniği (durum+zar+debuff+bastırma emri), Nüfus sistemi, building slot
-  sistemi, Köy Bilgi Paneli, Diplomasi mekaniğinin temeli (`DiplomasiVerisi`, gece zar kontrolü,
-  sağ-tık paneli) — hepsi önceki oturumlarda kurulup test edildi, değişmedi.
-- Savaş mekaniğinin temeli: `KrallikData`/`Sahip`/`Garnizon`, `EtkinSavunmaHesapla`, "Saldır" emri.
-- **Ekonomi giderleri** (bu oturumda eklendi, bkz. "Ekonomi Giderleri"): günlük asker maaşı +
-  bina bakım gideri, ilk denenen oranlar (0.5/2) dengesiz çıkıp 0.05/1'e düşürüldü, uçtan uca test
-  edildi (artık oyuncu sadece bekleyerek sonsuza kadar zenginleşemiyor).
-- **Hex Harita Sistemi TAMAMEN KURULDU** (bu oturumun en büyük işi, bkz. "Hex Harita Sistemi") —
-  gerçek görünür, kod-üretimli (hiç dış asset yok) altıgen harita: her köyün kendi tile'ları
-  (ağırlıklı Voronoi ile boşluksuz dağıtım), krallık rengine göre boyalı tile'lar, hover'da toprak
-  sınırı çizgisi, köy fethedilince renklerin otomatik güncellenmesi, tıklanabilir yerleşke işaretleri
-  (özel bir ikonla, `icon40.png`). Uçtan uca test edildi, birkaç ciddi debug turu sonunda (yanlış
-  RectTransform anchor'ları, `HaritaMaskeleyici`'de unutulmuş 19x scale, paralelkenar şekli) düzeldi.
-- **Ordu kaynağı ve mesafeye bağlı süre** (bu oturumda eklendi, bkz. "Ordu Kaynağı ve Mesafeye Bağlı
-  Süre") — İsyan Bastır/Saldır/yeni "Garnizon Gönder" emirlerinde artık "Genel Yedek Kuvvet mi yoksa
-  hangi köyün garnizonundan mı gönderiyorsun" seçimi var, süre gerçek hex mesafesine göre hesaplanıyor,
-  hayatta kalanlar nereden gittiyse oraya dönüyor. Uçtan uca test edildi.
-- **Terrain (Arazi Türü) Sistemi** (bu oturumda eklendi, bkz. "Terrain Sistemi") — 4 tür (Ova/Orman/
-  Dağ/Çöl), Erzak/Altın/Savunma'ya etkisi, F1/F2/F3 harita görünüm geçişi (Siyasi/Terrain/Kaynak),
-  F3'te ikon+sayı gösterimi. Uçtan uca test edildi.
-- **Düşman AI'ı — ilk versiyon** (bu oturumda eklendi, bkz. "Savaş Mekaniği") — savaşta olan düşman
-  köyleri, statik Garnizon'larıyla en yakın bizim köye belli bir ihtimalle saldırabiliyor. Test edildi.
-- **Diplomasi'nin devamı — Elçi danışmanı** (bu oturumda eklendi, bkz. "Diplomasi Mekaniği") —
-  Hediye Gönder (Diplomasi artırır) ve Barış Teklif Et (savaşı bitirebilir, Diplomasi'ye bağlı şans,
-  savaşta değilken otomatik gri) emirleri. Test edildi.
+  sistemi, Köy Bilgi Paneli, Diplomasi mekaniği (`DiplomasiVerisi`, gece zar kontrolü, sağ-tık
+  paneli, Elçi danışmanı ile Hediye Gönder/Barış Teklif Et) — önceki oturumlarda kurulup test edildi.
+- Savaş mekaniği: `KrallikData`/`Sahip`/`Garnizon`, `EtkinSavunmaHesapla`, "Saldır" emri, düşman
+  AI'ının ilk versiyonu (savaştaki düşman köyleri en yakın bizim köye saldırabiliyor).
+- Ekonomi giderleri (günlük asker maaşı + bina bakım gideri), Terrain (Arazi Türü) Sistemi (4 tür,
+  F1/F2/F3 harita görünümleri), Hex Harita Sistemi'nin temeli (ağırlıklı-Voronoi tile dağıtımı,
+  kod-üretimli görsel çizim) — önceki oturumlarda kurulup test edildi.
+- **Sadakat mekaniğinin yeniden tasarımı** (bu oturumda eklendi, bkz. "Sadakat Mekaniğinin Yeniden
+  Tasarımı") — "genel Sadakat" kavramı kaldırıldı, artık tamamen köy-bazlı + Erzak/Nüfus oranına
+  bağlı pasif sürüklenme + savaşta sınıra yakın köylere mesafeye bağlı baskı + Köy Bilgi Paneli'nde
+  hover dökümü. Uçtan uca test edildi.
+- **Yerleşke Tipleri: Köy/Şehir/Kale ayrımı** (bu oturumda eklendi, roadmap'in en kritik mimari
+  kararıydı) — `YerlesimTipi` enum'u, `KoyData.Tip`/`MaxGarnizon`, Garnizon'un artığı HER yerde
+  tavana kelepçelenmesi, harita üzerinde tipe göre farklı ikonlar (`KoyIkonu`/`SehirIkonu`/
+  `KaleIkonu`). Test edildi.
+- **Büyük harita** (bu oturumda eklendi) — köy sayısı 4'ten 12'ye çıkarıldı (Vensa Şehri, Kirmiz
+  Kalesi, Dolen Köyü, Harmis Köyü, Astir Kalesi, Rekaz Şehri, Vulgar Kallesi, Sombra Köyü eklendi),
+  yerleşke konumları birkaç iterasyon sonunda dengeli/yayılmış bir düzene oturdu.
+- **Harita zoom/boyut düzeltmeleri** (bu oturumda eklendi, bkz. "Harita Zoom/Boyut Düzeltmeleri") —
+  büyüyen haritanın ekrana sığması (`Icerik` boyutu artık otomatik hesaplanıyor), tam zoom-out'ta
+  haritanın TAMAMININ görünmesi (`Mathf.Min` "contain" düzeltmesi), kısa kenardaki boşlukta arkadaki
+  UI'nin görünmemesi (sabit `HaritaSabitArkaplan`). Uçtan uca test edildi.
+- **Bug düzeltmesi: 0 Garnizonlu köy artık gerçekten savunmasız** (bu oturumda, bkz. Mimari
+  Kararları #36) — hem oyuncunun Saldır emri hem düşman AI'ı için, hedefin Garnizonu 0 ise zar
+  atılmadan direkt ele geçiriliyor.
 - Görsel asset pipeline (Taht Odası/Şahsi Oda arka planları) önceki oturumdan, değişmedi.
 
 ⚠️ Yarım kaldı / doğrulanmadı / bilinçli ertelendi:
-- **Hover tooltip kutusunun görsel tasarımı** hâlâ bitmedi (arka plan/padding eksik) — bu oturumda
-  kullanıcı bilerek bu işi ertelemeyi seçti.
+- **Hover tooltip kutusunun görsel tasarımı** hâlâ bitmedi (arka plan/padding eksik) — kullanıcı
+  bilerek bu işi ertelemeyi seçti.
 - **Buton/ikon sprite'ları** (`PixelButtonsPack_BDragon1727` vb.) hâlâ dilimlenip uygulanmadı.
 - **Şahsi Oda'daki eski placeholder'lar** (`OdaGorseli` altındaki mor/bej kutular) hâlâ düzeltilmedi.
 - `KoyEtiketiTiklama.cs`, `DanismanPaneli.cs`, `TahtOdasiTest.cs` artık (neredeyse kesin) ölü kod —
-  bu oturumda silinmesi düşünüldü ama sahne dosyasında hâlâ referans olduğu görülüp (muhtemelen
-  hâlâ bir objeye bağlı komponentler) riskli bulunup ERTELENDİ, ayrı/dikkatli bir oturumda ele alınmalı.
-- Ansiklopedi hâlâ boş placeholder. Başkent hâlâ sadece fikir, kod yok — Köy/Şehir/Kale tipleri de
-  henüz ayrı değil (bilinçli olarak ertelendi, sadece `TileMenzili` sayısı eklendi).
+  sahne dosyasında hâlâ referans olduğu görülüp riskli bulunup ERTELENDİ, ayrı/dikkatli bir
+  oturumda ele alınmalı.
+- Ansiklopedi hâlâ boş placeholder.
 - **Düşman AI'ı hâlâ çok temel** — ekonomisi donuk, Garnizon'u statik/taşınmıyor, hedef seçimi
   sadece "en yakın köy". Gerçek bir "düşünen rakip" (ekonomi + garnizon transferi + karar mantığı)
-  ayrı, büyük bir iş (bkz. Mimari Kararları #30 ve kullanıcıyla yapılan tartışma).
+  ayrı, büyük bir iş (bkz. Mimari Kararları #30 ve kullanıcıyla yapılan roadmap tartışması).
 - Kıyı/Su terrain türü bilinçli olarak eklenmedi (haritada henüz gerçek bir deniz konsepti yok).
+- **Yerleşke tipine özel inşa seçenekleri (örn. Kale'ye "Sur İnşa Et") bilinçli olarak eklenmedi** —
+  kapsam bu oturumda sadece stat/tip farkıyla sınırlı tutuldu, binalar ayrı bir sonraki adım.
+- **Sadakat/Erzak sayı dengesi hâlâ oturmadı** — hex harita sisteminden gelen Erzak değerleri bazı
+  köylerde çok yüksek çıkıyor, bu da Sadakat'ın hızla 100'e vurmasına yol açabiliyor; kullanıcı
+  bunu bilerek "ayrı bir dengeleme oturumu" na bıraktı.
+- **Uzun vadeli roadmap'in geri kalanı henüz başlamadı** — bkz. "8) UZUN VADELİ YOL HARİTASI":
+  Refah/İnanç/Teknoloji statları, Manpower mekaniğinin geliştirilmesi, Kralın şahsi statları,
+  Detaylı diplomasi, Focus Tree, Kart mantığı, diyalogların detaylandırılması.
 
 ---
 
 ## 6) SIRADAKİ ADIMLAR
 
 Bu oturumda tamamlananlar:
-1. ✅ **Play başlarken direkt harita açılma bug'ı düzeltildi** — `HaritaEkrani` artık varsayılan
-   kapalı, oyun Taht Odası ile başlıyor.
-2. ✅ **Terrain (Arazi Türü) Sistemi kuruldu** — 4 tür, Erzak/Altın/Savunma etkisi, F1/F2/F3 harita
-   görünüm geçişi (Siyasi/Terrain/Kaynak, Civ6 tarzı ikon+sayı gösterimi).
-3. ✅ **Harita açıkken arkadaki stat hover'ları çalışmaya devam etme bug'ı düzeltildi** —
-   `HaritaEkraniKontrol.cs`, `StatTooltip`'in raycast-bypass ettiğini (bkz. Bilinen Tuzaklar) tespit
-   edip doğrudan `enabled` ile kapatıyor.
-4. ✅ **F3'te köy ikonu/isim sayıları kapatma sorunu düzeltildi** — F3'te isim/ikon gizleniyor, köyün
-   oturduğu tile'a her zaman görünen ayrı bir çerçeve ekleniyor.
-5. ✅ **Düşman AI'ının ilk versiyonu eklendi** — savaşta olan, Garnizonu olan düşman köyleri belli
-   ihtimalle en yakın bizim köye saldırabiliyor (Saldır emriyle aynı formül).
-6. ✅ **Diplomasi'nin devamı: Elçi danışmanı + Barış Yap** — Hediye Gönder / Barış Teklif Et emirleri,
-   gece işleniyor, Barış Teklif Et savaşta değilken otomatik gri.
-7. ✅ **Köylü NPC'sinin köy-sahiplik bug'ı düzeltildi** — düşmana ait bir köy artık Köylü gönderemiyor.
-8. ✅ Danışman listesi paneline Vertical Layout Group + Content Size Fitter eklendi (otomatik hizalama).
+1. ✅ **Sadakat mekaniği yeniden tasarlandı** — genel Sadakat kaldırıldı, köy-bazlı + pasif
+   sürüklenme (Erzak/Nüfus oranı) + savaşta sınır baskısı (mesafeye bağlı) + hover dökümü.
+2. ✅ **Bug: 0 Garnizonlu köy artık gerçekten savunmasız** — zar atmadan direkt ele geçiriliyor
+   (hem oyuncu hem düşman AI'ı için).
+3. ✅ **Uzun vadeli oyun tasarımı roadmap'i çıkarıldı** — kullanıcının "bilinç akışı" listesi
+   (kart, focus tree, manpower, Refah/İnanç/Teknoloji, kral statları, büyük harita, detaylı
+   diplomasi, düşman AI, ansiklopedi, diyalog detayı) mimari bağımlılığa göre sıraya kondu —
+   bkz. "8) UZUN VADELİ YOL HARİTASI". İlk iki madde (Sadakat, Köy/Şehir/Kale) bu oturumda yapıldı.
+4. ✅ **Yerleşke Tipleri: Köy/Şehir/Kale ayrımı kuruldu** (roadmap'in en kritik mimari kararı) —
+   `YerlesimTipi` enum'u, `MaxGarnizon` (gerçek üst sınır, Garnizon artan HER yerde kelepçelendi),
+   harita ikonları tipe göre ayrıştı (`KoyIkonu`/`SehirIkonu`/`KaleIkonu`). Tipe özel inşa seçenekleri
+   (örn. Kale'ye "Sur İnşa Et") BİLİNÇLİ OLARAK bu adıma dahil edilmedi, ayrı bir sonraki adım.
+5. ✅ **Büyük harita:** Köy sayısı 4'ten 12'ye çıktı, yerleşke konumları birkaç iterasyon sonunda
+   (çok dağınık → çok sıkışık/dengesiz → cephe hattı temalı, eşit aralıklı) dengeli bir düzene oturdu.
+6. ✅ **Harita zoom/boyut bug'ları düzeltildi** — büyüyen içeriğe göre otomatik `Icerik` boyutu,
+   `Mathf.Min` ile "contain" zoom (haritanın TAMAMI görünsün), zoom/pan'dan bağımsız sabit arka plan.
 
 ⚠️ Bu oturumda ortaya çıkan, netleşmemiş/yarım kalan noktalar:
-1. **Köy/Şehir/Kale ayrımı henüz yok** — sadece `KoyData.TileMenzili` (menzil sayısı) eklendi,
-   gerçek farklı yerleşke tipleri (farklı inşa seçenekleri, farklı savunma vs.) bilinçli olarak
-   ertelendi. İleride gerekirse bu, `KoyData`'ya dokunan HER sistemi etkileyecek büyük bir refactor.
-2. **Düşman AI'ı hâlâ çok temel** — statik Garnizon, ekonomi yok, sadece "en yakın köy" hedefleme.
-   Kullanıcıyla "ilerde bunu geliştirebilir miyiz" konuşuldu — cevap: evet, teknik altyapının çoğu
-   (mesafe, saldırı formülü, ekonomi formülleri) zaten var, sadece ekonomiyi canlandırma + garnizon
-   transferi + karar mantığı katmanları eklenmesi lazım, ayrı büyük bir iş olarak bekliyor.
-3. Buton/ikon sprite dilimleme + hover tooltip görsel tasarımı + Şahsi Oda placeholder'ları hâlâ
+1. **Sadakat/Erzak sayı dengesi hâlâ oturmadı** — hex harita sisteminden gelen Erzak değerleri bazı
+   köylerde çok yüksek çıkıp Sadakat'ı hızla 100'e vurduruyor. Kullanıcı bilerek "ayrı bir dengeleme
+   oturumu" na bıraktı, mimari bir sorun değil.
+2. **Vergi/asker toplama gibi Sadakat düşüren yeni emir türleri** henüz tasarlanmadı — kullanıcı
+   "ayrı bir sonraki adım olsun" dedi, Sadakat işinin kapsamına bilerek dahil edilmedi.
+3. **Yerleşke tipine özel inşa seçenekleri** (Kale'ye "Sur İnşa Et", Şehir'e "Pazar" gibi) henüz yok.
+4. Buton/ikon sprite dilimleme + hover tooltip görsel tasarımı + Şahsi Oda placeholder'ları hâlâ
    bekliyor (birkaç oturumdur bilerek erteleniyor).
-4. `KoyEtiketiTiklama.cs`/`DanismanPaneli.cs`/`TahtOdasiTest.cs` hâlâ silinmedi (sahne dosyasında
+5. `KoyEtiketiTiklama.cs`/`DanismanPaneli.cs`/`TahtOdasiTest.cs` hâlâ silinmedi (sahne dosyasında
    referans olduğu görülüp riskli bulundu, ayrı bir oturumda dikkatlice ele alınmalı).
 
-Önceki oturumlarda tamamlananlar (özet): Ekonomi giderleri, Hex Harita Sistemi (baştan sona), Ordu
-kaynağı + mesafeye bağlı süre, Savaş mekaniğinin temeli, Diplomasi mekaniğinin temeli, Diyalogda
-Geri/Boşver, görsel asset pipeline, isyan mekaniği, building slot sistemi, Nüfus sistemi, Köy Bilgi
-Paneli, StatsUI renklendirme, hover tooltip sistemi (fareyi takip ediyor ama arka planı/padding'i
-hâlâ eksik).
+Önceki oturumlarda tamamlananlar (özet): Terrain Sistemi, Düşman AI'ının ilk versiyonu, Diplomasi'nin
+devamı (Elçi danışmanı), Ekonomi giderleri, Hex Harita Sistemi (baştan sona), Ordu kaynağı + mesafeye
+bağlı süre, Savaş mekaniğinin temeli, Diplomasi mekaniğinin temeli, Diyalogda Geri/Boşver, görsel
+asset pipeline, isyan mekaniği, building slot sistemi, Nüfus sistemi, Köy Bilgi Paneli, StatsUI
+renklendirme, hover tooltip sistemi (fareyi takip ediyor ama arka planı/padding'i hâlâ eksik).
 
-Henüz gündeme gelmemiş ama olası konular (öncelik sırası belirlenmedi):
-- **Buton/ikon sprite dilimleme + uygulama** ve **hover tooltip kutusunun görsel tasarımı** — en
-  eski yarım kalan işler, birkaç oturumdur erteleniyor.
-- **Düşman AI'ının geliştirilmesi:** ekonomiyi canlandırmak, garnizon transferi, gerçek bir hedef
-  seçme/karar mantığı — büyük bir iş, temel sistemler (Köy/Şehir/Kale ayrımı gibi) oturunca ele alınacak.
-- **Köy/Şehir/Kale ayrımı ve Başkent fikri** — hex harita sistemi bunun için zemin hazırladı
-  (`TileMenzili` zaten var), ama gerçek tip ayrımı ve Başkent'in özel rolü henüz tasarlanmadı.
-- **Kıyı/Su terrain türü** — haritada gerçek bir deniz/kıyı konsepti tasarlanınca eklenebilir.
-- `KoyEtiketiTiklama.cs`/`DanismanPaneli.cs`/`TahtOdasiTest.cs`'in gerçekten ölü kod olduğunu
-  doğrulayıp (sahnedeki referansları tek tek kontrol ederek) temizlemek.
-- Başka danışmanlar eklemek, Ansiklopedi'nin ne göstereceğine karar vermek.
-- Mektuplar/görev sistemini (istenirse) sıfırdan ele almak. Kaydet/yükle (save/load) sistemi.
+**Sıradaki adım netleşti (bkz. "8) UZUN VADELİ YOL HARİTASI"): Yeni statlar — Refah, İnanç,
+Teknoloji.** Kullanıcı bu oturumun sonunda bunu onayladı ama henüz başlanmadı, yeni oturumda Q&A
+ile devam edilecek.
 
 **Genel çalışma tarzı hâlâ geçerli:** her adımı küçük parçalara böl, kullanıcı test edip onaylamadan
-bir sonrakine geçme. Bu oturum bu tarza büyük ölçüde sadık kaldı — terrain sistemi bile önce
-netleştirici sorularla planlanıp sonra küçük, test edilebilir parçalara (veri modeli → üretim →
-F1/F2 → F3 → savunma etkisi) bölünerek uygulandı.
+bir sonrakine geçme. Bu oturum bu tarza sadık kaldı — hem Sadakat hem Köy/Şehir/Kale işleri önce
+Q&A ile netleştirilip sonra küçük, test edilebilir parçalara bölünerek uygulandı. Harita
+zoom/boyut bug'ları ise kullanıcının playtest sırasında bulduğu, plansız ama hızlı çözülen ek işlerdi.
 
 ---
 
@@ -1574,3 +1770,65 @@ F1/F2 → F3 → savunma etkisi) bölünerek uygulandı.
   önemsizdi, mesafeye bağlı süre sistemi gelince (bu oturumda) gizli kalmış bir eksiklik ortaya
   çıkardı: `Saldır` emri 3 gün sürünce hiçbir zar atmadan/sahiplik değiştirmeden "tamamlandı" dedi.
   Yeni bir şansa-bağlı+çok-günlü-olabilecek emir eklerken bu kutucuk HER ZAMAN kontrol edilmeli.
+- **Bir UI içeriği (örn. harita `Icerik`'i) zoom/pan ile küçültülüp büyütülebiliyorsa, "zoom sınırını
+  hesaplarken `Mathf.Max` mı `Mathf.Min` mi kullanmalıyım?" sorusunun cevabı NİYETE göre değişir.**
+  `Mathf.Max(genislikOrani, yukseklikOrani)` = **cover**: viewport'u TAMAMEN kapla, uzun kenarda
+  içerik taşabilir/görünmeyebilir. `Mathf.Min(...)` = **contain**: İÇERİĞİN TAMAMI viewport'a sığsın,
+  kısa kenarda boşluk kalabilir ama hiçbir şey kırpılmaz. Küçük bir içerikte bu ayrım fark etmez
+  (minZoom zaten viewport'u dolduracak kadar büyüktür), içerik viewport'tan çok büyüyünce fark ortaya
+  çıkar. "Kullanıcı her şeyi görebilsin" isteniyorsa `Min`, "boşluk hiç kalmasın" isteniyorsa `Max`.
+- **Bir UI içeriğinin boyutunu zoom-fit hesabı için dinamik/runtime'da büyütüyorsan, o içeriğin
+  KENDİ arka plan/rengini de aynı anda büyütmen gerekir — yoksa "contain" zoom'da açığa çıkan
+  boşlukta ne varsa (bir alt katmandaki UI, stat paneli vs.) görünür hale gelir.** Bu oturumda hex
+  harita `Icerik`'i tile sayısına göre dinamik büyütülünce, `Icerik`'in içindeki sabit-boyutlu arka
+  plan paneli geride kalıp boşluk bıraktı. En sağlam çözüm: içeriğin BÜYÜKLÜĞÜNDEN TAMAMEN BAĞIMSIZ,
+  görüntü alanının kendisine (zoom/pan uygulanan objenin EBEVEYNİNE) anchor-stretch ile her zaman
+  tam kaplayan, sabit ayrı bir arka plan eklemek — böylece zoom/pan ne olursa olsun asla boşluk kalmaz.
+
+---
+
+## 8) UZUN VADELİ YOL HARİTASI (Roadmap)
+
+Bu oturumda kullanıcı, oyunda "hâlâ havada kalan" büyük mekanikleri tek bir "bilinç akışı" mesajıyla
+döktü: kart mantığı, focus tree mantığı, Manpower mekaniğinde geliştirmeler, Refah/İnanç/Teknoloji
+statları, kralın şahsi statları, kaleler/şehirler/köyler içeren kapsamlı büyük bir harita, daha
+detaylı bir diplomasi, düşman AI'ı, Ansiklopedi, detaylandırılmış diyaloglar/sonuç fonksiyonları,
+ve "Sadakat neden liquid değil" şikayeti. Bunlar mimari bağımlılığa ve kodlama durumuna göre
+aşağıdaki sıraya kondu (gerekçe: temel/mimari değişiklikler önce, üstüne inşa edilecek içerik/derinlik
+katmanları sonra, belgeleme/cila (Ansiklopedi) en sona — mekanikler oturmadan yazılan belge iki kere
+yazılır).
+
+1. ✅ **Sadakat mekaniğinin yeniden tasarımı** — TAMAMLANDI (bu oturumda). Küçük, bağımsız, hızlı
+   bir kazanımdı, diğer hiçbir şeye bağımlı değildi.
+2. ✅ **Köy/Şehir/Kale ayrımı + kapsamlı büyük harita** — TAMAMLANDI (bu oturumda). En kritik mimari
+   karardı çünkü kart/focus-tree/teknoloji gibi sistemlerin çoğu "hangi yerleşke türü ne yapabilir"
+   sorusuna dayanacak — bunu sonradan eklemek o zamana kadar yazılan her şeyi yeniden düzenlemek
+   demekti.
+3. ⏳ **Yeni statlar: Refah, İnanç, Teknoloji** — SIRADA, kullanıcı onayladı ama henüz başlanmadı.
+   Yerleşke tipleri netleştiği için (örn. Teknoloji binaları şehre özel olabilir), bu statların
+   "genel mi, köy bazlı mı" (Erzak deseni mi, Altın deseni mi) olacağına karar vermek artık daha kolay.
+4. **Manpower mekaniğinin geliştirilmesi** (gerçekçi ölçek — kullanıcının planı: ileride 500k-1M gibi
+   büyük sayılara çıkabilir, bkz. "Ekonomi Giderleri" bölümündeki not — ve Nüfus/yerleşke sistemine
+   bağlantı). Nüfus/yerleşke sistemi netleşince Manpower'ın nereden geldiği daha net cevaplanır.
+5. **Kralın şahsi statları** — nispeten bağımsız bir katman, ama gerçek anlamı Focus Tree/Kart
+   sistemleriyle ortaya çıkar (örn. "Kralın sağlığı düşükse şu olay tetiklenir").
+6. **Düşman AI'ının geliştirilmesi** — ekonomiyi canlandırmak, garnizon transferi, gerçek bir hedef
+   seçme/karar mantığı. Yerleşke/teknoloji sistemleri netleşmeden anlamsız kalırdı (bkz. Mimari
+   Kararları #30).
+7. **Detaylı diplomasi** — mevcut savaş/barış ikili sistemine derinlik (ittifak, ticaret anlaşması,
+   vassallık vs.). AI biraz olgunlaşınca daha anlamlı olur.
+8. **Focus Tree mantığı** — uzun vadeli hedef sistemi (HOI4 tarzı), anlamlı olması için üstüne
+   inşa edileceği statlar (Teknoloji, İnanç, Refah, Ordu) zaten var olmalı.
+9. **Kart mantığı** (event kartları) — içerik sunma sistemi, muhtemelen mevcut diyalog sistemine
+   ek/alternatif; ne demek istediği henüz netleştirilmedi, Focus Tree ile paralel/sonrasında
+   düşünülebilir.
+10. **Diyalogların/sonuç fonksiyonlarının detaylandırılması** — bu tek seferlik bir adım DEĞİL,
+    her yeni sistem (statlar, kart, focus tree) eklendikçe sürekli genişleyecek, arka planda devam
+    eden bir çaba.
+11. **Ansiklopedi** — EN SONA bırakıldı, mekanikler değişe değişe yazılmasın diye, oturunca tek
+    seferde yazılacak.
+
+**Not:** Bu sıralama kullanıcı tarafından onaylandı ama katı bir sözleşme değil — her adımdan önce
+yine Q&A ile netleştirilip küçük parçalara bölünerek uygulanacak (bkz. "1) TAKIM VE ANLATIM TARZI").
+Yeni bir oturum bu roadmap'i okuyunca, "3. Yeni statlar" ile devam etmesi bekleniyor, ama kullanıcı
+öncelik değiştirmek isterse buna göre esnetilebilir.

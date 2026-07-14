@@ -38,7 +38,9 @@ public class DayResolver
                 {
                     if (devam.Emir.HedefKoy != null)
                     {
-                        devam.Emir.HedefKoy.Garnizon += devam.Emir.GonderilenManpower;
+                        devam.Emir.HedefKoy.Garnizon = Mathf.Min(
+                            devam.Emir.HedefKoy.Garnizon + devam.Emir.GonderilenManpower,
+                            devam.Emir.HedefKoy.MaxGarnizon);
                         BildirimYoneticisi.Instance.Bildirim("Garnizon (" + devam.Emir.HedefKoy.Isim + ")", devam.Emir.GonderilenManpower);
                         mesajListesi.Add("<color=yellow>" + devam.Emir.GonderilenManpower + " asker " + devam.Emir.HedefKoy.Isim + " koyune ulasti, garnizona katildi.</color>");
                     }
@@ -80,7 +82,7 @@ public class DayResolver
     {
         if (emir.KaynakKoy != null)
         {
-            emir.KaynakKoy.Garnizon += miktar;
+            emir.KaynakKoy.Garnizon = Mathf.Min(emir.KaynakKoy.Garnizon + miktar, emir.KaynakKoy.MaxGarnizon);
             BildirimYoneticisi.Instance.Bildirim("Garnizon (" + emir.KaynakKoy.Isim + ")", miktar);
         }
         else
@@ -118,7 +120,7 @@ public class DayResolver
 
         if (emir.GarnizonEkler && emir.HedefKoy != null)
         {
-            emir.HedefKoy.Garnizon += emir.GonderilenManpower;
+            emir.HedefKoy.Garnizon = Mathf.Min(emir.HedefKoy.Garnizon + emir.GonderilenManpower, emir.HedefKoy.MaxGarnizon);
             BildirimYoneticisi.Instance.Bildirim("Garnizon (" + emir.HedefKoy.Isim + ")", emir.GonderilenManpower);
             mesajListesi.Add("<color=yellow>" + emir.GonderilenManpower + " asker " + emir.HedefKoy.Isim + " koyune ulasti, garnizona katildi.</color>");
             return;
@@ -155,10 +157,19 @@ public class DayResolver
 
         if (emir.SaldiriBaslatir && emir.HedefKoy != null)
         {
-            float etkinSavunma = KoyYoneticisi.Instance.EtkinSavunmaHesapla(emir.HedefKoy);
-            float toplamGuc = emir.GonderilenManpower + etkinSavunma;
-            float saldiriSansi = toplamGuc <= 0f ? 0.5f : emir.GonderilenManpower / toplamGuc;
-            bool saldiriBasarili = Random.Range(0f, 1f) < saldiriSansi;
+            bool saldiriBasarili;
+            if (emir.HedefKoy.Garnizon <= 0)
+            {
+                // Hedef koyde hic garnizon yoksa savunmasiz sayilir, zar atilmadan direkt ele geciriliyor.
+                saldiriBasarili = true;
+            }
+            else
+            {
+                float etkinSavunma = KoyYoneticisi.Instance.EtkinSavunmaHesapla(emir.HedefKoy);
+                float toplamGuc = emir.GonderilenManpower + etkinSavunma;
+                float saldiriSansi = toplamGuc <= 0f ? 0.5f : emir.GonderilenManpower / toplamGuc;
+                saldiriBasarili = Random.Range(0f, 1f) < saldiriSansi;
+            }
 
             float kayipYuzdesi = saldiriBasarili ? 0.15f : 0.80f;
             int kaybedilenManpower = Mathf.RoundToInt(emir.GonderilenManpower * kayipYuzdesi);
@@ -167,7 +178,7 @@ public class DayResolver
             if (saldiriBasarili)
             {
                 emir.HedefKoy.Sahip = KoyYoneticisi.Instance.OyuncuKralligi;
-                emir.HedefKoy.Garnizon = hayattaKalanManpower;
+                emir.HedefKoy.Garnizon = Mathf.Min(hayattaKalanManpower, emir.HedefKoy.MaxGarnizon);
 
                 if (HexHaritaCizici.Instance != null)
                 {

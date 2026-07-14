@@ -23,4 +23,7 @@ public class KoyData
 
     public KrallikData Sahip;
     public int Garnizon = 0;
+    public int MaxGarnizon = 50;
+
+    public YerlesimTipi Tip = YerlesimTipi.Koy;
 }

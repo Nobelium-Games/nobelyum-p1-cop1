@@ -395,7 +395,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         Debug.Log("Secenek uygulandi: " + secenek.SecenekMetni +
-            " -> Sadakat: " + GameManager.Instance.State.Sadakat);
+            " -> Sadakat: " + KoyYoneticisi.Instance.OrtalamaSadakat());
 
         if (string.IsNullOrEmpty(secenek.SonrakiNodeID))
         {

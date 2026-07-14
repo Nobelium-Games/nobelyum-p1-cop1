@@ -25,8 +25,12 @@ public class HexHaritaCizici : MonoBehaviour
     public float KaynakIkonBoyutu = 16f;
     public Color SinirRengi = Color.black;
     public Color ErzakIkonRengi = new Color(0.3f, 0.8f, 0.3f);
-    public Sprite YerlesimIkonu;
+    public Sprite KoyIkonu;
+    public Sprite SehirIkonu;
+    public Sprite KaleIkonu;
     public TMP_Text GorunumMetni;
+    public HaritaKontrol Kontrol;
+    public float IcerikKenarPayi = 100f;
 
     Sprite hexagonSprite;
     Sprite hexagonCerceveSprite;
@@ -40,6 +44,8 @@ public class HexHaritaCizici : MonoBehaviour
     Dictionary<KoyData, GameObject> yerlesimIsimGorselleri = new Dictionary<KoyData, GameObject>();
     Dictionary<KoyData, GameObject> merkezSinirGorselleri = new Dictionary<KoyData, GameObject>();
 
+    GameObject sabitArkaplan;
+
     void Start()
     {
         Instance = this;
@@ -49,6 +55,7 @@ public class HexHaritaCizici : MonoBehaviour
         kareSprite = SekilUretici.KareSprite();
         daireSprite = SekilUretici.DaireSprite();
 
+        SabitArkaplaniOlusturVeyaGuncelle();
         EskiCizimleriTemizle();
         koyTileSinirlari.Clear();
         tileGorselleri.Clear();
@@ -56,9 +63,72 @@ public class HexHaritaCizici : MonoBehaviour
         kaynakGorselleri.Clear();
         yerlesimIsimGorselleri.Clear();
         merkezSinirGorselleri.Clear();
+        IcerikBoyutunuGuncelle();
         TileleriCiz();
         YerlesimleriCiz();
         GorunumMetniniGuncelle();
+
+        if (Kontrol != null)
+        {
+            Kontrol.YenidenHesaplaVeSinirla();
+        }
+    }
+
+    void SabitArkaplaniOlusturVeyaGuncelle()
+    {
+        // Icerik (harita icerigi) zoom/pan ile kucalup buyuyebiliyor - haritanin tamami ekrana
+        // sigdirilinca (contain) kisa kenarda bosluk kalabiliyor. Bu bosluk her zaman kapali
+        // kalsin diye, Icerik'in ebeveynine (goruntu alanina), zoom/pan'dan BAGIMSIZ, her zaman
+        // tam ekran kaplayan sabit bir arka plan ekliyoruz.
+        Transform ebeveyn = Icerik.parent;
+
+        if (sabitArkaplan == null)
+        {
+            Transform mevcut = ebeveyn.Find("HaritaSabitArkaplan");
+            if (mevcut != null)
+            {
+                sabitArkaplan = mevcut.gameObject;
+            }
+        }
+
+        if (sabitArkaplan == null)
+        {
+            sabitArkaplan = new GameObject("HaritaSabitArkaplan");
+            RectTransform rect = sabitArkaplan.AddComponent<RectTransform>();
+            rect.SetParent(ebeveyn, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            Image resim = sabitArkaplan.AddComponent<Image>();
+            resim.color = new Color(0.2830189f, 0.20783761f, 0.14017445f, 1f);
+            resim.raycastTarget = false;
+        }
+
+        sabitArkaplan.transform.SetAsFirstSibling();
+    }
+
+    void IcerikBoyutunuGuncelle()
+    {
+        float maxX = 0f;
+        float maxY = 0f;
+
+        foreach (HexTileData tile in HaritaYoneticisi.Instance.Tileler)
+        {
+            Vector2 konum = EksenselKonum(tile.Koordinat);
+            maxX = Mathf.Max(maxX, Mathf.Abs(konum.x));
+            maxY = Mathf.Max(maxY, Mathf.Abs(konum.y));
+        }
+
+        Vector2 yeniBoyut = new Vector2((maxX + IcerikKenarPayi) * 2f, (maxY + IcerikKenarPayi) * 2f);
+        Icerik.sizeDelta = yeniBoyut;
+
+        // Bu script'in oldugu obje (HaritaArkaplanGorseli), haritanin arka plan rengini kaplayan
+        // panel - Icerik ile ayni boyuta gelmezse buyuyen harita onun disina tasar.
+        RectTransform arkaplanRect = GetComponent<RectTransform>();
+        arkaplanRect.sizeDelta = yeniBoyut;
+        arkaplanRect.anchoredPosition = Vector2.zero;
     }
 
     void Update()
@@ -99,6 +169,19 @@ public class HexHaritaCizici : MonoBehaviour
         GorunumMetni.text = "F1: Siyasi | F2: Terrain | F3: Kaynak  -  Aktif: " + aktifAdi;
     }
 
+    Sprite YerlesimIkonuSec(YerlesimTipi tip)
+    {
+        switch (tip)
+        {
+            case YerlesimTipi.Sehir:
+                return SehirIkonu;
+            case YerlesimTipi.Kale:
+                return KaleIkonu;
+            default:
+                return KoyIkonu;
+        }
+    }
+
     Color TileRenginiHesapla(HexTileData tile)
     {
         if (AktifGorunum == HaritaGorunumu.Terrain || AktifGorunum == HaritaGorunumu.Kaynak)
@@ -121,7 +204,8 @@ public class HexHaritaCizici : MonoBehaviour
 
         foreach (KeyValuePair<KoyData, Image> kv in yerlesimGorselleri)
         {
-            Color rengi = YerlesimIkonu != null ? Color.white : (kv.Key.Sahip != null ? kv.Key.Sahip.HaritaRengi : Color.white);
+            bool ikonVar = YerlesimIkonuSec(kv.Key.Tip) != null;
+            Color rengi = ikonVar ? Color.white : (kv.Key.Sahip != null ? kv.Key.Sahip.HaritaRengi : Color.white);
             rengi.a = kaynakGorunuyor ? 0f : 1f;
             kv.Value.color = rengi;
         }
@@ -276,9 +360,11 @@ public class HexHaritaCizici : MonoBehaviour
             GameObject obje = new GameObject("Yerlesim_" + koy.Isim);
             RectTransform rect = SabitCapaliRectOlustur(obje, Icerik);
 
+            Sprite yerlesimIkonu = YerlesimIkonuSec(koy.Tip);
+
             Image resim = obje.AddComponent<Image>();
-            resim.sprite = YerlesimIkonu != null ? YerlesimIkonu : kareSprite;
-            resim.color = YerlesimIkonu != null ? Color.white : (koy.Sahip != null ? koy.Sahip.HaritaRengi : Color.white);
+            resim.sprite = yerlesimIkonu != null ? yerlesimIkonu : kareSprite;
+            resim.color = yerlesimIkonu != null ? Color.white : (koy.Sahip != null ? koy.Sahip.HaritaRengi : Color.white);
             yerlesimGorselleri[koy] = resim;
 
             float boyut = YerlesimBoyutu * (1f + 0.25f * (koy.TileMenzili - 1));

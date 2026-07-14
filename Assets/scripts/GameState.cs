@@ -5,7 +5,6 @@ public class GameState
 {
     public int Gun = 1;
 
-    public int Sadakat = 50;
     public int Altin = 50;
     public int Manpower = 50;
 
@@ -53,7 +52,7 @@ public class GameState
             case "Nufus":
                 return KoyYoneticisi.Instance.ToplamNufus();
             case "Sadakat":
-                return Sadakat + KoyYoneticisi.Instance.OrtalamaSadakat();
+                return KoyYoneticisi.Instance.OrtalamaSadakat();
             case "Altin":
                 return Altin;
             case "Manpower":
@@ -76,7 +75,7 @@ public class GameState
                 KoyYoneticisi.Instance.NufusDegistir(miktar);
                 break;
             case "Sadakat":
-                Sadakat = UnityEngine.Mathf.Clamp(Sadakat + miktar, 0, 100);
+                KoyYoneticisi.Instance.SadakatDegistir(miktar);
                 break;
             case "Altin":
                 Altin += miktar;

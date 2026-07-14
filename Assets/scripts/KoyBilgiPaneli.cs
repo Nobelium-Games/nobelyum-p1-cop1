@@ -40,7 +40,7 @@ public class KoyBilgiPaneli : MonoBehaviour
 
         float etkinSavunma = KoyYoneticisi.Instance.EtkinSavunmaHesapla(koy);
         SavunmaText.text = "Savunma: " + Mathf.RoundToInt(etkinSavunma) + " (baz: " + koy.Savunma + ")";
-        GarnizonText.text = "Garnizon: " + koy.Garnizon;
+        GarnizonText.text = "Garnizon: " + koy.Garnizon + "/" + koy.MaxGarnizon;
 
         DurumText.gameObject.SetActive(bizeAit);
         SadakatText.gameObject.SetActive(bizeAit);
@@ -53,7 +53,15 @@ public class KoyBilgiPaneli : MonoBehaviour
         if (bizeAit)
         {
             DurumText.text = koy.IsyanHalinde ? "<color=red>ISYAN HALINDE</color>" : "";
-            SadakatText.text = "Sadakat: " + koy.Sadakat;
+            SadakatText.text = "<link=\"gelir\">Sadakat: " + koy.Sadakat + "</link>";
+
+            StatTooltip sadakatTooltip = SadakatText.GetComponent<StatTooltip>();
+            if (sadakatTooltip != null)
+            {
+                KoyData koyReferansiSadakat = koy;
+                sadakatTooltip.GelirMetinFonksiyonu = () => KoyYoneticisi.Instance.SadakatDagilimKoyBilgisiMetni(koyReferansiSadakat);
+            }
+
             ErzakText.text = "Erzak: " + koy.Erzak;
             NufusText.text = "Nufus: " + koy.Nufus + " <sup>" + YieldMetni(KoyYoneticisi.Instance.NufusYieldHesapla(koy), koy.IsyanHalinde) + "</sup>";
             ErzakYieldText.text = "<link=\"gelir\">Erzak Yield: " + YieldMetni(KoyYoneticisi.Instance.NetErzakYieldHesapla(koy), koy.IsyanHalinde) + "</link>";

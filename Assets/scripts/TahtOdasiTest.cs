@@ -7,7 +7,7 @@ public class TahtOdasiTest : MonoBehaviour
         GameManager.Instance.State.StatDegistir("Sadakat", 5);
         GameManager.Instance.State.StatDegistir("Erzak", -3);
 
-        Debug.Log("Karar verildi -> Sadakat: " + GameManager.Instance.State.Sadakat +
+        Debug.Log("Karar verildi -> Sadakat: " + GameManager.Instance.State.StatDegerAl("Sadakat") +
                 " Erzak: " + GameManager.Instance.State.StatDegerAl("Erzak"));
     }
 }

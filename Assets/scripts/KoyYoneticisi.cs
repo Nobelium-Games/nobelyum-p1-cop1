@@ -14,6 +14,12 @@ public class KoyYoneticisi : MonoBehaviour
     public float NufusEsik = 1f;
     public float NufusKatsayi = 10f;
 
+    [Header("Sadakat Ayarlari")]
+    public float SadakatEsik = 1f;
+    public float SadakatKatsayi = 2f;
+    public float SinirBaskisiMenzili = 5f;
+    public float SinirBaskisiMax = 2f;
+
     [Header("Savas Ayarlari")]
     public float GarnizonKatsayisi = 10f;
     public float DusmanSaldiriIhtimali = 0.2f;
@@ -334,16 +340,25 @@ public class KoyYoneticisi : MonoBehaviour
                 continue;
             }
 
-            float etkinSavunma = EtkinSavunmaHesapla(hedefKoy);
-            float saldiriSansi = dusmanKoy.Garnizon / (dusmanKoy.Garnizon + etkinSavunma);
-            bool basarili = Random.Range(0f, 1f) < saldiriSansi;
+            bool basarili;
+            if (hedefKoy.Garnizon <= 0)
+            {
+                // Hedef koyde hic garnizon yoksa savunmasiz sayilir, zar atilmadan direkt ele geciriliyor.
+                basarili = true;
+            }
+            else
+            {
+                float etkinSavunma = EtkinSavunmaHesapla(hedefKoy);
+                float saldiriSansi = dusmanKoy.Garnizon / (dusmanKoy.Garnizon + etkinSavunma);
+                basarili = Random.Range(0f, 1f) < saldiriSansi;
+            }
 
             if (basarili)
             {
                 int hayattaKalan = Mathf.RoundToInt(dusmanKoy.Garnizon * (1f - 0.15f));
                 dusmanKoy.Garnizon = 0;
                 hedefKoy.Sahip = dusmanKoy.Sahip;
-                hedefKoy.Garnizon = hayattaKalan;
+                hedefKoy.Garnizon = Mathf.Min(hayattaKalan, hedefKoy.MaxGarnizon);
 
                 mesajListesi.Add("<color=red>" + dusmanKoy.Sahip.Isim + " ordusu " + hedefKoy.Isim + " koyumuzu ele gecirdi!</color>");
 
@@ -446,5 +461,93 @@ public class KoyYoneticisi : MonoBehaviour
             toplam += koy.Sadakat;
         }
         return toplam / bizimKoylerimiz.Count;
+    }
+
+    public void SadakatDegistir(int miktar)
+    {
+        List<KoyData> bizimKoylerimiz = Koyler.FindAll(koy => koy.Sahip == OyuncuKralligi);
+        if (bizimKoylerimiz.Count == 0)
+        {
+            return;
+        }
+
+        int koyBasinaDusen = miktar / bizimKoylerimiz.Count;
+        int kalan = miktar % bizimKoylerimiz.Count;
+
+        for (int i = 0; i < bizimKoylerimiz.Count; i++)
+        {
+            int buKoyeUygulanacak = koyBasinaDusen + (i < kalan ? 1 : 0);
+            bizimKoylerimiz[i].Sadakat = Mathf.Clamp(bizimKoylerimiz[i].Sadakat + buKoyeUygulanacak, 0, 100);
+        }
+    }
+
+    public int SadakatYieldHesapla(KoyData koy)
+    {
+        if (koy.Nufus <= 0)
+        {
+            return 0;
+        }
+
+        float kisiBasiStok = (float)koy.Erzak / koy.Nufus;
+        return Mathf.RoundToInt((kisiBasiStok - SadakatEsik) * SadakatKatsayi);
+    }
+
+    int SinirBaskisiHesapla(KoyData koy)
+    {
+        if (Harita == null)
+        {
+            return 0;
+        }
+
+        int enKucukMesafe = int.MaxValue;
+        foreach (KoyData digerKoy in Koyler)
+        {
+            if (digerKoy.Sahip == OyuncuKralligi || digerKoy.Sahip == null || !SavastaMi(digerKoy.Sahip))
+            {
+                continue;
+            }
+
+            int mesafe = Harita.KoyMesafesi(koy, digerKoy);
+            if (mesafe < enKucukMesafe)
+            {
+                enKucukMesafe = mesafe;
+            }
+        }
+
+        if (enKucukMesafe == int.MaxValue || enKucukMesafe > SinirBaskisiMenzili)
+        {
+            return 0;
+        }
+
+        float oran = 1f - (enKucukMesafe / SinirBaskisiMenzili);
+        return -Mathf.RoundToInt(SinirBaskisiMax * oran);
+    }
+
+    public string SadakatDagilimKoyBilgisiMetni(KoyData koy)
+    {
+        int drift = SadakatYieldHesapla(koy);
+        int sinirBaskisi = SinirBaskisiHesapla(koy);
+
+        string metin = "Erzak/Nufus: " + IsaretliMetin(drift);
+        if (sinirBaskisi != 0)
+        {
+            metin += "\nSinir Baskisi: " + IsaretliMetin(sinirBaskisi);
+        }
+        return metin;
+    }
+
+    public void SadakatiGunlukGuncelle()
+    {
+        foreach (KoyData koy in Koyler)
+        {
+            if (koy.Sahip != OyuncuKralligi)
+            {
+                continue;
+            }
+
+            int drift = SadakatYieldHesapla(koy);
+            int sinirBaskisi = SinirBaskisiHesapla(koy);
+            koy.Sadakat = Mathf.Clamp(koy.Sadakat + drift + sinirBaskisi, 0, 100);
+        }
     }
 }

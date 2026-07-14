@@ -47,6 +47,7 @@ public class DayCycleManager : MonoBehaviour
     {
         GameManager.Instance.State.BaseGeliriUygula();
         KoyYoneticisi.Instance.ErzagiGunlukArtir();
+        KoyYoneticisi.Instance.SadakatiGunlukGuncelle();
         GameManager.Instance.State.Altin += KoyYoneticisi.Instance.ToplamAltinYieldi();
         GameManager.Instance.State.GiderleriUygula();
     }

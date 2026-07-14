@@ -2360,7 +2360,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   State:
     Gun: 1
-    Sadakat: 0
     Altin: 50
     Manpower: 50
     ErzakBaseGelir: 0
@@ -3740,6 +3739,7 @@ GameObject:
   - component: {fileID: 903654198}
   - component: {fileID: 903654200}
   - component: {fileID: 903654199}
+  - component: {fileID: 903654201}
   m_Layer: 5
   m_Name: SadakatText
   m_TagString: Untagged
@@ -3866,6 +3866,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 903654197}
   m_CullTransparentMesh: 1
+--- !u!114 &903654201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 903654197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0a7e1dede04eb44ba778e6f6bfe5bec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StatTooltip
 --- !u!1 &904622787
 GameObject:
   m_ObjectHideFlags: 0
@@ -4310,6 +4322,8 @@ MonoBehaviour:
         IsyanHalinde: 0
         Sahip: {fileID: 0}
         Garnizon: 0
+        MaxGarnizon: 50
+        Tip: 0
       BinaSlotuKullanir: 0
       IsyanliKoyGerekli: 0
       ManpowerMiktariSorulsun: 0
@@ -4334,6 +4348,8 @@ MonoBehaviour:
         IsyanHalinde: 0
         Sahip: {fileID: 0}
         Garnizon: 0
+        MaxGarnizon: 50
+        Tip: 0
       GarnizonEkler: 0
       HedefKrallik: {fileID: 0}
       DiplomasiyiArttirir: 0
@@ -7786,6 +7802,8 @@ MonoBehaviour:
   ErzakIkonRengi: {r: 0.3, g: 0.8, b: 0.3, a: 1}
   YerlesimIkonu: {fileID: 8579738433832949323, guid: e095371cd57ec464fbcc49e5f9ea2b89, type: 3}
   GorunumMetni: {fileID: 1776652540}
+  Kontrol: {fileID: 1583662357}
+  IcerikKenarPayi: 100
 --- !u!1 &1588302630
 GameObject:
   m_ObjectHideFlags: 0
@@ -10041,7 +10059,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KoyYoneticisi
   Koyler:
-  - Isim: "Babanya K\xF6y\xFC"
+  - Isim: "Babanya \u015Eehri"
     Sadakat: 80
     Erzak: 2
     Nufus: 30
@@ -10049,13 +10067,66 @@ MonoBehaviour:
     BaseErzakYield: 1
     AltinYield: 5
     Savunma: 20
-    MerkezTileKoordinati: {x: 0, y: 0, z: 0}
-    TileMenzili: 1
+    MerkezTileKoordinati: {x: 5, y: 0, z: 0}
+    TileMenzili: 2
     MaxBinaSlotu: 3
     DoluBinaSlotu: 0
     IsyanHalinde: 0
     Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
     Garnizon: 0
+    MaxGarnizon: 80
+    Tip: 1
+  - Isim: "Vensa \u015Eehiri"
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 20
+    MerkezTileKoordinati: {x: 8, y: 0, z: 0}
+    TileMenzili: 2
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 80
+    Tip: 1
+  - Isim: Kirmiz Kalesi
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 40
+    MerkezTileKoordinati: {x: 2, y: -2, z: 0}
+    TileMenzili: 1
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 150
+    Tip: 2
+  - Isim: Astir Kalesi
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 40
+    MerkezTileKoordinati: {x: 2, y: 2, z: 0}
+    TileMenzili: 1
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 150
+    Tip: 2
   - Isim: "Panpi K\xF6y\xFC"
     Sadakat: 80
     Erzak: 20
@@ -10064,13 +10135,15 @@ MonoBehaviour:
     BaseErzakYield: 1
     AltinYield: 5
     Savunma: 20
-    MerkezTileKoordinati: {x: 4, y: 0, z: 0}
+    MerkezTileKoordinati: {x: 5, y: -4, z: 0}
     TileMenzili: 1
     MaxBinaSlotu: 3
     DoluBinaSlotu: 0
     IsyanHalinde: 0
     Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
     Garnizon: 0
+    MaxGarnizon: 50
+    Tip: 0
   - Isim: "Gigi K\xF6y\xFC"
     Sadakat: 10
     Erzak: 20
@@ -10079,14 +10152,16 @@ MonoBehaviour:
     BaseErzakYield: 1
     AltinYield: 5
     Savunma: 20
-    MerkezTileKoordinati: {x: 0, y: 4, z: 0}
+    MerkezTileKoordinati: {x: 5, y: 4, z: 0}
     TileMenzili: 1
     MaxBinaSlotu: 3
     DoluBinaSlotu: 0
     IsyanHalinde: 0
     Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
     Garnizon: 0
-  - Isim: "Tartara K\xF6y\xFC"
+    MaxGarnizon: 50
+    Tip: 0
+  - Isim: "Dolen K\xF6y\xFC"
     Sadakat: 50
     Erzak: 20
     Nufus: 30
@@ -10094,16 +10169,107 @@ MonoBehaviour:
     BaseErzakYield: 1
     AltinYield: 5
     Savunma: 20
-    MerkezTileKoordinati: {x: -4, y: 4, z: 0}
+    MerkezTileKoordinati: {x: 8, y: -3, z: 0}
+    TileMenzili: 1
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 50
+    Tip: 0
+  - Isim: "Harmis K\xF6y\xFC"
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 20
+    MerkezTileKoordinati: {x: 8, y: 3, z: 0}
+    TileMenzili: 1
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 50
+    Tip: 0
+  - Isim: "Rekaz \u015Eehri"
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 20
+    MerkezTileKoordinati: {x: -5, y: 0, z: 0}
+    TileMenzili: 2
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 37f379bf49cbd891b090ba9f7de72b2c, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 80
+    Tip: 1
+  - Isim: Vulgar Kallesi
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 40
+    MerkezTileKoordinati: {x: -2, y: 2, z: 0}
     TileMenzili: 1
     MaxBinaSlotu: 3
     DoluBinaSlotu: 0
     IsyanHalinde: 0
     Sahip: {fileID: 11400000, guid: 37f379bf49cbd891b090ba9f7de72b2c, type: 2}
     Garnizon: 20
+    MaxGarnizon: 150
+    Tip: 2
+  - Isim: Tartara Kalesi
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 40
+    MerkezTileKoordinati: {x: -2, y: -2, z: 0}
+    TileMenzili: 1
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 37f379bf49cbd891b090ba9f7de72b2c, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 150
+    Tip: 2
+  - Isim: "Sombra K\xF6y\xFC"
+    Sadakat: 50
+    Erzak: 20
+    Nufus: 30
+    ErzakYield: 1
+    BaseErzakYield: 1
+    AltinYield: 5
+    Savunma: 20
+    MerkezTileKoordinati: {x: -5, y: 3, z: 0}
+    TileMenzili: 1
+    MaxBinaSlotu: 3
+    DoluBinaSlotu: 0
+    IsyanHalinde: 0
+    Sahip: {fileID: 11400000, guid: 37f379bf49cbd891b090ba9f7de72b2c, type: 2}
+    Garnizon: 20
+    MaxGarnizon: 50
+    Tip: 0
   OyuncuKralligi: {fileID: 11400000, guid: 07cf29f791eb9858001bc8aef79d4bcb, type: 2}
   NufusEsik: 1
   NufusKatsayi: 5
+  SadakatEsik: 1
+  SadakatKatsayi: 2
+  SinirBaskisiMenzili: 15
+  SinirBaskisiMax: 2
   GarnizonKatsayisi: 10
   DusmanSaldiriIhtimali: 0.2
   Diplomasiler:
@@ -10427,7 +10593,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HaritaYoneticisi
   Tileler: []
   HaritaMerkezi: {x: 0, y: 0, z: 0}
-  SinirPayi: 1
+  SinirPayi: 2
   OrduHizi: 3
 --- !u!4 &1954229640
 Transform:
