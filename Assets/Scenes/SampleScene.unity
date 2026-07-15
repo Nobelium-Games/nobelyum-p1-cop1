@@ -7800,7 +7800,9 @@ MonoBehaviour:
   KaynakIkonBoyutu: 16
   SinirRengi: {r: 0, g: 0, b: 0, a: 1}
   ErzakIkonRengi: {r: 0.3, g: 0.8, b: 0.3, a: 1}
-  YerlesimIkonu: {fileID: 8579738433832949323, guid: e095371cd57ec464fbcc49e5f9ea2b89, type: 3}
+  KoyIkonu: {fileID: 6176631235306720873, guid: 32959c2f9152dcf4a88f1067afaee903, type: 3}
+  SehirIkonu: {fileID: -1346362745708459578, guid: a55014d3200cddc479446acf6ad8adb4, type: 3}
+  KaleIkonu: {fileID: 8579738433832949323, guid: e095371cd57ec464fbcc49e5f9ea2b89, type: 3}
   GorunumMetni: {fileID: 1776652540}
   Kontrol: {fileID: 1583662357}
   IcerikKenarPayi: 100
