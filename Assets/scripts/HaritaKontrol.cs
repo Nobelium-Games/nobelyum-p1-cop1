@@ -67,6 +67,16 @@ public class HaritaKontrol : MonoBehaviour, IBeginDragHandler, IDragHandler, ISc
         SinirlaKonum();
     }
 
+    public void Odaklan(Vector2 icerikIciKonum, float hedefZoom)
+    {
+        // Icerik icindeki bir noktayi (ornegin bir koyun merkez tile pozisyonunu)
+        // goruntu alaninin ortasina getirir.
+        float olcek = Mathf.Clamp(hedefZoom, minZoom, MaxZoom);
+        Icerik.localScale = new Vector3(olcek, olcek, 1f);
+        Icerik.anchoredPosition = -icerikIciKonum * olcek;
+        SinirlaKonum();
+    }
+
     void SinirlaKonum()
     {
         float olcek = Icerik.localScale.x;

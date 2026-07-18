@@ -897,7 +897,7 @@ RectTransform:
   m_GameObject: {fileID: 145241639}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3.585837, y: 3.65, z: 1}
+  m_LocalScale: {x: 3.585837, y: 7.226635, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1543320797}
@@ -5388,7 +5388,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1060060978}
   - component: {fileID: 1060060979}
-  - component: {fileID: 1060060980}
   m_Layer: 5
   m_Name: ChildAlignment
   m_TagString: Untagged
@@ -5405,7 +5404,7 @@ RectTransform:
   m_GameObject: {fileID: 1060060977}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.7371628, y: 1.0299662, z: 0.82324}
+  m_LocalScale: {x: 1.7936147, y: 1.2002597, z: 0.81616}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 903654198}
@@ -5450,20 +5449,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &1060060980
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1060060977}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
-  m_Padding: {x: 0, y: 0, z: 0, w: 0}
-  m_Softness: {x: 0, y: 0}
 --- !u!1 &1080689178
 GameObject:
   m_ObjectHideFlags: 0
@@ -5718,7 +5703,7 @@ MonoBehaviour:
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 1000
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -8010,10 +7995,8 @@ MonoBehaviour:
   KoyIkonu: {fileID: 6176631235306720873, guid: 32959c2f9152dcf4a88f1067afaee903, type: 3}
   SehirIkonu: {fileID: -1346362745708459578, guid: a55014d3200cddc479446acf6ad8adb4, type: 3}
   KaleIkonu: {fileID: 8579738433832949323, guid: e095371cd57ec464fbcc49e5f9ea2b89, type: 3}
-  DegirmenIkonu: {fileID: 1410552971748389284, guid: e20f2c792fcb4684a8c6f45a4cb7c72b, type: 3}
-  DegirmenIkonBoyutu: 24
   GorunumMetni: {fileID: 1776652540}
-  KapatButonu: {fileID: 1493361116}
+  KapatButonu: {fileID: 0}
   Kontrol: {fileID: 1583662357}
   IcerikKenarPayi: 100
 --- !u!1 &1588302630
@@ -10009,7 +9992,7 @@ RectTransform:
   m_GameObject: {fileID: 1879844521}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 15.672, y: 7.9947686, z: 1}
+  m_LocalScale: {x: 18.23, y: 7.9251776, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1060060978}
@@ -10017,7 +10000,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -111.8319}
+  m_AnchoredPosition: {x: 0, y: -114.373535}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1879844523

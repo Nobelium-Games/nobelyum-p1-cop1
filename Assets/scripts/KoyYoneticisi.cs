@@ -14,9 +14,6 @@ public class KoyYoneticisi : MonoBehaviour
     public float NufusEsik = 1f;
     public float NufusKatsayi = 10f;
 
-    [Header("Sadakat Ayarlari")]
-    public float SadakatEsik = 1f;
-    public float SadakatKatsayi = 2f;
     public float SinirBaskisiMenzili = 5f;
     public float SinirBaskisiMax = 2f;
 
@@ -240,10 +237,35 @@ public class KoyYoneticisi : MonoBehaviour
         }
     }
 
+    public int ToplamGenelSavunmaBonusu()
+    {
+        int toplam = 0;
+        foreach (KoyData koy in Koyler)
+        {
+            if (koy.Tip != YerlesimTipi.Kale || BizeAitDegil(koy))
+            {
+                continue;
+            }
+            toplam += koy.GenelSavunmaBonusu;
+        }
+        return toplam;
+    }
+
     public float EtkinSavunmaHesapla(KoyData koy)
     {
-        float terrainCarpani = Harita != null ? Harita.KoyunTerrainSavunmaCarpani(koy) : 1f;
-        return koy.Savunma * terrainCarpani * (1f + koy.Garnizon / GarnizonKatsayisi);
+        int genelBonus = koy.Sahip == OyuncuKralligi ? ToplamGenelSavunmaBonusu() : 0;
+        return (koy.Savunma + genelBonus) * (1f + koy.Garnizon / GarnizonKatsayisi);
+    }
+
+    public string SavunmaDagilimKoyBilgisiMetni(KoyData koy)
+    {
+        int genelBonus = ToplamGenelSavunmaBonusu();
+        string metin = "Baz: " + koy.Savunma;
+        if (genelBonus > 0)
+        {
+            metin += "\nKale Bonusu: +" + genelBonus;
+        }
+        return metin;
     }
 
     public List<KoyData> GarnizonluKoyler()
@@ -481,17 +503,6 @@ public class KoyYoneticisi : MonoBehaviour
         }
     }
 
-    public int SadakatYieldHesapla(KoyData koy)
-    {
-        if (koy.Nufus <= 0)
-        {
-            return 0;
-        }
-
-        float kisiBasiStok = (float)koy.Erzak / koy.Nufus;
-        return Mathf.RoundToInt((kisiBasiStok - SadakatEsik) * SadakatKatsayi);
-    }
-
     int SinirBaskisiHesapla(KoyData koy)
     {
         if (Harita == null)
@@ -525,15 +536,12 @@ public class KoyYoneticisi : MonoBehaviour
 
     public string SadakatDagilimKoyBilgisiMetni(KoyData koy)
     {
-        int drift = SadakatYieldHesapla(koy);
         int sinirBaskisi = SinirBaskisiHesapla(koy);
-
-        string metin = "Erzak/Nufus: " + IsaretliMetin(drift);
-        if (sinirBaskisi != 0)
+        if (sinirBaskisi == 0)
         {
-            metin += "\nSinir Baskisi: " + IsaretliMetin(sinirBaskisi);
+            return "";
         }
-        return metin;
+        return "Sinir Baskisi: " + IsaretliMetin(sinirBaskisi);
     }
 
     public void SadakatiGunlukGuncelle()
@@ -545,9 +553,8 @@ public class KoyYoneticisi : MonoBehaviour
                 continue;
             }
 
-            int drift = SadakatYieldHesapla(koy);
             int sinirBaskisi = SinirBaskisiHesapla(koy);
-            koy.Sadakat = Mathf.Clamp(koy.Sadakat + drift + sinirBaskisi, 0, 100);
+            koy.Sadakat = Mathf.Clamp(koy.Sadakat + sinirBaskisi, 0, 100);
         }
     }
 }

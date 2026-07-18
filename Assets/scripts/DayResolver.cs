@@ -50,7 +50,19 @@ public class DayResolver
                     if (devam.Emir.HedefKoy != null && !string.IsNullOrEmpty(devam.Emir.HedefKoy.Isim) && devam.Emir.BaseGeliriStat == "Erzak")
                     {
                         int eskiYield = devam.Emir.HedefKoy.ErzakYield;
-                        devam.Emir.HedefKoy.ErzakYield = eskiYield * 2;
+
+                        if (devam.Emir.HedefTile != null)
+                        {
+                            // Tile secilmisse (yeni sistem): sadece o tile'in Erzak degeri katlanir,
+                            // koyun ErzakYield'i tum tile'lardan yeniden hesaplanir.
+                            devam.Emir.HedefTile.DegirmenVar = true;
+                            devam.Emir.HedefKoy.ErzakYield = HaritaYoneticisi.Instance.KoyunErzakToplami(devam.Emir.HedefKoy);
+                        }
+                        else
+                        {
+                            devam.Emir.HedefKoy.ErzakYield = eskiYield * 2;
+                        }
+
                         BildirimYoneticisi.Instance.Bildirim(
                             "Erzak Yield (" + devam.Emir.HedefKoy.Isim + ")", devam.Emir.HedefKoy.ErzakYield - eskiYield);
                     }

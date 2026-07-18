@@ -100,7 +100,7 @@ public class HaritaYoneticisi : MonoBehaviour
         {
             if (tile.SahipKoy == koy)
             {
-                toplam += tile.ErzakDegeri;
+                toplam += tile.DegirmenVar ? tile.ErzakDegeri * 3 : tile.ErzakDegeri;
             }
         }
         return toplam;
@@ -159,20 +159,5 @@ public class HaritaYoneticisi : MonoBehaviour
     public Color TerrainRengi(HexTileData tile)
     {
         return TerrainVerisi.Bilgi(tile.Terrain).Renk;
-    }
-
-    public float KoyunTerrainSavunmaCarpani(KoyData koy)
-    {
-        float toplam = 0f;
-        int adet = 0;
-        foreach (HexTileData tile in Tileler)
-        {
-            if (tile.SahipKoy == koy)
-            {
-                toplam += TerrainVerisi.Bilgi(tile.Terrain).SavunmaCarpani;
-                adet++;
-            }
-        }
-        return adet > 0 ? toplam / adet : 1f;
     }
 }

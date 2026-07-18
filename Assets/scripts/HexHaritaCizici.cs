@@ -28,7 +28,10 @@ public class HexHaritaCizici : MonoBehaviour
     public Sprite KoyIkonu;
     public Sprite SehirIkonu;
     public Sprite KaleIkonu;
+    public Sprite DegirmenIkonu;
+    public float DegirmenIkonBoyutu = 24f;
     public TMP_Text GorunumMetni;
+    public GameObject KapatButonu;
     public HaritaKontrol Kontrol;
     public float IcerikKenarPayi = 100f;
 
@@ -43,8 +46,13 @@ public class HexHaritaCizici : MonoBehaviour
     Dictionary<HexTileData, GameObject> kaynakGorselleri = new Dictionary<HexTileData, GameObject>();
     Dictionary<KoyData, GameObject> yerlesimIsimGorselleri = new Dictionary<KoyData, GameObject>();
     Dictionary<KoyData, GameObject> merkezSinirGorselleri = new Dictionary<KoyData, GameObject>();
+    Dictionary<HexTileData, GameObject> degirmenGorselleri = new Dictionary<HexTileData, GameObject>();
 
     GameObject sabitArkaplan;
+
+    bool tileSecimModuAktif;
+    KoyData tileSecimKoyu;
+    System.Action<HexTileData> tileSecimCallback;
 
     void Start()
     {
@@ -63,8 +71,10 @@ public class HexHaritaCizici : MonoBehaviour
         kaynakGorselleri.Clear();
         yerlesimIsimGorselleri.Clear();
         merkezSinirGorselleri.Clear();
+        degirmenGorselleri.Clear();
         IcerikBoyutunuGuncelle();
         TileleriCiz();
+        DegirmenIkonlariniGuncelle();
         YerlesimleriCiz();
         GorunumMetniniGuncelle();
 
@@ -133,7 +143,7 @@ public class HexHaritaCizici : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null)
+        if (Keyboard.current == null || tileSecimModuAktif)
         {
             return;
         }
@@ -164,6 +174,9 @@ public class HexHaritaCizici : MonoBehaviour
         {
             return;
         }
+
+        // Tile secim modunda F tuslari zaten devre disi, yazi da gizli dursun.
+        GorunumMetni.gameObject.SetActive(!tileSecimModuAktif);
 
         string aktifAdi = AktifGorunum.ToString();
         GorunumMetni.text = "F1: Siyasi | F2: Terrain | F3: Kaynak  -  Aktif: " + aktifAdi;
@@ -218,16 +231,30 @@ public class HexHaritaCizici : MonoBehaviour
         foreach (KeyValuePair<KoyData, GameObject> kv in yerlesimIsimGorselleri)
         {
             kv.Value.SetActive(!kaynakGorunuyor);
+
+            TMP_Text isimText = kv.Value.GetComponent<TMP_Text>();
+            if (isimText != null)
+            {
+                isimText.color = kv.Key.IsyanHalinde ? Color.red : Color.white;
+            }
         }
 
         foreach (KeyValuePair<KoyData, GameObject> kv in merkezSinirGorselleri)
         {
             kv.Value.SetActive(kaynakGorunuyor);
         }
+
+        // Gece tamamlanan yeni degirmenlerin ikonlari da cizilsin.
+        DegirmenIkonlariniGuncelle();
     }
 
     public void SinirGoster(KoyData koy)
     {
+        // Tile secim modunda sadece hedef koyun siniri gorunur, hover ile baskasi acilamaz.
+        if (tileSecimModuAktif && koy != tileSecimKoyu)
+        {
+            return;
+        }
         if (koy == null || !koyTileSinirlari.ContainsKey(koy))
         {
             return;
@@ -240,6 +267,11 @@ public class HexHaritaCizici : MonoBehaviour
 
     public void SinirGizle(KoyData koy)
     {
+        // Tile secim modunda hedef koyun siniri hep acik kalir, hover-cikisi onu kapatamaz.
+        if (tileSecimModuAktif && koy == tileSecimKoyu)
+        {
+            return;
+        }
         if (koy == null || !koyTileSinirlari.ContainsKey(koy))
         {
             return;
@@ -250,12 +282,200 @@ public class HexHaritaCizici : MonoBehaviour
         }
     }
 
+    HaritaGorunumu tileSecimOncesiGorunum;
+
+    public void TileSecimModunuBaslat(KoyData koy, System.Action<HexTileData> callback)
+    {
+        tileSecimModuAktif = true;
+        tileSecimKoyu = koy;
+        tileSecimCallback = callback;
+
+        // Secim sirasinda hangi tile'da ne kadar Erzak oldugu gorunsun diye
+        // harita gecici olarak Kaynak (F3) gorunumune aliniyor.
+        tileSecimOncesiGorunum = AktifGorunum;
+        AktifGorunum = HaritaGorunumu.Kaynak;
+        RenkleriGuncelle();
+        GorunumMetniniGuncelle();
+
+        SinirGoster(koy);
+        TileSecimGorselleriniGuncelle();
+
+        if (KapatButonu != null)
+        {
+            KapatButonu.SetActive(false);
+        }
+
+        // Harita, secilen koyun merkezine odaklanarak acilsin.
+        if (Kontrol != null)
+        {
+            Kontrol.Odaklan(EksenselKonum(koy.MerkezTileKoordinati), 2f);
+        }
+    }
+
+    public void TileSecimModunuBitir()
+    {
+        // Once mod bayragi kapatiliyor - aksi halde SinirGizle'deki "mod aktifken hedef
+        // koyun siniri kapanamaz" korumasi, buradaki gizlemeyi de engelliyor.
+        KoyData kapanacakKoy = tileSecimKoyu;
+        tileSecimModuAktif = false;
+        tileSecimKoyu = null;
+        tileSecimCallback = null;
+        SinirGizle(kapanacakKoy);
+
+        AktifGorunum = tileSecimOncesiGorunum;
+        RenkleriGuncelle();
+        GorunumMetniniGuncelle();
+
+        if (KapatButonu != null)
+        {
+            KapatButonu.SetActive(true);
+        }
+
+        TileSecimGorselleriniGuncelle();
+    }
+
+    public void DegirmenIkonlariniGuncelle()
+    {
+        foreach (HexTileData tile in HaritaYoneticisi.Instance.Tileler)
+        {
+            if (!tile.DegirmenVar || degirmenGorselleri.ContainsKey(tile))
+            {
+                continue;
+            }
+
+            GameObject obje = new GameObject("Degirmen_" + tile.Koordinat.x + "_" + tile.Koordinat.y);
+            RectTransform rect = SabitCapaliRectOlustur(obje, Icerik);
+
+            Image resim = obje.AddComponent<Image>();
+            resim.sprite = DegirmenIkonu != null ? DegirmenIkonu : daireSprite;
+            resim.color = DegirmenIkonu != null ? Color.white : new Color(0.85f, 0.7f, 0.4f, 1f);
+            resim.raycastTarget = false;
+
+            rect.sizeDelta = new Vector2(DegirmenIkonBoyutu, DegirmenIkonBoyutu);
+            rect.anchoredPosition = EksenselKonum(tile.Koordinat);
+
+            // Degirmen ikonu, yerlesim ikonlarinin/isimlerinin ARKASINDA cizilsin diye
+            // Hierarchy'de onlardan once (ustte) bir siraya taşınıyor.
+            int enKucukYerlesimSirasi = int.MaxValue;
+            foreach (KeyValuePair<KoyData, Image> yerlesim in yerlesimGorselleri)
+            {
+                enKucukYerlesimSirasi = Mathf.Min(enKucukYerlesimSirasi, yerlesim.Value.transform.GetSiblingIndex());
+            }
+            if (enKucukYerlesimSirasi != int.MaxValue)
+            {
+                obje.transform.SetSiblingIndex(enKucukYerlesimSirasi);
+            }
+
+            degirmenGorselleri[tile] = obje;
+        }
+    }
+
+    public void TileHover(HexTileData tile, bool hoverda)
+    {
+        // Sadece tile secim modunda, secilebilir (hedef koye ait ve bos) tile'larda hover etkisi var.
+        if (!tileSecimModuAktif || tile.SahipKoy != tileSecimKoyu || tile.DegirmenVar)
+        {
+            return;
+        }
+
+        if (!tileGorselleri.ContainsKey(tile))
+        {
+            return;
+        }
+
+        tileGorselleri[tile].color = hoverda
+            ? new Color(0.7f, 0.58f, 0.12f, 0.75f)
+            : new Color(1f, 0.85f, 0.2f, 0.6f);
+    }
+
+    public void TileTiklandi(HexTileData tile)
+    {
+        if (!tileSecimModuAktif || tile.SahipKoy != tileSecimKoyu || tile.DegirmenVar)
+        {
+            return;
+        }
+
+        System.Action<HexTileData> callback = tileSecimCallback;
+        TileSecimModunuBitir();
+        callback?.Invoke(tile);
+    }
+
+    void TileSecimGorselleriniGuncelle()
+    {
+        foreach (KeyValuePair<HexTileData, Image> kv in tileGorselleri)
+        {
+            HexTileData tile = kv.Key;
+            Image resim = kv.Value;
+
+            if (!tileSecimModuAktif)
+            {
+                Color normalRenk = TileRenginiHesapla(tile);
+                normalRenk.a = TileSaydamligi;
+                resim.color = normalRenk;
+                resim.raycastTarget = false;
+
+                if (degirmenGorselleri.ContainsKey(tile))
+                {
+                    degirmenGorselleri[tile].SetActive(true);
+                }
+                continue;
+            }
+
+            bool bizimTile = tile.SahipKoy == tileSecimKoyu;
+            bool doluTile = bizimTile && tile.DegirmenVar;
+            bool secilebilir = bizimTile && !doluTile;
+
+            resim.raycastTarget = secilebilir;
+
+            if (secilebilir)
+            {
+                resim.color = new Color(1f, 0.85f, 0.2f, 0.6f);
+            }
+            else if (doluTile)
+            {
+                resim.color = new Color(0.5f, 0.1f, 0.1f, 0.5f);
+            }
+            else
+            {
+                // Secim modunda hedef koy disindaki tile'lar tamamen gizli.
+                resim.color = new Color(0f, 0f, 0f, 0f);
+            }
+
+            // Erzak sayilari da sadece hedef koyun tile'larinda gorunsun.
+            if (kaynakGorselleri.ContainsKey(tile))
+            {
+                kaynakGorselleri[tile].SetActive(bizimTile);
+            }
+
+            // Degirmen ikonlari da secim modunda sadece hedef koyde gorunsun.
+            if (degirmenGorselleri.ContainsKey(tile))
+            {
+                degirmenGorselleri[tile].SetActive(!tileSecimModuAktif || bizimTile);
+            }
+        }
+
+        if (tileSecimModuAktif)
+        {
+            // Diger koylerin merkez cerceveleri de secim sirasinda gizlensin.
+            foreach (KeyValuePair<KoyData, GameObject> kv in merkezSinirGorselleri)
+            {
+                kv.Value.SetActive(kv.Key == tileSecimKoyu);
+            }
+        }
+
+        // Secim modunda gorunmez yerlesim ikonlari hover/tiklama yakalamasin.
+        foreach (KeyValuePair<KoyData, Image> kv in yerlesimGorselleri)
+        {
+            kv.Value.raycastTarget = !tileSecimModuAktif;
+        }
+    }
+
     void EskiCizimleriTemizle()
     {
         for (int i = Icerik.childCount - 1; i >= 0; i--)
         {
             Transform cocuk = Icerik.GetChild(i);
-            if (cocuk.name.StartsWith("Tile_") || cocuk.name.StartsWith("Yerlesim_") || cocuk.name.StartsWith("Kaynak_") || cocuk.name.StartsWith("MerkezSinir_"))
+            if (cocuk.name.StartsWith("Tile_") || cocuk.name.StartsWith("Yerlesim_") || cocuk.name.StartsWith("Kaynak_") || cocuk.name.StartsWith("MerkezSinir_") || cocuk.name.StartsWith("Degirmen_"))
             {
                 Destroy(cocuk.gameObject);
             }
@@ -276,6 +496,9 @@ public class HexHaritaCizici : MonoBehaviour
             resim.color = renk;
             resim.raycastTarget = false;
             tileGorselleri[tile] = resim;
+
+            TileTiklama tileTiklama = obje.AddComponent<TileTiklama>();
+            tileTiklama.Tile = tile;
 
             rect.sizeDelta = new Vector2(TileBoyutu * Mathf.Sqrt(3f), TileBoyutu * 2f);
             rect.anchoredPosition = EksenselKonum(tile.Koordinat);
@@ -387,7 +610,7 @@ public class HexHaritaCizici : MonoBehaviour
             isimText.fontSize = 18f;
             isimText.alignment = TextAlignmentOptions.Center;
             isimText.raycastTarget = false;
-            isimText.color = Color.white;
+            isimText.color = koy.IsyanHalinde ? Color.red : Color.white;
             isimText.text = koy.Isim;
 
             isimObjesi.SetActive(AktifGorunum != HaritaGorunumu.Kaynak);

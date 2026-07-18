@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +18,7 @@ public class DialogueManager : MonoBehaviour
     public OrderManager Orders;
     public GameObject DiyalogKutusuKok;
     public Button GeriButonu;
+    public GameObject HaritaEkrani;
 
     private List<GameObject> olusturulanSecenekButonlari = new List<GameObject>();
 
@@ -156,13 +158,18 @@ public class DialogueManager : MonoBehaviour
 
             bool slotDolu = sablon.BinaSlotuKullanir && koy.DoluBinaSlotu >= koy.MaxBinaSlotu;
             bool isyanEngeli = sablon.BinaSlotuKullanir && koy.IsyanHalinde;
+            bool kaleEngeli = sablon.BinaSlotuKullanir && koy.Tip == YerlesimTipi.Kale;
             bool isyansizEngeli = sablon.IsyanliKoyGerekli && !koy.IsyanHalinde;
-            bool tiklanamaz = slotDolu || isyanEngeli || isyansizEngeli;
+            bool tiklanamaz = slotDolu || isyanEngeli || kaleEngeli || isyansizEngeli;
 
             string etiket = koy.Isim;
             if (isyanEngeli)
             {
                 etiket += " (Isyan Halinde)";
+            }
+            else if (kaleEngeli)
+            {
+                etiket += " (Kalede Insaat Yapilamaz)";
             }
             else if (slotDolu)
             {
@@ -230,6 +237,38 @@ public class DialogueManager : MonoBehaviour
 
         BosverSecenegiEkleIstenirse();
         GeriButonunuGuncelle();
+    }
+
+    void TileSecimAdimi(OrderData sablon, KoyData hedefKoy)
+    {
+        if (sablon.BinaSlotuKullanir)
+        {
+            hedefKoy.DoluBinaSlotu++;
+        }
+
+        DiyalogKutusuKok.SetActive(false);
+        HaritaEkrani.SetActive(true);
+
+        // Harita ekrani daha once hic acilmadiysa HexHaritaCizici'nin Start()'i bu karede henuz
+        // calismamis olabilir (SetActive Awake'i aninda cagirir ama Start'i bir kare geciktirir).
+        // Bir kare bekleyip Instance'in ve tile gorsellerinin hazir oldugundan emin oluyoruz.
+        StartCoroutine(TileSecimBaslatCoroutine(sablon, hedefKoy));
+    }
+
+    IEnumerator TileSecimBaslatCoroutine(OrderData sablon, KoyData hedefKoy)
+    {
+        yield return null;
+
+        HexHaritaCizici.Instance.TileSecimModunuBaslat(hedefKoy, (HexTileData secilenTile) =>
+        {
+            HaritaEkrani.SetActive(false);
+            DiyalogKutusuKok.SetActive(true);
+
+            OrderData kopya = sablon.KopyalaVeKoyAta(hedefKoy);
+            kopya.HedefTile = secilenTile;
+            Orders.EmirEkle(kopya);
+            DiyalogBitir();
+        });
     }
 
     void ManpowerAdimi(OrderData sablon, KoyData hedefKoy, KoyData kaynakKoy)
@@ -378,6 +417,12 @@ public class DialogueManager : MonoBehaviour
             gecmisNodeler.Push(aktifNode);
             KoySecimGoster(sablon, (KoyData secilenKoy) =>
             {
+                if (sablon.TileSecimiGerekli)
+                {
+                    TileSecimAdimi(sablon, secilenKoy);
+                    return;
+                }
+
                 if (sablon.KaynakSecimiGerekli)
                 {
                     KaynakSecimGoster(sablon, secilenKoy, (KoyData secilenKaynak) => ManpowerAdimi(sablon, secilenKoy, secilenKaynak));

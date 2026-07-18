@@ -8,4 +8,5 @@ public class HexTileData
     public int ErzakDegeri;
     public int AltinDegeri;
     public KoyData SahipKoy;
+    public bool DegirmenVar = false;
 }

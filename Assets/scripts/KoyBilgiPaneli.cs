@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -18,6 +19,8 @@ public class KoyBilgiPaneli : MonoBehaviour
     public TMP_Text DurumText;
     public TMP_Text SavunmaText;
     public TMP_Text GarnizonText;
+    public TMP_Text KaleBonusText;
+    public ScrollRect IcerikScrollRect;
 
     void Awake()
     {
@@ -29,6 +32,11 @@ public class KoyBilgiPaneli : MonoBehaviour
     {
         bool bizeAit = koy.Sahip == KoyYoneticisi.Instance.OyuncuKralligi;
 
+        if (IcerikScrollRect != null)
+        {
+            IcerikScrollRect.verticalNormalizedPosition = 1f;
+        }
+
         IsimText.text = koy.Isim;
 
         bool bayrakVar = koy.Sahip != null && koy.Sahip.Bayrak != null;
@@ -38,9 +46,21 @@ public class KoyBilgiPaneli : MonoBehaviour
             BayrakImage.sprite = koy.Sahip.Bayrak;
         }
 
-        float etkinSavunma = KoyYoneticisi.Instance.EtkinSavunmaHesapla(koy);
-        SavunmaText.text = "Savunma: " + Mathf.RoundToInt(etkinSavunma) + " (baz: " + koy.Savunma + ")";
+        int genelSavunmaBonusu = bizeAit ? KoyYoneticisi.Instance.ToplamGenelSavunmaBonusu() : 0;
+        SavunmaText.text = "<link=\"gelir\">Savunma: " + (koy.Savunma + genelSavunmaBonusu) + "</link>";
+
+        StatTooltip savunmaTooltip = SavunmaText.GetComponent<StatTooltip>();
+        if (savunmaTooltip != null)
+        {
+            KoyData koyReferansiSavunma = koy;
+            savunmaTooltip.GelirMetinFonksiyonu = bizeAit
+                ? (Func<string>)(() => KoyYoneticisi.Instance.SavunmaDagilimKoyBilgisiMetni(koyReferansiSavunma))
+                : null;
+        }
+
         GarnizonText.text = "Garnizon: " + koy.Garnizon + "/" + koy.MaxGarnizon;
+
+        bool kale = koy.Tip == YerlesimTipi.Kale;
 
         DurumText.gameObject.SetActive(bizeAit);
         SadakatText.gameObject.SetActive(bizeAit);
@@ -49,6 +69,7 @@ public class KoyBilgiPaneli : MonoBehaviour
         ErzakYieldText.gameObject.SetActive(bizeAit);
         AltinYieldText.gameObject.SetActive(bizeAit);
         SlotText.gameObject.SetActive(bizeAit);
+        KaleBonusText.gameObject.SetActive(bizeAit && kale);
 
         if (bizeAit)
         {
@@ -64,6 +85,7 @@ public class KoyBilgiPaneli : MonoBehaviour
 
             ErzakText.text = "Erzak: " + koy.Erzak;
             NufusText.text = "Nufus: " + koy.Nufus + " <sup>" + YieldMetni(KoyYoneticisi.Instance.NufusYieldHesapla(koy), koy.IsyanHalinde) + "</sup>";
+
             ErzakYieldText.text = "<link=\"gelir\">Erzak Yield: " + YieldMetni(KoyYoneticisi.Instance.NetErzakYieldHesapla(koy), koy.IsyanHalinde) + "</link>";
 
             StatTooltip erzakYieldTooltip = ErzakYieldText.GetComponent<StatTooltip>();
@@ -72,8 +94,14 @@ public class KoyBilgiPaneli : MonoBehaviour
                 KoyData koyReferansi = koy;
                 erzakYieldTooltip.GelirMetinFonksiyonu = () => KoyYoneticisi.Instance.ErzakYieldKoyBilgisiMetni(koyReferansi);
             }
+
             AltinYieldText.text = "Altin Yield: " + YieldMetni(koy.AltinYield, koy.IsyanHalinde);
             SlotText.text = "Bina Slotu: " + koy.DoluBinaSlotu + "/" + koy.MaxBinaSlotu;
+
+            if (kale)
+            {
+                KaleBonusText.text = "Savunma Bonusu: +" + koy.GenelSavunmaBonusu;
+            }
         }
 
         Panel.SetActive(true);

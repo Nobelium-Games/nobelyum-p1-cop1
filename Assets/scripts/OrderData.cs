@@ -30,6 +30,9 @@ public class OrderData
     public KoyData KaynakKoy;
     public bool GarnizonEkler;
 
+    public bool TileSecimiGerekli;
+    public HexTileData HedefTile;
+
     public KrallikData HedefKrallik;
     public bool DiplomasiyiArttirir;
     public int DiplomasiMiktari;
@@ -72,6 +75,7 @@ public class OrderData
         kopya.SaldiriBaslatir = SaldiriBaslatir;
         kopya.KaynakSecimiGerekli = KaynakSecimiGerekli;
         kopya.GarnizonEkler = GarnizonEkler;
+        kopya.TileSecimiGerekli = TileSecimiGerekli;
         return kopya;
     }
 }

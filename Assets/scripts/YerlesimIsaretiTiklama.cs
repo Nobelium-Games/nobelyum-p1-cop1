@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class YerlesimIsaretiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class YerlesimIsaretiTiklama : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IScrollHandler
 {
     public KoyData Koy;
 
@@ -23,7 +23,7 @@ public class YerlesimIsaretiTiklama : MonoBehaviour, IPointerClickHandler, IPoin
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (Koy == null)
+        if (Koy == null || eventData.dragging)
         {
             return;
         }
@@ -38,5 +38,34 @@ public class YerlesimIsaretiTiklama : MonoBehaviour, IPointerClickHandler, IPoin
         }
 
         KoyBilgiPaneli.Instance.Goster(Koy);
+    }
+
+    // Yerlesim ikonlari raycast yakaladigi icin harita pan/zoom olaylari HaritaKontrol'e
+    // ulasmiyor, bu yuzden burada yakalayip elle iletiyoruz.
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        HaritaKontrol kontrol = HexHaritaCizici.Instance != null ? HexHaritaCizici.Instance.Kontrol : null;
+        if (kontrol != null)
+        {
+            kontrol.OnBeginDrag(eventData);
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        HaritaKontrol kontrol = HexHaritaCizici.Instance != null ? HexHaritaCizici.Instance.Kontrol : null;
+        if (kontrol != null)
+        {
+            kontrol.OnDrag(eventData);
+        }
+    }
+
+    public void OnScroll(PointerEventData eventData)
+    {
+        HaritaKontrol kontrol = HexHaritaCizici.Instance != null ? HexHaritaCizici.Instance.Kontrol : null;
+        if (kontrol != null)
+        {
+            kontrol.OnScroll(eventData);
+        }
     }
 }

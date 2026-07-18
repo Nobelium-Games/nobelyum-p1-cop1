@@ -39,8 +39,76 @@ MonoBehaviour:
           Isim: 
           Sadakat: 50
           Erzak: 20
+          Nufus: 30
           ErzakYield: 2
+          BaseErzakYield: 1
           AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
           MaxBinaSlotu: 3
           DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+          MaxGarnizon: 50
+          Tip: 0
+          GenelSavunmaBonusu: 2
         BinaSlotuKullanir: 1
+        IsyanliKoyGerekli: 0
+        ManpowerMiktariSorulsun: 0
+        IsyanBastirir: 0
+        GonderilenManpower: 0
+        DusmanKoyuGerekli: 0
+        SaldiriBaslatir: 0
+        KaynakSecimiGerekli: 0
+        KaynakKoy:
+          Isim: 
+          Sadakat: 50
+          Erzak: 20
+          Nufus: 30
+          ErzakYield: 1
+          BaseErzakYield: 1
+          AltinYield: 0
+          Savunma: 20
+          MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+          TileMenzili: 1
+          MaxBinaSlotu: 3
+          DoluBinaSlotu: 0
+          IsyanHalinde: 0
+          Sahip: {fileID: 0}
+          Garnizon: 0
+          MaxGarnizon: 50
+          Tip: 0
+          GenelSavunmaBonusu: 2
+        GarnizonEkler: 0
+        TileSecimiGerekli: 1
+        HedefTile:
+          Koordinat: {x: 0, y: 0, z: 0}
+          Terrain: 0
+          ErzakDegeri: 0
+          AltinDegeri: 0
+          SahipKoy:
+            Isim: 
+            Sadakat: 50
+            Erzak: 20
+            Nufus: 30
+            ErzakYield: 1
+            BaseErzakYield: 1
+            AltinYield: 0
+            Savunma: 20
+            MerkezTileKoordinati: {x: 0, y: 0, z: 0}
+            TileMenzili: 1
+            MaxBinaSlotu: 3
+            DoluBinaSlotu: 0
+            IsyanHalinde: 0
+            Sahip: {fileID: 0}
+            Garnizon: 0
+            MaxGarnizon: 50
+            Tip: 0
+            GenelSavunmaBonusu: 2
+          DegirmenVar: 0
+        HedefKrallik: {fileID: 0}
+        DiplomasiyiArttirir: 0
+        DiplomasiMiktari: 0
+        BarisTeklifEder: 0

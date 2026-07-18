@@ -26,4 +26,7 @@ public class KoyData
     public int MaxGarnizon = 50;
 
     public YerlesimTipi Tip = YerlesimTipi.Koy;
+
+    // Sadece Tip == Kale icin anlamli: bu kalenin butun krallige sagladigi genel savunma bonusu.
+    public int GenelSavunmaBonusu = 2;
 }

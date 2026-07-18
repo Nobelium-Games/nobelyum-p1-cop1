@@ -1832,3 +1832,117 @@ yazılır).
 yine Q&A ile netleştirilip küçük parçalara bölünerek uygulanacak (bkz. "1) TAKIM VE ANLATIM TARZI").
 Yeni bir oturum bu roadmap'i okuyunca, "3. Yeni statlar" ile devam etmesi bekleniyor, ama kullanıcı
 öncelik değiştirmek isterse buna göre esnetilebilir.
+
+---
+
+## 9) SON OTURUM GÜNCELLEMESİ (18 Temmuz 2026)
+
+> **ÖNEMLİ:** Bu bölüm, yukarıdaki eski bölümlerle çelişiyorsa BU BÖLÜM geçerlidir.
+> Bu oturumda ikinci geliştirici (Emre) ile çalışıldı, önceki oturumlar diğer geliştiriciyle
+> (ahmetberhan) yapılmıştı.
+
+### Kaldırılan / değiştirilen mekanikler
+
+- **Savunmadan terrain (arazi) çarpanı TAMAMEN KALDIRILDI.** `EtkinSavunmaHesapla` artık terrain'e
+  bakmıyor. `HaritaYoneticisi.KoyunTerrainSavunmaCarpani()` fonksiyonu SİLİNDİ.
+  `TerrainVerisi.SavunmaCarpani` alanı hâlâ tabloda duruyor ama artık ÖLÜ VERİ, hiçbir yerden
+  okunmuyor. Terrain'in Erzak/Altın üretimi ve F1/F2/F3 görünümleri aynen çalışıyor.
+- **Sadakat'ın Erzak/Nüfus oranına bağlı pasif sürüklenmesi (drift) TAMAMEN KALDIRILDI.**
+  `SadakatYieldHesapla`, `SadakatEsik`, `SadakatKatsayi` silindi. `SadakatiGunlukGuncelle()` artık
+  SADECE sınır baskısını uyguluyor (savaşta düşmana yakın köylere mesafeye bağlı düşüş — o mekanik
+  duruyor). Sadakat artık sadece (1) diyalog/olay etkileri, (2) sınır baskısı ile değişiyor.
+  Köy Bilgi Paneli'ndeki Sadakat hover'ı da sadece "Sinir Baskisi" satırını gösteriyor (baskı 0 ise
+  hiçbir şey göstermiyor).
+- **Değirmen çarpanı artık tile bazlı ve 3x** (aşağıya bak, "Değirmen tile sistemi").
+
+### Genel Kale Savunma Bonusu (yeni mekanik)
+
+- `KoyData.GenelSavunmaBonusu` (int, **varsayılan 2**, Inspector'dan köy başına değiştirilebilir) —
+  sadece `Tip == Kale` olan yerleşkelerde anlamlı.
+- `KoyYoneticisi.ToplamGenelSavunmaBonusu()` — bize ait VE isyanda olmayan (`BizeAitDegil` filtresi
+  + `Tip == Kale`) kalelerin bonuslarının toplamı. Örn. 3 kale x 2 = +6.
+- **Yeni savunma formülü:** `EtkinSavunma = (koy.Savunma + ToplamGenelKaleBonusu) * (1 + Garnizon/GarnizonKatsayisi)`.
+  Bonus SADECE bize ait köylere ekleniyor (`koy.Sahip == OyuncuKralligi` kontrolü) — düşman köyüne
+  saldırırken bizim kalelerimizin bonusu onun savunmasına EKLENMİYOR (bu bir bug'dı, düzeltildi).
+- Köy Bilgi Paneli'nde Savunma satırı **toplamı** gösteriyor ("Savunma: 26"), etkin savunma
+  (garnizonlu) GÖSTERİLMİYOR; hover'da `SavunmaDagilimKoyBilgisiMetni` ile "Baz: X / Kale Bonusu: +Y"
+  dökümü çıkıyor (SavunmaText'e `<link="gelir">` + StatTooltip deseni, kullanıcı Inspector'dan
+  StatTooltip component'ini ekledi).
+
+### Köy Bilgi Paneli değişiklikleri
+
+- **Tip bazlı gösterim (seçenek A benimsendi):** Üç ayrı panel DEĞİL, tek panel + `koy.Tip`'e göre
+  satır aç/kapa (`SetActive`). Şu an tek fark: `KaleBonusText` (yeni alan, Inspector'a bağlandı)
+  sadece Kale'lerde görünüyor, "Savunma Bonusu: +X" yazıyor (o kalenin kendi katkısı).
+  Erzak Yield HER tipte görünüyor (Köy'de gizlenmesi denendi, kullanıcı istemedi — köylerde de
+  görünecek, tip-özel alan ayrımı İLERİDE konuşulacak).
+- **Panel artık kaydırılabilir (Scroll View):** Panel > Viewport (Rect Mask 2D, sabit boyut) >
+  Icerik (Vertical Layout Group + Content Size Fitter) yapısı kuruldu (kullanıcı Unity'de elle yaptı).
+  Panel'de Scroll Rect var. `KoyBilgiPaneli.IcerikScrollRect` (yeni alan) her `Goster()`'da
+  `verticalNormalizedPosition = 1` ile scroll'u tepeye sarıyor. Icerik top-anchor'lu (statlar
+  yukarıdan başlıyor).
+- Savunma satırı: eski "Savunma: Etkin (baz: X)" formatı KALDIRILDI (yukarıya bak).
+
+### Değirmen tile sistemi (büyük yeni özellik, uçtan uca çalışıyor)
+
+Değirmen artık köyün tamamını değil, oyuncunun SEÇTİĞİ TEK BİR HEX TILE'ı etkiliyor:
+
+- **Veri:** `HexTileData.DegirmenVar` (bool). `OrderData.TileSecimiGerekli` (bool) +
+  `OrderData.HedefTile` (runtime'da atanır, kopyalanmaz). İnşaatçı'nın Değirmen emrinde
+  `TileSecimiGerekli` Inspector'dan işaretli.
+- **Üretim:** `HaritaYoneticisi.KoyunErzakToplami` değirmenli tile'ın Erzak'ını **x3** sayıyor
+  (önce x2'ydi, kullanıcı 3'e çıkarttı). Köyün `ErzakYield`'i değirmen tamamlanınca
+  `KoyunErzakToplami`'ndan yeniden hesaplanıyor (`DayResolver`, `HedefTile != null` dalı:
+  `DegirmenVar = true` + yeniden hesap; `HedefTile == null` ise ESKİ davranış korunuyor, x2).
+- **Akış:** İnşaatçı > Değirmen > köy seç (Kale'ler artık SEÇİLEMEZ, "(Kalede Insaat Yapilamaz)"
+  etiketiyle devre dışı — `DialogueManager.KoySecimGoster`'daki `kaleEngeli`) > harita
+  **tile seçim modunda** açılıyor > tile'a tıklanınca emir kuyruğa giriyor.
+- **Tile seçim modu (`HexHaritaCizici`):** `TileSecimModunuBaslat(koy, callback)` /
+  `TileSecimModunuBitir()` / `TileTiklandi(tile)`:
+  - Harita otomatik **Kaynak (F3) görünümünde** açılıyor (Erzak sayıları görünsün diye), mod bitince
+    önceki görünüme dönüyor. Mod aktifken F1/F2/F3 tuşları devre dışı (`Update`'te erken return).
+  - Hedef köyün boş tile'ları SARI ve tıklanabilir, değirmenli tile'ları KOYU KIRMIZI/tıklanamaz,
+    hedef köy DIŞINDAKİ HER ŞEY TAMAMEN GÖRÜNMEZ (tile, erzak sayısı, değirmen ikonu, merkez
+    çerçevesi hepsi gizli).
+  - Hover: seçilebilir tile üzerine gelince daha koyu sarıya dönüyor (`TileHover`).
+  - Harita, seçilen köyün merkezine **2x zoom'la odaklanarak** açılıyor (`HaritaKontrol.Odaklan` —
+    yeni public fonksiyon, Icerik içi bir noktayı viewport ortasına getirir).
+  - Mod aktifken X (kapat) butonu ve F1/F2/F3 yazısı gizli (`HexHaritaCizici.KapatButonu` yeni alan,
+    Inspector'dan bağlandı; `GorunumMetni` de mod bayrağına göre gizleniyor).
+  - Mod aktifken hover-sınır sistemi kilitli: hedef köyün sınırı hep açık, başka köyünki açılamaz
+    (`SinirGoster`/`SinirGizle` içindeki mod kontrolleri).
+- **`TileTiklama.cs` (YENİ script):** Her tile objesine `TileleriCiz`'de ekleniyor. Tıklama +
+  hover (IPointerEnter/Exit) + **pan/zoom iletme**: tile'lar raycast yakaladığı için scroll/drag
+  olayları `HaritaKontrol`'e ulaşmıyordu — bu script IBeginDrag/IDrag/IScrollHandler uygulayıp
+  olayları `HexHaritaCizici.Instance.Kontrol`'e elle iletiyor (aynı sorun yerleşim ikonlarında da
+  vardı, seçim modunda onların raycast'i kapatılıyor).
+- **Değirmen ikonları haritada:** `HexHaritaCizici.DegirmenIkonu` (Sprite, Inspector'dan atanabilir;
+  atanmazsa kod-üretimli daire) + `DegirmenIkonBoyutu` (24). `DegirmenIkonlariniGuncelle()` —
+  `DegirmenVar` olan her tile'a ikon çiziyor, hem `Start`'ta hem `RenkleriGuncelle`'de çağrılıyor
+  (gece tamamlanan değirmen ertesi sabah haritada beliriyor). İkonlar sibling-index ile yerleşim
+  ikonlarının/isimlerin ARKASINA yerleştiriliyor (yoksa isimlerin önünde kalıyordu).
+
+### Diğer değişiklikler
+
+- **İsyan eden köyün haritadaki ismi KIRMIZI:** hem ilk çizimde (`YerlesimleriCiz`) hem
+  `RenkleriGuncelle`'de `koy.IsyanHalinde`'ye bakılıyor. `DayCycleManager.UyuyaBas()` sonunda artık
+  `HexHaritaCizici.Instance.RenkleriGuncelle()` çağrılıyor (isyan/bastırma sonrası harita otomatik
+  güncellensin diye).
+- **Değirmen sadece Köy ve Şehir'e inşa edilebiliyor** (Kale'ye yapılamıyor) — yukarıya bak.
+
+### Yeni tuzaklar (bu oturumda yaşandı)
+
+- **Kendi eklediğin korumanın tuzağı:** `SinirGizle`'ye "mod aktifken hedef köyün sınırı kapanamaz"
+  koruması eklendikten sonra, `TileSecimModunuBitir` içindeki `SinirGizle` çağrısı da (mod henüz
+  aktifken çağrıldığı için) engellenir oldu — sınırlar ertesi gün de açık kalıyordu. Çözüm: Bitir
+  içinde ÖNCE mod bayrağını kapat, SONRA gizle. Bir fonksiyona durum-bazlı koruma eklerken, o
+  fonksiyonu çağıran KENDİ kodunun da o korumaya takılabileceğini kontrol et.
+- **Raycast yakalayan UI objeleri (tile/ikon), altta kalan pan/zoom handler'ının olaylarını yutar** —
+  çözüm ya raycast'i kapatmak ya da olayları elle iletmek (`TileTiklama`'daki forwarding deseni).
+- **Görünmez (alpha 0) bir UI objesi hâlâ raycast yakalar** — Kaynak modunda görünmez olan yerleşim
+  ikonları hover/tıklama almaya devam ediyordu; görünmezlik yetmez, `raycastTarget = false` da gerekli.
+
+### Sıradaki adım
+
+Roadmap değişmedi ("3. Yeni statlar: Refah/İnanç/Teknoloji" hâlâ sırada). Kullanıcı "claude.md yi
+güncelle, sonra devam edeceğiz" dedi — bir sonraki işin ne olduğu henüz söylenmedi, kullanıcıya sor.

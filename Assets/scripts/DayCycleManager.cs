@@ -165,6 +165,11 @@ public class DayCycleManager : MonoBehaviour
 
     Orders.YeniDongueBasla();
 
+    if (HexHaritaCizici.Instance != null)
+    {
+        HexHaritaCizici.Instance.RenkleriGuncelle();
+    }
+
     YeniGuneBasla();
 }
 
