@@ -10,6 +10,23 @@ public class KoyYoneticisi : MonoBehaviour
     [Header("Krallik Ayarlari")]
     public KrallikData OyuncuKralligi;
 
+    // Her krallligin baskenti kendi KrallikData asset'inde (BaskentIsmi, string) tutuluyor -
+    // KoyData bir ScriptableObject olmadigi icin Inspector'dan dogrudan referans verilemiyor
+    // (verilirse Unity bos, yeni bir KoyData ornegi olusturuyor, Koyler listesindeki gercek
+    // koyle hicbir baglantisi olmuyor). Bu yuzden isim uzerinden arama yapiyoruz.
+    public KoyData BaskentiBul(KrallikData krallik)
+    {
+        if (krallik == null || string.IsNullOrEmpty(krallik.BaskentIsmi))
+        {
+            return null;
+        }
+        return Koyler.Find(koy => string.Equals(koy.Isim.Trim(), krallik.BaskentIsmi.Trim(), System.StringComparison.OrdinalIgnoreCase));
+    }
+
+    // Bizim baskentimiz - eskiden ayri bir "Baskent" alani olarak tutulan yer, artik
+    // OyuncuKralligi'nin BaskentIsmi'nden hesaplaniyor (bkz. yukaridaki not).
+    public KoyData Baskent => BaskentiBul(OyuncuKralligi);
+
     [Header("Nufus Buyume Ayarlari")]
     public float NufusEsik = 1f;
     public float NufusKatsayi = 10f;

@@ -139,11 +139,16 @@ public class HaritaYoneticisi : MonoBehaviour
 
     public int SureHesapla(KoyData kaynakKoy, KoyData hedefKoy)
     {
-        if (kaynakKoy == null)
+        // Kaynak "Genel Yedek Kuvvet" ise (kaynakKoy null), artik konumsuz sayilmiyor -
+        // Baskent'in konumundan yola cikiyor (bkz. KoyYoneticisi.Baskent). Baskent henuz
+        // atanmadiysa (Inspector'dan unutulduysa) eski davranisa (aninda, 1 gun) dusuluyor.
+        KoyData gercekKaynak = kaynakKoy != null ? kaynakKoy : KoyYoneticisi.Instance.Baskent;
+
+        if (gercekKaynak == null)
         {
             return 1;
         }
-        int mesafe = KoyMesafesi(kaynakKoy, hedefKoy);
+        int mesafe = KoyMesafesi(gercekKaynak, hedefKoy);
         return Mathf.Max(1, Mathf.RoundToInt(mesafe / OrduHizi));
     }
 

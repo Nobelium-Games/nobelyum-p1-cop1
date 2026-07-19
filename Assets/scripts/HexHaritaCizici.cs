@@ -35,10 +35,28 @@ public class HexHaritaCizici : MonoBehaviour
     public HaritaKontrol Kontrol;
     public float IcerikKenarPayi = 100f;
 
+    [Header("Ordu Hareketi Gorseli")]
+    public Color OrduOkuRengi = Color.white;
+    public Sprite AskerIkonu;
+    public int OkParcaSayisi = 30;
+    public float OkParcaBoyutu = 14f;
+    public float OkParcaAraligi = 36f;
+    public float AskerIkonuBoyutu = 20f;
+    public float OkYanipSonmeHizi = 4f;
+
+    public Color YildizRengi = new Color(1f, 0.85f, 0.2f);
+    public float YildizBoyutu = 16f;
+
     Sprite hexagonSprite;
     Sprite hexagonCerceveSprite;
     Sprite kareSprite;
     Sprite daireSprite;
+    Sprite okSprite;
+    Sprite yildizSprite;
+
+    Dictionary<KoyData, Image> yildizGorselleri = new Dictionary<KoyData, Image>();
+
+    Dictionary<OrderData, OrduYoluGorseli> orduGorselleri = new Dictionary<OrderData, OrduYoluGorseli>();
 
     Dictionary<KoyData, List<GameObject>> koyTileSinirlari = new Dictionary<KoyData, List<GameObject>>();
     Dictionary<HexTileData, Image> tileGorselleri = new Dictionary<HexTileData, Image>();
@@ -62,6 +80,8 @@ public class HexHaritaCizici : MonoBehaviour
         hexagonCerceveSprite = SekilUretici.HexagonCerceveSprite();
         kareSprite = SekilUretici.KareSprite();
         daireSprite = SekilUretici.DaireSprite();
+        okSprite = SekilUretici.OkUcuSprite();
+        yildizSprite = SekilUretici.YildizSprite();
 
         SabitArkaplaniOlusturVeyaGuncelle();
         EskiCizimleriTemizle();
@@ -72,15 +92,39 @@ public class HexHaritaCizici : MonoBehaviour
         yerlesimIsimGorselleri.Clear();
         merkezSinirGorselleri.Clear();
         degirmenGorselleri.Clear();
+        orduGorselleri.Clear();
+        yildizGorselleri.Clear();
         IcerikBoyutunuGuncelle();
         TileleriCiz();
         DegirmenIkonlariniGuncelle();
         YerlesimleriCiz();
         GorunumMetniniGuncelle();
+        OrduGorselleriniIlkYukle();
 
         if (Kontrol != null)
         {
             Kontrol.YenidenHesaplaVeSinirla();
+        }
+    }
+
+    // Harita ilk kez acilirken, daha once (harita hic acilmamisken) verilmis olabilecek
+    // emirlerin gorselleri de eksik kalmasin diye hem devam eden hem henuz Uyu'ya basilip
+    // islenmemis (onizleme asamasindaki) emirleri tarayip cizdiriyor.
+    void OrduGorselleriniIlkYukle()
+    {
+        if (DayCycleManager.Instance == null)
+        {
+            return;
+        }
+
+        OrduHareketleriniGuncelle(DayCycleManager.Instance.DevamEdenEmirler);
+
+        if (DayCycleManager.Instance.Orders != null)
+        {
+            foreach (OrderData emir in DayCycleManager.Instance.Orders.BekleyenEmirler)
+            {
+                OrduOnizlemesiEkle(emir);
+            }
         }
     }
 
@@ -195,6 +239,15 @@ public class HexHaritaCizici : MonoBehaviour
         }
     }
 
+    // Bir koyun ismi, o anki sahibinin baskenti ile ayniysa true donuyor. Her krallik kendi
+    // baskentini KrallikData.BaskentIsmi ile tutuyor (bkz. KoyYoneticisi.BaskentiBul), bu
+    // yuzden herhangi bir krallik (sadece oyuncu degil) icin de calisiyor.
+    bool KoyBaskentMi(KoyData koy)
+    {
+        return koy.Sahip != null && !string.IsNullOrEmpty(koy.Sahip.BaskentIsmi)
+            && string.Equals(koy.Isim.Trim(), koy.Sahip.BaskentIsmi.Trim(), System.StringComparison.OrdinalIgnoreCase);
+    }
+
     Color TileRenginiHesapla(HexTileData tile)
     {
         if (AktifGorunum == HaritaGorunumu.Terrain || AktifGorunum == HaritaGorunumu.Kaynak)
@@ -236,6 +289,11 @@ public class HexHaritaCizici : MonoBehaviour
             if (isimText != null)
             {
                 isimText.color = kv.Key.IsyanHalinde ? Color.red : Color.white;
+            }
+
+            if (yildizGorselleri.ContainsKey(kv.Key))
+            {
+                yildizGorselleri[kv.Key].gameObject.SetActive(KoyBaskentMi(kv.Key));
             }
         }
 
@@ -475,7 +533,7 @@ public class HexHaritaCizici : MonoBehaviour
         for (int i = Icerik.childCount - 1; i >= 0; i--)
         {
             Transform cocuk = Icerik.GetChild(i);
-            if (cocuk.name.StartsWith("Tile_") || cocuk.name.StartsWith("Yerlesim_") || cocuk.name.StartsWith("Kaynak_") || cocuk.name.StartsWith("MerkezSinir_") || cocuk.name.StartsWith("Degirmen_"))
+            if (cocuk.name.StartsWith("Tile_") || cocuk.name.StartsWith("Yerlesim_") || cocuk.name.StartsWith("Kaynak_") || cocuk.name.StartsWith("MerkezSinir_") || cocuk.name.StartsWith("Degirmen_") || cocuk.name.StartsWith("OrduYolu"))
             {
                 Destroy(cocuk.gameObject);
             }
@@ -616,6 +674,25 @@ public class HexHaritaCizici : MonoBehaviour
             isimObjesi.SetActive(AktifGorunum != HaritaGorunumu.Kaynak);
             yerlesimIsimGorselleri[koy] = isimObjesi;
 
+            // Baskent isaretini isim metninin karakteri olarak degil, ayri bir sprite ikonu
+            // olarak (TMP font'unda "★" karakteri olmayabildigi icin, bkz. SekilUretici.YildizSprite)
+            // ismin hemen soluna cizip sadece baskent olan yerlesimlerde aktif ediyoruz. Isim
+            // ortalanmis oldugu (Center alignment) icin sabit kutu genisligi (160) yerine
+            // metnin GERCEK genisligini olcup ona gore yakinlastiriyoruz.
+            float isimGenisligi = isimText.GetPreferredValues().x;
+            GameObject yildizObjesi = new GameObject("Yildiz");
+            RectTransform yildizRect = SabitCapaliRectOlustur(yildizObjesi, isimObjesi.transform);
+            yildizRect.sizeDelta = new Vector2(YildizBoyutu, YildizBoyutu);
+            yildizRect.anchoredPosition = new Vector2(-(isimGenisligi / 2f) - YildizBoyutu / 2f - 2f, 0f);
+
+            Image yildizResim = yildizObjesi.AddComponent<Image>();
+            yildizResim.sprite = yildizSprite;
+            yildizResim.color = YildizRengi;
+            yildizResim.raycastTarget = false;
+
+            yildizObjesi.SetActive(KoyBaskentMi(koy));
+            yildizGorselleri[koy] = yildizResim;
+
             GameObject merkezSinirObjesi = new GameObject("MerkezSinir_" + koy.Isim);
             RectTransform merkezSinirRect = SabitCapaliRectOlustur(merkezSinirObjesi, Icerik);
             merkezSinirRect.sizeDelta = new Vector2(TileBoyutu * Mathf.Sqrt(3f), TileBoyutu * 2f);
@@ -640,6 +717,97 @@ public class HexHaritaCizici : MonoBehaviour
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.localScale = Vector3.one;
         return rect;
+    }
+
+    // Her devam eden (cok gunlu) emir icin, KaynakKoy'u olanlari haritada A koyunden B koyune
+    // giden bir ok+asker gorseliyle gosterir. Genel Yedek Kuvvet'ten (KaynakKoy == null) giden
+    // emirler zaten hep 1 gunde vardigi icin gosterilmiyor. DayCycleManager.UyuyaBas() her gece
+    // bunu cagirip gorselleri o gecenin KalanGun'una gore guncelliyor.
+    public void OrduHareketleriniGuncelle(List<DevamEdenEmir> devamEdenler)
+    {
+        HashSet<OrderData> aktifEmirler = new HashSet<OrderData>();
+
+        foreach (DevamEdenEmir devam in devamEdenler)
+        {
+            OrderData emir = devam.Emir;
+            KoyData efektifKaynak = EfektifKaynakKoy(emir);
+            if (efektifKaynak == null || emir.HedefKoy == null)
+            {
+                continue;
+            }
+
+            aktifEmirler.Add(emir);
+
+            float ilerleme = emir.ToplamSure <= 0
+                ? 1f
+                : Mathf.Clamp01((float)(emir.ToplamSure - devam.KalanGun) / emir.ToplamSure);
+
+            Vector2 kaynakKonum = EksenselKonum(efektifKaynak.MerkezTileKoordinati);
+            Vector2 hedefKonum = EksenselKonum(emir.HedefKoy.MerkezTileKoordinati);
+            Vector2 guncelKonum = Vector2.Lerp(kaynakKonum, hedefKonum, ilerleme);
+
+            OrduGorseliniGetirVeyaOlustur(emir, efektifKaynak).Guncelle(guncelKonum, hedefKonum);
+        }
+
+        List<OrderData> tamamlananlar = new List<OrderData>();
+        foreach (KeyValuePair<OrderData, OrduYoluGorseli> kv in orduGorselleri)
+        {
+            if (!aktifEmirler.Contains(kv.Key))
+            {
+                if (kv.Value != null)
+                {
+                    Destroy(kv.Value.gameObject);
+                }
+                tamamlananlar.Add(kv.Key);
+            }
+        }
+        foreach (OrderData emir in tamamlananlar)
+        {
+            orduGorselleri.Remove(emir);
+        }
+    }
+
+    // Emir verildigi an (henuz Uyu'ya basilmadan, DevamEdenEmir listesine girmeden once)
+    // birligin kaynak koyde durdugunu gostermek icin cagriliyor - DialogueManager.ManpowerAdimi'nda.
+    public void OrduOnizlemesiEkle(OrderData emir)
+    {
+        KoyData efektifKaynak = EfektifKaynakKoy(emir);
+        if (efektifKaynak == null || emir.HedefKoy == null)
+        {
+            return;
+        }
+
+        Vector2 kaynakKonum = EksenselKonum(efektifKaynak.MerkezTileKoordinati);
+        Vector2 hedefKonum = EksenselKonum(emir.HedefKoy.MerkezTileKoordinati);
+        OrduGorseliniGetirVeyaOlustur(emir, efektifKaynak).Guncelle(kaynakKonum, hedefKonum);
+    }
+
+    // Emrin KaynakKoy'u null ise (Genel Yedek Kuvvet secildiyse), artik Baskent'i gercek
+    // kaynak konumu sayiyoruz - bkz. KoyYoneticisi.Baskent. Baskent atanmadiysa (null) donuyor,
+    // bu durumda o emir icin hareket gorseli/ok cizilmiyor (eski davranis).
+    KoyData EfektifKaynakKoy(OrderData emir)
+    {
+        if (emir.KaynakKoy != null)
+        {
+            return emir.KaynakKoy;
+        }
+        return KoyYoneticisi.Instance != null ? KoyYoneticisi.Instance.Baskent : null;
+    }
+
+    OrduYoluGorseli OrduGorseliniGetirVeyaOlustur(OrderData emir, KoyData kaynakKoy)
+    {
+        if (orduGorselleri.ContainsKey(emir))
+        {
+            return orduGorselleri[emir];
+        }
+
+        GameObject obje = new GameObject("OrduYolu_" + kaynakKoy.Isim + "_" + emir.HedefKoy.Isim);
+        OrduYoluGorseli gorsel = obje.AddComponent<OrduYoluGorseli>();
+        Sprite askerSprite = AskerIkonu != null ? AskerIkonu : kareSprite;
+        gorsel.Kur(Icerik, okSprite, askerSprite, OkParcaSayisi, OkParcaBoyutu,
+            AskerIkonuBoyutu, OrduOkuRengi, Color.white, OkYanipSonmeHizi, OkParcaAraligi);
+        orduGorselleri[emir] = gorsel;
+        return gorsel;
     }
 
     Vector2 EksenselKonum(Vector3Int koordinat)

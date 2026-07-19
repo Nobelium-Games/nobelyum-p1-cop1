@@ -15,3 +15,4 @@ MonoBehaviour:
   Isim: "Babbar Krall\u0131\u011F\u0131"
   HaritaRengi: {r: 0.9, g: 0.15, b: 0.15, a: 1}
   Bayrak: {fileID: -5789408411567217797, guid: b43283a8abbb91c43a003b300f482fd2, type: 3}
+  BaskentIsmi: "Rekaz \u015Eehri"

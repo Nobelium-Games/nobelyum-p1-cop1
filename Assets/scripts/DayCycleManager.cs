@@ -32,6 +32,8 @@ public class DayCycleManager : MonoBehaviour
     private int suankiNpcIndex = 0;
     private List<DevamEdenEmir> devamEdenEmirler = new List<DevamEdenEmir>();
 
+    public List<DevamEdenEmir> DevamEdenEmirler => devamEdenEmirler;
+
     void Awake()
     {
         Instance = this;
@@ -168,6 +170,7 @@ public class DayCycleManager : MonoBehaviour
     if (HexHaritaCizici.Instance != null)
     {
         HexHaritaCizici.Instance.RenkleriGuncelle();
+        HexHaritaCizici.Instance.OrduHareketleriniGuncelle(devamEdenEmirler);
     }
 
     YeniGuneBasla();

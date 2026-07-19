@@ -212,9 +212,14 @@ public class DialogueManager : MonoBehaviour
         }
         olusturulanSecenekButonlari.Clear();
 
+        KoyData baskent = KoyYoneticisi.Instance.Baskent;
+        string yedekEtiketi = baskent != null
+            ? "Baskent (" + baskent.Isim + ") (" + GameManager.Instance.State.Manpower + ")"
+            : "Genel Yedek Kuvvet (" + GameManager.Instance.State.Manpower + ")";
+
         GameObject yedekButon = Instantiate(SecenekButonSablonu, SecenekIcerik);
         yedekButon.SetActive(true);
-        yedekButon.GetComponentInChildren<TMP_Text>().text = "Genel Yedek Kuvvet (" + GameManager.Instance.State.Manpower + ")";
+        yedekButon.GetComponentInChildren<TMP_Text>().text = yedekEtiketi;
         yedekButon.GetComponent<Button>().onClick.AddListener(() => callback(null));
         olusturulanSecenekButonlari.Add(yedekButon);
 
@@ -302,6 +307,14 @@ public class DialogueManager : MonoBehaviour
                 kopya.KaynakKoy = kaynakKoy;
                 kopya.ToplamSure = HaritaYoneticisi.Instance.SureHesapla(kaynakKoy, hedefKoy);
                 Orders.EmirEkle(kopya);
+
+                // Emir gercekten kabul edildiyse (danisman/maliyet reddi olmadiysa), Uyu'ya
+                // basilmadan once bile haritada kaynak noktasinda onizleme olarak gosterelim.
+                if (Orders.BekleyenEmirler.Contains(kopya) && HexHaritaCizici.Instance != null)
+                {
+                    HexHaritaCizici.Instance.OrduOnizlemesiEkle(kopya);
+                }
+
                 DiyalogBitir();
             });
             return;

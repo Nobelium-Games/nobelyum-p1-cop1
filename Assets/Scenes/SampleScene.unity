@@ -8016,6 +8016,15 @@ MonoBehaviour:
   KapatButonu: {fileID: 1493361116}
   Kontrol: {fileID: 1583662357}
   IcerikKenarPayi: 100
+  OrduOkuRengi: {r: 0, g: 0, b: 0, a: 1}
+  AskerIkonu: {fileID: 5303334776410475335, guid: 950966f00f781c04594b989dd36189bf, type: 3}
+  OkParcaSayisi: 40
+  OkParcaBoyutu: 20
+  OkParcaAraligi: 36
+  AskerIkonuBoyutu: 25
+  OkYanipSonmeHizi: 4
+  YildizRengi: {r: 1, g: 0.85, b: 0.2, a: 1}
+  YildizBoyutu: 16
 --- !u!1 &1588302630
 GameObject:
   m_ObjectHideFlags: 0
@@ -10868,7 +10877,7 @@ MonoBehaviour:
   Tileler: []
   HaritaMerkezi: {x: 0, y: 0, z: 0}
   SinirPayi: 2
-  OrduHizi: 3
+  OrduHizi: 2
 --- !u!4 &1954229640
 Transform:
   m_ObjectHideFlags: 0

@@ -57,9 +57,45 @@ public static class SekilUretici
         return DuzenliCokgenSprite(boyut, 3, -90);
     }
 
+    public static Sprite OkUcuSprite(int boyut = 64, float centikDerinligi = 0.55f)
+    {
+        // V/cevron seklinde bir ok ucu: on tarafta sivri bir nokta, arkada ortasi ice
+        // cekilmis (centikli) iki kanat - yol/harita oklarinda kullanilan klasik gorunum.
+        // Varsayilan olarak asagi (-Y) bakiyor.
+        Vector2 merkez = new Vector2(boyut / 2f, boyut / 2f);
+        float yaricap = boyut / 2f - 1f;
+
+        Vector2 ucNokta = merkez + new Vector2(0f, -yaricap);
+        Vector2 sagKanat = merkez + new Vector2(yaricap * 0.85f, yaricap * 0.6f);
+        Vector2 centik = merkez + new Vector2(0f, yaricap * 0.6f * centikDerinligi);
+        Vector2 solKanat = merkez + new Vector2(-yaricap * 0.85f, yaricap * 0.6f);
+
+        Vector2[] koseler = { ucNokta, sagKanat, centik, solKanat };
+        return CokgenSpriteOlustur(boyut, boyut, koseler);
+    }
+
     public static Sprite KareSprite(int boyut = 64)
     {
         return DuzenliCokgenSprite(boyut, 4, 45);
+    }
+
+    public static Sprite YildizSprite(int boyut = 64)
+    {
+        // TMP fontlarinda "★" karakteri genelde olmadigi icin (bos kutu cikiyor), yildizi
+        // metin karakteri yerine kod uretimli bir sprite olarak ciziyoruz - 5 kollu, klasik yildiz.
+        Vector2 merkez = new Vector2(boyut / 2f, boyut / 2f);
+        float disYaricap = boyut / 2f - 1f;
+        float icYaricap = disYaricap * 0.42f;
+
+        Vector2[] koseler = new Vector2[10];
+        for (int i = 0; i < 10; i++)
+        {
+            float yaricap = (i % 2 == 0) ? disYaricap : icYaricap;
+            float aciRadyan = (-90f + 36f * i) * Mathf.Deg2Rad;
+            koseler[i] = merkez + new Vector2(Mathf.Cos(aciRadyan), Mathf.Sin(aciRadyan)) * yaricap;
+        }
+
+        return CokgenSpriteOlustur(boyut, boyut, koseler);
     }
 
     public static Sprite DaireSprite(int boyut = 64)
